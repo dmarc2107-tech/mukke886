@@ -392,13 +392,25 @@
 </head>
 <body>
 
-    <!-- PROFILE ERSTELLEN -->
+    <!-- PROFILE ERSTELLEN / LOGIN -->
     <div id="profile-overlay" class="overlay">
         <div class="modal">
-            <h2>Willkommen!</h2>
-            <p>Lege dein Spielerprofil an:</p>
-            <input type="text" id="username-input" class="btn" style="background: var(--bg-color); text-align: center; font-size: 18px; margin-bottom: 15px;" placeholder="Dein Spielername">
-            <button class="btn btn-main" onclick="saveProfile()">Speichern</button>
+            <h2 id="profile-title">Profil erstellen</h2>
+            <p id="profile-desc">Lege dein lokales Spielerprofil an:</p>
+            
+            <input type="text" id="username-input" class="btn" style="background: var(--bg-color); text-align: center; font-size: 16px; margin-bottom: 10px;" placeholder="Dein Spielername" autocomplete="off">
+            <input type="password" id="password-input" class="btn" style="background: var(--bg-color); text-align: center; font-size: 16px; margin-bottom: 15px;" placeholder="Dein Passwort">
+            
+            <div id="artist-select-container">
+                <p style="margin-bottom: 5px; font-size: 14px; color: var(--primary); font-weight: bold;">Wähle deine Sieger-Hymne:</p>
+                <select id="fav-artist-select" class="btn" style="background: var(--bg-color); text-align: center; font-size: 16px; margin-bottom: 20px; color: var(--text);">
+                    <!-- Artists werden via JS geladen -->
+                </select>
+            </div>
+            
+            <button class="btn btn-main" onclick="handleProfileLogin()">Einloggen / Speichern</button>
+            <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
+            <p id="reset-profile-btn" style="color: var(--text-muted); font-size: 12px; cursor: pointer; margin-top: 20px; text-decoration: underline;" onclick="resetProfile()">Profil zurücksetzen (Neuer Account)</p>
         </div>
     </div>
 
@@ -513,12 +525,41 @@
                 <img id="milestone-image" src="" alt="Milestone Reward" style="display: none; width: 100%; max-height: 250px; object-fit: cover; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--primary); box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);">
                 
                 <p id="feedback-desc">Beschreibung</p>
-                <h3 id="mp-result" style="color: var(--primary); display: none; margin-bottom: 15px;"></h3>
+                <h3 id="mp-result" style="color: var(--primary); display: none; margin-bottom: 15px; font-size: 16px; white-space: pre-line;"></h3>
                 <button id="feedback-btn" class="btn btn-main" onclick="handleFeedbackNext()" style="margin-bottom: 0;">Nächste Runde ➔</button>
             </div>
         </div>
 
     <script>
+        // ==========================================
+        // ARTIST DATEN
+        // ==========================================
+        const soundcloudArtists = [
+            'XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God',
+            'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert',
+            'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K',
+            'YNW Melly', 'Yung Lean', 'Bones'
+        ];
+
+        const artists2010s = [
+            'Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 
+            'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 
+            'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 
+            'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa',
+            'Offset', 'Quavo', 'Yeat', 'Central Cee'
+        ];
+        
+        const legends = [
+            '2Pac', 'The Notorious B.I.G.', 'Eminem', '50 Cent', 
+            'Snoop Dogg', 'Dr. Dre', 'Ice Cube', 'Nas'
+        ];
+
+        const megaStars = [
+            'Drake', 'Kendrick Lamar', 'J. Cole', 'Kanye West', 'Post Malone'
+        ];
+
+        const allArtists = [...new Set([...soundcloudArtists, ...artists2010s, ...legends, ...megaStars])].sort();
+
         // ==========================================
         // MULTIPLAYER & PROFIL KONFIGURATION
         // ==========================================
@@ -526,27 +567,88 @@
         const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
         
         let playerName = localStorage.getItem('rapquiz_username');
+        let savedPw = localStorage.getItem('rapquiz_password');
+        let myFavArtist = localStorage.getItem('rapquiz_fav_artist') || '';
+        
         let isMultiplayer = false;
         let isMpHost = false;
         let currentRoom = '';
         let gameIsOver = false;
+        let opponentFinalStats = null;
 
         function checkProfile() {
-            if (!playerName) {
+            let select = document.getElementById('fav-artist-select');
+            if (select.children.length === 0) {
+                allArtists.forEach(a => {
+                    let opt = document.createElement('option');
+                    opt.value = a; 
+                    opt.innerText = a; 
+                    select.appendChild(opt);
+                });
+            }
+
+            if (!playerName || !savedPw) {
+                document.getElementById('profile-title').innerText = "Profil erstellen";
+                document.getElementById('profile-desc').innerText = "Lege dein lokales Spielerprofil an:";
+                document.getElementById('artist-select-container').style.display = 'block';
                 document.getElementById('profile-overlay').style.display = 'flex';
             } else {
-                document.getElementById('player-greeting').innerText = `Bereit, ${playerName}?`;
+                document.getElementById('profile-title').innerText = "Willkommen zurück!";
+                document.getElementById('profile-desc').innerText = "Bitte gib dein Passwort ein, um dich einzuloggen:";
+                document.getElementById('username-input').value = playerName;
+                document.getElementById('username-input').disabled = true;
+                document.getElementById('artist-select-container').style.display = 'none';
+                document.getElementById('profile-overlay').style.display = 'flex';
             }
         }
 
-        function saveProfile() {
+        function handleProfileLogin() {
             let name = document.getElementById('username-input').value.trim();
-            if (name) {
-                localStorage.setItem('rapquiz_username', name);
-                playerName = name;
-                document.getElementById('player-greeting').innerText = `Bereit, ${playerName}?`;
-                document.getElementById('profile-overlay').style.display = 'none';
+            let pw = document.getElementById('password-input').value.trim();
+            let err = document.getElementById('profile-error');
+            
+            if (!name || !pw) {
+                err.innerText = "Bitte fülle alle Felder aus!";
+                err.style.display = 'block';
+                return;
             }
+
+            if (savedPw) {
+                // Login Flow
+                if (pw !== savedPw) {
+                    err.innerText = "Falsches Passwort!";
+                    err.style.display = 'block';
+                    return;
+                }
+            } else {
+                // Register Flow
+                let fav = document.getElementById('fav-artist-select').value;
+                localStorage.setItem('rapquiz_username', name);
+                localStorage.setItem('rapquiz_password', pw);
+                localStorage.setItem('rapquiz_fav_artist', fav);
+                playerName = name;
+                savedPw = pw;
+                myFavArtist = fav;
+            }
+            
+            document.getElementById('player-greeting').innerText = `Bereit, ${playerName}?`;
+            document.getElementById('profile-overlay').style.display = 'none';
+            err.style.display = 'none';
+        }
+
+        function resetProfile() {
+            localStorage.removeItem('rapquiz_username');
+            localStorage.removeItem('rapquiz_password');
+            localStorage.removeItem('rapquiz_fav_artist');
+            playerName = null;
+            savedPw = null;
+            myFavArtist = '';
+            
+            document.getElementById('username-input').disabled = false;
+            document.getElementById('username-input').value = '';
+            document.getElementById('password-input').value = '';
+            document.getElementById('profile-error').style.display = 'none';
+            checkProfile();
         }
 
         // ==========================================
@@ -591,38 +693,68 @@
             document.getElementById('opponent-display').innerText = `Gegner: ${data.score}`;
         });
 
+        // ==========================================
+        // NEU: MULTIPLAYER GEWINNER-HYMNE
+        // ==========================================
         socket.on('opponentGameOver', (data) => {
-            // Wenn der Gegner alle Leben verliert oder fertig ist, endet auch dein Spiel
-            audio.pause();
-            clearTimeout(precisionTimer);
-            document.getElementById('feedback-overlay').style.display = 'flex';
-            document.getElementById('feedback-modal').className = "modal gameover";
-            document.getElementById('feedback-cover').style.display = 'none';
-            if(document.getElementById('milestone-image')) document.getElementById('milestone-image').style.display = 'none';
-
-            document.getElementById('feedback-title').innerText = "🏁 SPIEL BEENDET!";
-            document.getElementById('feedback-desc').innerText = `Das Spiel ist vorbei!\n\nDein Score: ${score}\nGegner Score: ${data.score}`;
+            opponentFinalStats = data; // Daten (Score & favArtist vom Gegner) speichern
             
-            const resultText = document.getElementById('mp-result');
-            resultText.style.display = 'block';
-            if (score > data.score) resultText.innerText = `🏆 Du hast GEWONNEN!`;
-            else if (score < data.score) resultText.innerText = `❌ Du hast VERLOREN!`;
-            else resultText.innerText = `🤝 UNENTSCHIEDEN!`;
-
-            let btn = document.getElementById('feedback-btn');
-            btn.innerText = "Zurück zum Menü 🏠";
-            btn.onclick = () => {
-                sfxAudio.pause(); 
-                document.getElementById('feedback-overlay').style.display = 'none';
-                backToMenu();
-            };
-
-            // Eigene Punkte noch schnell rüberschicken, falls noch nicht geschehen
-            if (!gameIsOver) {
-                gameIsOver = true;
-                socket.emit('gameOver', { roomCode: currentRoom, score: score });
+            // Wenn ich auch schon fertig bin, direkt auswerten
+            if (gameIsOver) {
+                evaluateWinnerAndPlayAnthem();
             }
         });
+
+        async function evaluateWinnerAndPlayAnthem() {
+            let resultText = document.getElementById('mp-result');
+            resultText.style.display = 'block';
+            let winnerArtist = '';
+
+            if (score > opponentFinalStats.score) {
+                resultText.innerText = `🏆 DU HAST GEWONNEN!\n\nScore: ${score} zu ${opponentFinalStats.score}\nDeine Sieger-Hymne von ${myFavArtist} wird geladen... 🎵`;
+                winnerArtist = myFavArtist;
+            } else if (score < opponentFinalStats.score) {
+                resultText.innerText = `❌ DU HAST VERLOREN!\n\nScore: ${score} zu ${opponentFinalStats.score}\nSieger-Hymne von ${opponentFinalStats.favArtist} wird geladen... 🎵`;
+                winnerArtist = opponentFinalStats.favArtist;
+            } else {
+                resultText.innerText = `🤝 UNENTSCHIEDEN!\nBeide ${score} Punkte!`;
+                return; 
+            }
+
+            // Game-Over Beat stoppen falls er noch läuft
+            sfxAudio.pause();
+
+            // Deezer API nach der Sieger-Hymne fragen
+            const callbackName = 'deezer_anthem_' + Date.now();
+            window[callbackName] = function(response) {
+                if (response && response.data && response.data.length > 0) {
+                    let validTracks = response.data.filter(t => t.preview);
+                    if (validTracks.length > 0) {
+                        // Zufälligen Song des Artists auswählen
+                        let track = validTracks[Math.floor(Math.random() * validTracks.length)];
+                        sfxAudio.src = track.preview;
+                        sfxAudio.volume = 1.0;
+                        sfxAudio.play().catch(e => console.log(e));
+                        
+                        // 10 Sekunden spielen, dann sanft ausfaden
+                        setTimeout(() => {
+                            let fade = setInterval(() => {
+                                if(sfxAudio.volume > 0.1) {
+                                    sfxAudio.volume -= 0.1;
+                                } else { 
+                                    clearInterval(fade); 
+                                    sfxAudio.pause(); 
+                                    sfxAudio.volume = 1; 
+                                }
+                            }, 200);
+                        }, 10000);
+                    }
+                }
+            };
+            const script = document.createElement('script');
+            script.src = `https://api.deezer.com/search?q=${encodeURIComponent(winnerArtist)}&limit=30&output=jsonp&callback=${callbackName}`;
+            document.head.appendChild(script);
+        }
 
         function createRoom() {
             isMpHost = true;
@@ -649,32 +781,6 @@
         // ==========================================
         // SPIEL-DATEN
         // ==========================================
-        const soundcloudArtists = [
-            'XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God',
-            'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert',
-            'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K',
-            'YNW Melly', 'Yung Lean', 'Bones'
-        ];
-
-        const artists2010s = [
-            'Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 
-            'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 
-            'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 
-            'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa',
-            'Offset', 'Quavo', 'Yeat', 'Central Cee'
-        ];
-        
-        const legends = [
-            '2Pac', 'The Notorious B.I.G.', 'Eminem', '50 Cent', 
-            'Snoop Dogg', 'Dr. Dre', 'Ice Cube', 'Nas'
-        ];
-
-        const megaStars = [
-            'Drake', 'Kendrick Lamar', 'J. Cole', 'Kanye West', 'Post Malone'
-        ];
-
-        const allArtists = [...new Set([...soundcloudArtists, ...artists2010s, ...legends, ...megaStars])].sort();
-
         let songsPool = [];
         let playedSongIds = new Set();
         let currentSong = null;
@@ -772,9 +878,9 @@
             hasReached1000 = false;
             pendingMilestone = false;
             gameIsOver = false;
+            opponentFinalStats = null;
             
             document.getElementById('opponent-display').style.display = isMultiplayer ? 'block' : 'none';
-            // Leben immer anzeigen, auch im Multiplayer!
             document.getElementById('lives-display').style.display = 'block'; 
             
             updateStatsDisplay();
@@ -982,7 +1088,6 @@
                 return;
             }
 
-            // WICHTIG: Kein lokales Mischen mehr! Beide nehmen den exakt gleichen Song.
             currentSong = unplayedSongs[0];
             playedSongIds.add(currentSong.id);
 
@@ -1189,7 +1294,6 @@
                     desc.innerText = `Ein Leben verloren!\n\nDas war:\n${currentSong.title} - ${currentSong.artist.name}`;
                 }
                 
-                // Leben zählen jetzt auch im Multiplayer!
                 if (lives <= 0) {
                     setTimeout(() => triggerGameOver(false), 2000);
                 }
@@ -1234,9 +1338,16 @@
             }
 
             if (isMultiplayer) {
-                document.getElementById('mp-result').innerText = "Warte auf Gegner...";
-                document.getElementById('mp-result').style.display = 'block';
-                socket.emit('gameOver', { roomCode: currentRoom, score: score });
+                // Sende deinen Score UND deinen Lieblingsartist an den Gegner
+                socket.emit('gameOver', { roomCode: currentRoom, score: score, favArtist: myFavArtist });
+                
+                // Falls der Gegner schon fertig ist, vergleiche die Ergebnisse und starte Hymne
+                if (opponentFinalStats) {
+                    evaluateWinnerAndPlayAnthem();
+                } else {
+                    document.getElementById('mp-result').innerText = "Warte auf Gegner...";
+                    document.getElementById('mp-result').style.display = 'block';
+                }
             }
 
             btn.innerText = "Zurück zum Menü 🏠";
@@ -1251,7 +1362,6 @@
 
         function updateStatsDisplay() {
             document.getElementById('score-display').innerText = "Score: " + score;
-            // Herzen werden immer aktualisiert
             let hearts = "";
             for(let i=0; i<3; i++) {
                 hearts += i < lives ? "❤️" : "🖤";
