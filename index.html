@@ -529,6 +529,7 @@
         let isMultiplayer = false;
         let isMpHost = false;
         let currentRoom = '';
+        let gameIsOver = false;
 
         function checkProfile() {
             if (!playerName) {
@@ -591,11 +592,36 @@
         });
 
         socket.on('opponentGameOver', (data) => {
+            // Wenn der Gegner alle Leben verliert oder fertig ist, endet auch dein Spiel
+            audio.pause();
+            clearTimeout(precisionTimer);
+            document.getElementById('feedback-overlay').style.display = 'flex';
+            document.getElementById('feedback-modal').className = "modal gameover";
+            document.getElementById('feedback-cover').style.display = 'none';
+            if(document.getElementById('milestone-image')) document.getElementById('milestone-image').style.display = 'none';
+
+            document.getElementById('feedback-title').innerText = "🏁 SPIEL BEENDET!";
+            document.getElementById('feedback-desc').innerText = `Das Spiel ist vorbei!\n\nDein Score: ${score}\nGegner Score: ${data.score}`;
+            
             const resultText = document.getElementById('mp-result');
             resultText.style.display = 'block';
-            if (score > data.score) resultText.innerText = `Du hast GEWONNEN! (Gegner: ${data.score} Pkt)`;
-            else if (score < data.score) resultText.innerText = `Du hast VERLOREN! (Gegner: ${data.score} Pkt)`;
-            else resultText.innerText = `UNENTSCHIEDEN! (Beide ${score} Pkt)`;
+            if (score > data.score) resultText.innerText = `🏆 Du hast GEWONNEN!`;
+            else if (score < data.score) resultText.innerText = `❌ Du hast VERLOREN!`;
+            else resultText.innerText = `🤝 UNENTSCHIEDEN!`;
+
+            let btn = document.getElementById('feedback-btn');
+            btn.innerText = "Zurück zum Menü 🏠";
+            btn.onclick = () => {
+                sfxAudio.pause(); 
+                document.getElementById('feedback-overlay').style.display = 'none';
+                backToMenu();
+            };
+
+            // Eigene Punkte noch schnell rüberschicken, falls noch nicht geschehen
+            if (!gameIsOver) {
+                gameIsOver = true;
+                socket.emit('gameOver', { roomCode: currentRoom, score: score });
+            }
         });
 
         function createRoom() {
@@ -696,7 +722,7 @@
         function enterMenu() {
             document.getElementById('splash-screen').style.display = 'none';
             showScreen('main-menu');
-            checkProfile(); // Profil prüfen beim Start
+            checkProfile();
         }
 
         window.onload = () => {
@@ -745,9 +771,11 @@
             lives = 3;
             hasReached1000 = false;
             pendingMilestone = false;
+            gameIsOver = false;
             
             document.getElementById('opponent-display').style.display = isMultiplayer ? 'block' : 'none';
-            document.getElementById('lives-display').style.display = isMultiplayer ? 'none' : 'block';
+            // Leben immer anzeigen, auch im Multiplayer!
+            document.getElementById('lives-display').style.display = 'block'; 
             
             updateStatsDisplay();
             sfxAudio.pause(); 
@@ -764,7 +792,7 @@
             audio.pause();
             sfxAudio.pause();
             clearTimeout(precisionTimer);
-            cancelMultiplayer(); // MP Reset
+            cancelMultiplayer(); 
             
             let milestoneImg = document.getElementById('milestone-image');
             if(milestoneImg) {
@@ -954,8 +982,8 @@
                 return;
             }
 
-            let shuffledUnplayed = unplayedSongs.sort(() => 0.5 - Math.random());
-            currentSong = shuffledUnplayed[0];
+            // WICHTIG: Kein lokales Mischen mehr! Beide nehmen den exakt gleichen Song.
+            currentSong = unplayedSongs[0];
             playedSongIds.add(currentSong.id);
 
             if (currentMode === 'progressive') {
@@ -1161,14 +1189,14 @@
                     desc.innerText = `Ein Leben verloren!\n\nDas war:\n${currentSong.title} - ${currentSong.artist.name}`;
                 }
                 
-                if (lives <= 0 && !isMultiplayer) {
+                // Leben zählen jetzt auch im Multiplayer!
+                if (lives <= 0) {
                     setTimeout(() => triggerGameOver(false), 2000);
                 }
             }
             
             updateStatsDisplay();
 
-            // Sende Punkte-Update an den Server im Multiplayer
             if (isMultiplayer) {
                 socket.emit('syncStats', { roomCode: currentRoom, score: score });
             }
@@ -1177,6 +1205,9 @@
         }
 
         function triggerGameOver(victory) {
+            if (gameIsOver) return;
+            gameIsOver = true;
+
             audio.pause();
             clearTimeout(precisionTimer);
             let modal = document.getElementById('feedback-modal');
@@ -1202,7 +1233,6 @@
                 sfxAudio.play().catch(e => console.log("Audio Fehler:", e));
             }
 
-            // Bei Multiplayer das Ergebnis vom Server anfordern
             if (isMultiplayer) {
                 document.getElementById('mp-result').innerText = "Warte auf Gegner...";
                 document.getElementById('mp-result').style.display = 'block';
@@ -1221,13 +1251,12 @@
 
         function updateStatsDisplay() {
             document.getElementById('score-display').innerText = "Score: " + score;
-            if (!isMultiplayer) {
-                let hearts = "";
-                for(let i=0; i<3; i++) {
-                    hearts += i < lives ? "❤️" : "🖤";
-                }
-                document.getElementById('lives-display').innerText = hearts;
+            // Herzen werden immer aktualisiert
+            let hearts = "";
+            for(let i=0; i<3; i++) {
+                hearts += i < lives ? "❤️" : "🖤";
             }
+            document.getElementById('lives-display').innerText = hearts;
         }
     </script>
 </body>
