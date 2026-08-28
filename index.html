@@ -198,14 +198,39 @@
             justify-content: space-between;
             align-items: center;
             background: rgba(255, 255, 255, 0.05);
-            padding: 12px 20px;
+            padding: 12px 15px;
             border-radius: 15px;
             margin-bottom: 25px;
         }
 
+        .stats-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .player-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            object-fit: cover;
+            background: var(--surface);
+        }
+
+        .player-info {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .player-name-display { font-size: 12px; color: var(--text-muted); font-weight: bold; }
+
         #score-display { font-size: 20px; font-weight: bold; color: var(--success); }
         #lives-display { font-size: 20px; letter-spacing: 3px; }
-        #opponent-display { font-size: 18px; color: var(--danger); font-weight: bold; display: none; }
+        
+        #opponent-container { display: none; text-align: right; }
+        #opponent-display { font-size: 20px; color: var(--danger); font-weight: bold; }
 
         .visualizer {
             width: 100px;
@@ -313,7 +338,7 @@
         .suggestion-item:last-child { border-bottom: none; }
         .suggestion-item:hover { background: var(--primary); color: white; }
 
-        /* --- Modals --- */
+        /* --- Modals & Overlays --- */
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -388,6 +413,43 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 15px auto;
         }
+
+        /* Profil Avatar Grid */
+        .avatar-grid {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .avatar-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #27272a;
+            cursor: pointer;
+            transition: 0.2s;
+            background: var(--surface);
+        }
+        
+        .avatar-option:hover { border-color: var(--primary); transform: scale(1.1); }
+        .avatar-option.selected { border-color: var(--success); box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+
+        /* Stats Box im Profil */
+        .profile-stats-box {
+            display: flex;
+            justify-content: space-around;
+            background: var(--bg-color);
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #27272a;
+            margin-bottom: 20px;
+        }
+        .stat-item { display: flex; flex-direction: column; }
+        .stat-num { font-size: 24px; font-weight: bold; color: var(--primary); }
+        .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; }
+
     </style>
 </head>
 <body>
@@ -396,8 +458,14 @@
     <div id="profile-overlay" class="overlay">
         <div class="modal">
             <h2 id="profile-title">Profil erstellen</h2>
-            <p id="profile-desc">Lege dein lokales Spielerprofil an:</p>
+            <p id="profile-desc">Wähle deinen Avatar und lege dein Profil an:</p>
             
+            <div id="avatar-select-container">
+                <div class="avatar-grid" id="avatar-grid-selection">
+                    <!-- Avatare werden per JS geladen -->
+                </div>
+            </div>
+
             <input type="text" id="username-input" class="btn" style="background: var(--bg-color); text-align: center; font-size: 16px; margin-bottom: 10px;" placeholder="Dein Spielername" autocomplete="off">
             <input type="password" id="password-input" class="btn" style="background: var(--bg-color); text-align: center; font-size: 16px; margin-bottom: 15px;" placeholder="Dein Passwort">
             
@@ -414,6 +482,35 @@
         </div>
     </div>
 
+    <!-- ECHTES PROFIL MENÜ -->
+    <div id="my-profile-screen" class="screen-container">
+        <h1 style="color: var(--primary);">MEIN PROFIL</h1>
+        <img id="profile-view-avatar" src="" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); margin: 20px auto; display: block; background: var(--surface); box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);">
+        <h2 id="profile-view-name" style="margin-top: 0;">Name</h2>
+        
+        <div class="profile-stats-box">
+            <div class="stat-item">
+                <span class="stat-num" id="stat-played">0</span>
+                <span class="stat-label">Spiele</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-num" id="stat-wins" style="color: var(--success);">0</span>
+                <span class="stat-label">Siege</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-num" id="stat-losses" style="color: var(--danger);">0</span>
+                <span class="stat-label">Niederlagen</span>
+            </div>
+        </div>
+
+        <p style="margin-bottom: 5px; font-size: 14px; color: var(--text-muted); font-weight: bold; text-align: left;">Deine Sieger-Hymne:</p>
+        <select id="edit-fav-artist-select" class="btn" style="background: var(--surface); text-align: center; font-size: 16px; margin-bottom: 25px; color: var(--text);" onchange="updateFavArtist()">
+            <!-- Artists via JS -->
+        </select>
+
+        <button class="btn-control menu-btn" style="width: 100%; padding: 15px;" onclick="showScreen('main-menu')">Zurück zum Menü</button>
+    </div>
+
     <!-- SPLASH SCREEN -->
     <div id="splash-screen" class="overlay" style="display: flex;">
         <h1 style="color: #ef4444; margin-bottom: 30px; text-shadow: 0 0 30px rgba(239, 68, 68, 0.8); font-size: 55px;">RAP QUIZ</h1>
@@ -426,7 +523,10 @@
         <!-- HAUPTMENÜ -->
         <div id="main-menu" class="screen-container">
             
-            <h2 id="player-greeting" style="color: var(--primary); font-size: 24px; margin-bottom: 25px;">Hallo, Spieler!</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 id="player-greeting" style="color: var(--primary); font-size: 24px; margin: 0;">Hallo, Spieler!</h2>
+                <button class="btn-control info" onclick="openProfileScreen()">👤 Mein Profil</button>
+            </div>
             
             <div class="mode-toggle-container">
                 <span id="label-mc" class="active-mc">Auswahl (Buttons)</span>
@@ -480,10 +580,27 @@
 
         <!-- SPIELBILDSCHIRM -->
         <div id="game-screen" class="screen-container">
+            
             <div class="stats-bar">
+                <!-- Mein Spieler -->
+                <div class="stats-player">
+                    <img id="ingame-my-avatar" class="player-avatar" src="" alt="Ich">
+                    <div class="player-info">
+                        <span id="ingame-my-name" class="player-name-display">Du</span>
+                        <span id="score-display">Score: 0</span>
+                    </div>
+                </div>
+                
                 <div id="lives-display">❤️❤️❤️</div>
-                <div id="score-display">Score: 0</div>
-                <div id="opponent-display">Gegner: 0</div>
+                
+                <!-- Gegner Spieler -->
+                <div class="stats-player" id="opponent-container" style="flex-direction: row-reverse;">
+                    <img id="ingame-opp-avatar" class="player-avatar" src="" style="border-color: var(--danger);" alt="Gegner">
+                    <div class="player-info" style="text-align: right;">
+                        <span id="ingame-opp-name" class="player-name-display">Gegner</span>
+                        <span id="opponent-display">Score: 0</span>
+                    </div>
+                </div>
             </div>
             
             <div class="visualizer">
@@ -561,7 +678,7 @@
         const allArtists = [...new Set([...soundcloudArtists, ...artists2010s, ...legends, ...megaStars])].sort();
 
         // ==========================================
-        // MULTIPLAYER & PROFIL KONFIGURATION
+        // PROFIL, AVATARE & STATS KONFIGURATION
         // ==========================================
         const SERVER_URL = 'https://mukke886.onrender.com';
         const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
@@ -569,27 +686,65 @@
         let playerName = localStorage.getItem('rapquiz_username');
         let savedPw = localStorage.getItem('rapquiz_password');
         let myFavArtist = localStorage.getItem('rapquiz_fav_artist') || '';
+        let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix';
         
+        // Lokale Stats laden oder neu erstellen
+        let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, draws: 0 };
+        
+        const avatarOptions = [
+            'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix',
+            'https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka',
+            'https://api.dicebear.com/7.x/adventurer/svg?seed=Jack',
+            'https://api.dicebear.com/7.x/adventurer/svg?seed=Jocelyn',
+            'https://api.dicebear.com/7.x/adventurer/svg?seed=Max',
+            'https://api.dicebear.com/7.x/adventurer/svg?seed=Jude'
+        ];
+
         let isMultiplayer = false;
         let isMpHost = false;
         let currentRoom = '';
         let gameIsOver = false;
         let opponentFinalStats = null;
 
+        function loadAvatarGrid() {
+            let grid = document.getElementById('avatar-grid-selection');
+            grid.innerHTML = '';
+            avatarOptions.forEach(src => {
+                let img = document.createElement('img');
+                img.src = src;
+                img.className = 'avatar-option' + (src === myAvatar ? ' selected' : '');
+                img.onclick = () => {
+                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                    img.classList.add('selected');
+                    myAvatar = src;
+                };
+                grid.appendChild(img);
+            });
+        }
+
+        function populateArtistSelects() {
+            let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
+            selects.forEach(select => {
+                if (select.children.length === 0) {
+                    allArtists.forEach(a => {
+                        let opt = document.createElement('option');
+                        opt.value = a; 
+                        opt.innerText = a;
+                        if(a === myFavArtist) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+                }
+            });
+        }
+
         function checkProfile() {
-            let select = document.getElementById('fav-artist-select');
-            if (select.children.length === 0) {
-                allArtists.forEach(a => {
-                    let opt = document.createElement('option');
-                    opt.value = a; 
-                    opt.innerText = a; 
-                    select.appendChild(opt);
-                });
-            }
+            populateArtistSelects();
+            loadAvatarGrid();
 
             if (!playerName || !savedPw) {
                 document.getElementById('profile-title').innerText = "Profil erstellen";
-                document.getElementById('profile-desc').innerText = "Lege dein lokales Spielerprofil an:";
+                document.getElementById('profile-desc').innerText = "Wähle deinen Avatar und lege dein Profil an:";
+                document.getElementById('avatar-select-container').style.display = 'block';
                 document.getElementById('artist-select-container').style.display = 'block';
                 document.getElementById('profile-overlay').style.display = 'flex';
             } else {
@@ -597,6 +752,7 @@
                 document.getElementById('profile-desc').innerText = "Bitte gib dein Passwort ein, um dich einzuloggen:";
                 document.getElementById('username-input').value = playerName;
                 document.getElementById('username-input').disabled = true;
+                document.getElementById('avatar-select-container').style.display = 'none';
                 document.getElementById('artist-select-container').style.display = 'none';
                 document.getElementById('profile-overlay').style.display = 'flex';
             }
@@ -614,18 +770,17 @@
             }
 
             if (savedPw) {
-                // Login Flow
                 if (pw !== savedPw) {
                     err.innerText = "Falsches Passwort!";
                     err.style.display = 'block';
                     return;
                 }
             } else {
-                // Register Flow
                 let fav = document.getElementById('fav-artist-select').value;
                 localStorage.setItem('rapquiz_username', name);
                 localStorage.setItem('rapquiz_password', pw);
                 localStorage.setItem('rapquiz_fav_artist', fav);
+                localStorage.setItem('rapquiz_avatar', myAvatar);
                 playerName = name;
                 savedPw = pw;
                 myFavArtist = fav;
@@ -640,15 +795,44 @@
             localStorage.removeItem('rapquiz_username');
             localStorage.removeItem('rapquiz_password');
             localStorage.removeItem('rapquiz_fav_artist');
+            localStorage.removeItem('rapquiz_avatar');
+            localStorage.removeItem('rapquiz_stats');
+            
             playerName = null;
             savedPw = null;
             myFavArtist = '';
+            myAvatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix';
+            myStats = { played: 0, wins: 0, losses: 0, draws: 0 };
             
             document.getElementById('username-input').disabled = false;
             document.getElementById('username-input').value = '';
             document.getElementById('password-input').value = '';
             document.getElementById('profile-error').style.display = 'none';
             checkProfile();
+        }
+
+        function openProfileScreen() {
+            document.getElementById('profile-view-avatar').src = myAvatar;
+            document.getElementById('profile-view-name').innerText = playerName;
+            document.getElementById('stat-played').innerText = myStats.played;
+            document.getElementById('stat-wins').innerText = myStats.wins;
+            document.getElementById('stat-losses').innerText = myStats.losses;
+            document.getElementById('edit-fav-artist-select').value = myFavArtist;
+            
+            showScreen('my-profile-screen');
+        }
+
+        function updateFavArtist() {
+            myFavArtist = document.getElementById('edit-fav-artist-select').value;
+            localStorage.setItem('rapquiz_fav_artist', myFavArtist);
+        }
+
+        function saveGameStats(result) {
+            myStats.played++;
+            if(result === 'win') myStats.wins++;
+            if(result === 'loss') myStats.losses++;
+            if(result === 'draw') myStats.draws++;
+            localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
         }
 
         // ==========================================
@@ -690,16 +874,16 @@
         });
 
         socket.on('updateOpponentStats', (data) => {
-            document.getElementById('opponent-display').innerText = `Gegner: ${data.score}`;
+            document.getElementById('opponent-display').innerText = `Score: ${data.score}`;
+            if(data.playerName) document.getElementById('ingame-opp-name').innerText = data.playerName;
+            if(data.avatar) document.getElementById('ingame-opp-avatar').src = data.avatar;
         });
 
         // ==========================================
-        // NEU: MULTIPLAYER GEWINNER-HYMNE
+        // MULTIPLAYER GEWINNER-HYMNE (MIT FIX)
         // ==========================================
         socket.on('opponentGameOver', (data) => {
-            opponentFinalStats = data; // Daten (Score & favArtist vom Gegner) speichern
-            
-            // Wenn ich auch schon fertig bin, direkt auswerten
+            opponentFinalStats = data; 
             if (gameIsOver) {
                 evaluateWinnerAndPlayAnthem();
             }
@@ -713,30 +897,35 @@
             if (score > opponentFinalStats.score) {
                 resultText.innerText = `🏆 DU HAST GEWONNEN!\n\nScore: ${score} zu ${opponentFinalStats.score}\nDeine Sieger-Hymne von ${myFavArtist} wird geladen... 🎵`;
                 winnerArtist = myFavArtist;
+                saveGameStats('win');
             } else if (score < opponentFinalStats.score) {
                 resultText.innerText = `❌ DU HAST VERLOREN!\n\nScore: ${score} zu ${opponentFinalStats.score}\nSieger-Hymne von ${opponentFinalStats.favArtist} wird geladen... 🎵`;
                 winnerArtist = opponentFinalStats.favArtist;
+                saveGameStats('loss');
             } else {
                 resultText.innerText = `🤝 UNENTSCHIEDEN!\nBeide ${score} Punkte!`;
+                saveGameStats('draw');
                 return; 
             }
 
-            // Game-Over Beat stoppen falls er noch läuft
             sfxAudio.pause();
 
-            // Deezer API nach der Sieger-Hymne fragen
+            // Deezer API Fix: Suche strikt mit dem artist-Tag
             const callbackName = 'deezer_anthem_' + Date.now();
             window[callbackName] = function(response) {
                 if (response && response.data && response.data.length > 0) {
-                    let validTracks = response.data.filter(t => t.preview);
+                    // Strenger Filter: Der Name muss den gesuchten Artist enthalten!
+                    let validTracks = response.data.filter(t => 
+                        t.preview && 
+                        t.artist.name.toLowerCase().includes(winnerArtist.toLowerCase())
+                    );
+                    
                     if (validTracks.length > 0) {
-                        // Zufälligen Song des Artists auswählen
                         let track = validTracks[Math.floor(Math.random() * validTracks.length)];
                         sfxAudio.src = track.preview;
                         sfxAudio.volume = 1.0;
                         sfxAudio.play().catch(e => console.log(e));
                         
-                        // 10 Sekunden spielen, dann sanft ausfaden
                         setTimeout(() => {
                             let fade = setInterval(() => {
                                 if(sfxAudio.volume > 0.1) {
@@ -751,8 +940,11 @@
                     }
                 }
             };
+            
+            // Suche verfeinert auf artist:"Name"
+            let searchQuery = `artist:"${winnerArtist}"`;
             const script = document.createElement('script');
-            script.src = `https://api.deezer.com/search?q=${encodeURIComponent(winnerArtist)}&limit=30&output=jsonp&callback=${callbackName}`;
+            script.src = `https://api.deezer.com/search?q=${encodeURIComponent(searchQuery)}&limit=50&output=jsonp&callback=${callbackName}`;
             document.head.appendChild(script);
         }
 
@@ -880,8 +1072,11 @@
             gameIsOver = false;
             opponentFinalStats = null;
             
-            document.getElementById('opponent-display').style.display = isMultiplayer ? 'block' : 'none';
+            document.getElementById('opponent-container').style.display = isMultiplayer ? 'flex' : 'none';
             document.getElementById('lives-display').style.display = 'block'; 
+            
+            document.getElementById('ingame-my-avatar').src = myAvatar;
+            document.getElementById('ingame-my-name').innerText = playerName;
             
             updateStatsDisplay();
             sfxAudio.pause(); 
@@ -1014,6 +1209,12 @@
         function launchGame() {
             document.getElementById('loading-overlay').style.display = 'none';
             showScreen('game-screen');
+            
+            // Sende sofort beim Start deinen Avatar & Namen an den Gegner
+            if(isMultiplayer) {
+                socket.emit('syncStats', { roomCode: currentRoom, score: score, playerName: playerName, avatar: myAvatar });
+            }
+            
             nextRound();
         }
 
@@ -1302,7 +1503,7 @@
             updateStatsDisplay();
 
             if (isMultiplayer) {
-                socket.emit('syncStats', { roomCode: currentRoom, score: score });
+                socket.emit('syncStats', { roomCode: currentRoom, score: score, playerName: playerName, avatar: myAvatar });
             }
 
             document.getElementById('feedback-overlay').style.display = 'flex';
@@ -1338,16 +1539,17 @@
             }
 
             if (isMultiplayer) {
-                // Sende deinen Score UND deinen Lieblingsartist an den Gegner
                 socket.emit('gameOver', { roomCode: currentRoom, score: score, favArtist: myFavArtist });
                 
-                // Falls der Gegner schon fertig ist, vergleiche die Ergebnisse und starte Hymne
                 if (opponentFinalStats) {
                     evaluateWinnerAndPlayAnthem();
                 } else {
                     document.getElementById('mp-result').innerText = "Warte auf Gegner...";
                     document.getElementById('mp-result').style.display = 'block';
                 }
+            } else {
+                // Solo-Stats speichern
+                saveGameStats(victory ? 'win' : 'loss');
             }
 
             btn.innerText = "Zurück zum Menü 🏠";
