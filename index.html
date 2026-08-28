@@ -495,29 +495,28 @@
                 <button class="btn btn-main" style="margin-top: 0; font-size: 16px; padding: 12px;" onclick="checkTextInput()">Einloggen</button>
             </div>
         </div>
-    </div>
 
-    <!-- LADE-SCREEN -->
-    <div id="loading-overlay" class="overlay">
-        <div class="modal" style="background: transparent; box-shadow: none;">
-            <div class="loader"></div>
-            <h2 style="color: white; font-size: 24px;" id="loading-text">Lade Datenbank...</h2>
+        <!-- LADE-SCREEN -->
+        <div id="loading-overlay" class="overlay">
+            <div class="modal" style="background: transparent; box-shadow: none;">
+                <div class="loader"></div>
+                <h2 style="color: white; font-size: 24px;" id="loading-text">Lade Datenbank...</h2>
+            </div>
         </div>
-    </div>
 
-    <!-- RICHTIG/FALSCH/VIDEO SCREEN -->
-    <div id="feedback-overlay" class="overlay">
-        <div id="feedback-modal" class="modal">
-            <h2 id="feedback-title">Titel</h2>
-            
-            <img id="feedback-cover" src="" alt="Album Cover">
-            <img id="milestone-image" src="" alt="Milestone Reward" style="display: none; width: 100%; max-height: 250px; object-fit: cover; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--primary); box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);">
-            
-            <p id="feedback-desc">Beschreibung</p>
-            <h3 id="mp-result" style="color: var(--primary); display: none; margin-bottom: 15px;"></h3>
-            <button id="feedback-btn" class="btn btn-main" onclick="handleFeedbackNext()" style="margin-bottom: 0;">Nächste Runde ➔</button>
+        <!-- RICHTIG/FALSCH/VIDEO SCREEN -->
+        <div id="feedback-overlay" class="overlay">
+            <div id="feedback-modal" class="modal">
+                <h2 id="feedback-title">Titel</h2>
+                
+                <img id="feedback-cover" src="" alt="Album Cover">
+                <img id="milestone-image" src="" alt="Milestone Reward" style="display: none; width: 100%; max-height: 250px; object-fit: cover; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--primary); box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);">
+                
+                <p id="feedback-desc">Beschreibung</p>
+                <h3 id="mp-result" style="color: var(--primary); display: none; margin-bottom: 15px;"></h3>
+                <button id="feedback-btn" class="btn btn-main" onclick="handleFeedbackNext()" style="margin-bottom: 0;">Nächste Runde ➔</button>
+            </div>
         </div>
-    </div>
 
     <script>
         // ==========================================
@@ -563,20 +562,20 @@
             isMultiplayer = true;
             if (isMpHost) {
                 alert("Gegner beigetreten! Wähle nun einen beliebigen Modus aus dem Menü, um das Duell zu starten.");
-                showScreen('main-menu'); // Host wählt Modus
+                showScreen('main-menu');
             } else {
                 document.getElementById('mp-status').innerText = 'Gegner gefunden! Warte auf Modus-Auswahl vom Host...';
             }
         });
 
         socket.on('receiveRoundData', (data) => {
-            // Client empfängt die vom Host gewählten Songs & Settings
+            resetGameStats(); 
+
             songsPool = data.songs;
             currentMode = data.mode;
             isHardcoreMode = data.hardcore;
             showArtistName = data.showArtist;
             
-            // UI Toggle visuell anpassen
             document.getElementById('hardcore-toggle').checked = isHardcoreMode;
             toggleHardcoreMode();
             document.getElementById('artist-toggle').checked = showArtistName;
@@ -584,7 +583,6 @@
 
             isMultiplayer = true;
             document.getElementById('loading-overlay').style.display = 'none';
-            resetGameStats();
             launchGame();
         });
 
@@ -671,16 +669,19 @@
         let maxPlayTime = 1;
         let precisionTimer = null; 
 
+        audio.onplaying = () => {
+            clearTimeout(precisionTimer);
+            if (maxPlayTime < 30) {
+                precisionTimer = setTimeout(() => {
+                    audio.pause();
+                }, maxPlayTime * 1000);
+            }
+        };
+
         function playAudioSnippet() {
             audio.currentTime = 0;
             clearTimeout(precisionTimer); 
-            audio.play().then(() => {
-                if (maxPlayTime < 30) {
-                    precisionTimer = setTimeout(() => {
-                        audio.pause();
-                    }, maxPlayTime * 1000);
-                }
-            }).catch(e => console.log(e));
+            audio.play().catch(e => console.log(e));
         }
 
         document.getElementById('guess-input').addEventListener('keypress', function (e) {
@@ -853,8 +854,20 @@
             launchGame();
         }
 
-       // Host schickt das fertige Paket an den Gegner
         function syncHostData() {
+            let slimSongs = songsPool.map(song => {
+                return {
+                    id: song.id,
+                    title: song.title,
+                    preview: song.preview,
+                    artist: { name: song.artist.name },
+                    album: { cover_medium: song.album.cover_medium }
+                };
+            });
+
+            slimSongs = slimSongs.sort(() => 0.5 - Math.random()).slice(0, 100);
+            songsPool = slimSongs;
+
             socket.emit('syncRoundData', { 
                 roomCode: currentRoom, 
                 songs: songsPool, 
@@ -949,8 +962,8 @@
                 const progressiveTimes = [0.1, 1, 2, 5, 10];
                 let step = Math.min(playedSongIds.size - 1, progressiveTimes.length - 1);
                 maxPlayTime = progressiveTimes[step];
-                document.getElementById('add-time-btn').innerText = `Progressiv: ${maxPlayTime}s`;
-                document.getElementById('add-time-btn').style.opacity = "0.5";
+                document.getElementById('add-time-btn').innerText = `+3s (Aktuell: ${maxPlayTime}s)`;
+                document.getElementById('add-time-btn').style.opacity = "1";
             } else {
                 maxPlayTime = 1;
                 document.getElementById('add-time-btn').innerText = `+3s (Aktuell: 1s)`;
@@ -1001,11 +1014,12 @@
         }
 
         function addTime() {
-            if (currentMode === 'progressive') return; 
             if (maxPlayTime < 10) {
                 maxPlayTime += 3;
                 if (maxPlayTime > 10) maxPlayTime = 10;
-                document.getElementById('add-time-btn').innerText = maxPlayTime < 10 ? `+3s (Aktuell: ${maxPlayTime}s)` : `Maximalzeit (10s)`;
+                let displayTime = maxPlayTime % 1 === 0 ? maxPlayTime : maxPlayTime.toFixed(1);
+                document.getElementById('add-time-btn').innerText = maxPlayTime < 10 ? `+3s (Aktuell: ${displayTime}s)` : `Maximalzeit (10s)`;
+                document.getElementById('add-time-btn').style.opacity = "1";
                 playAudioSnippet();
             } else {
                 document.getElementById('add-time-btn').style.opacity = "0.5";
