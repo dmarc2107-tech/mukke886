@@ -7,11 +7,12 @@
     <!-- Socket.io für 1v1 Multiplayer -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800;900&display=swap');
 
         :root {
             --bg-color: #09090b;
-            --surface: #18181b;
+            --surface: rgba(24, 24, 27, 0.65);
+            --surface-border: rgba(255, 255, 255, 0.08);
             --primary: #8b5cf6;
             --primary-hover: #7c3aed;
             --success: #10b981;
@@ -23,30 +24,64 @@
 
         body { 
             font-family: 'Poppins', sans-serif; 
-            background-color: var(--bg-color); 
+            /* Animierter Hintergrund-Verlauf */
+            background: linear-gradient(135deg, #09090b, #18181b, #1f1033, #09090b);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
             color: var(--text); 
             text-align: center; 
             margin: 0;
             padding: 0;
             user-select: none;
             overflow-x: hidden;
+            min-height: 100vh;
         }
 
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Musik-Toggle Button oben rechts */
+        #music-toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--surface-border);
+            color: white;
+            font-size: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 100;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: none;
+        }
+        #music-toggle-btn:hover { transform: scale(1.1); border-color: var(--primary); }
+
         h1 { 
-            color: var(--primary); 
-            font-size: 42px; 
+            color: var(--text); 
+            font-size: 46px; 
             font-weight: 900;
             letter-spacing: 2px;
             text-transform: uppercase;
-            margin-top: 30px;
-            margin-bottom: 5px;
-            text-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+            margin-top: 40px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 25px rgba(139, 92, 246, 0.6);
         }
+        
+        .highlight-text { color: var(--primary); }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            position: relative;
         }
 
         /* --- SPLASH SCREEN --- */
@@ -60,20 +95,34 @@
         #splash-image {
             max-width: 80%;
             max-height: 45vh;
-            border-radius: 12px;
-            border: 3px solid #ef4444;
-            box-shadow: 0 0 50px rgba(239, 68, 68, 0.5);
+            border-radius: 20px;
+            border: 3px solid var(--danger);
+            box-shadow: 0 0 50px rgba(239, 68, 68, 0.4);
             margin-bottom: 15px;
             object-fit: cover;
         }
 
         .creator-credits {
-            color: #a1a1aa;
-            font-size: 18px;
+            color: var(--text-muted);
+            font-size: 16px;
             font-weight: bold;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
             text-transform: uppercase;
             margin-bottom: 40px;
+        }
+
+        /* --- GLASSMORPHISM CONTAINERS --- */
+        .screen-container { 
+            display: none; 
+            max-width: 650px; 
+            margin: 0 auto; 
+            background: var(--surface);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--surface-border);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
 
         /* --- Toggle Switches --- */
@@ -82,20 +131,20 @@
             justify-content: center;
             align-items: center;
             margin-bottom: 15px;
-            background: var(--surface);
-            padding: 12px;
-            border-radius: 12px;
-            border: 2px solid #27272a;
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 16px;
+            border: 1px solid var(--surface-border);
         }
 
         .mode-toggle-container span {
-            font-weight: bold;
+            font-weight: 600;
             color: var(--text-muted);
             transition: 0.3s;
             font-size: 14px;
         }
 
-        .mode-toggle-container span.active-mc { color: var(--primary); }
+        .mode-toggle-container span.active-mc { color: var(--primary); text-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
         .mode-toggle-container span.active-hc { color: var(--danger); text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
         .mode-toggle-container span.active-green { color: var(--success); text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
 
@@ -128,132 +177,136 @@
             background-color: white;
             transition: .4s;
             border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
         input:checked + .slider.red { background-color: var(--danger); }
         input:checked + .slider.red:before { transform: translateX(22px); }
-        
         input:checked + .slider.green { background-color: var(--success); }
         input:checked + .slider.green:before { transform: translateX(22px); }
 
         /* --- Menü & Layout --- */
         .menu-title {
             color: var(--text-muted);
-            font-size: 16px;
-            margin-top: 25px;
-            margin-bottom: 12px;
-            font-weight: bold;
+            font-size: 14px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            text-align: left;
+            border-bottom: 1px solid var(--surface-border);
+            padding-bottom: 5px;
         }
 
         .artist-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
             margin-bottom: 20px;
         }
 
         /* --- Buttons --- */
         .btn { 
-            background-color: var(--surface); 
-            border: 2px solid #27272a; 
+            background-color: rgba(255,255,255,0.03); 
+            border: 1px solid var(--surface-border); 
             color: var(--text); 
-            padding: 16px 10px; 
-            border-radius: 12px; 
+            padding: 16px 12px; 
+            border-radius: 16px; 
             cursor: pointer; 
             font-size: 14px; 
-            font-weight: 700;
+            font-weight: 600;
             transition: all 0.2s ease;
             width: 100%;
+            backdrop-filter: blur(5px);
         }
 
         .btn:hover { 
-            background-color: var(--primary); 
+            background-color: rgba(139, 92, 246, 0.1); 
             border-color: var(--primary);
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
         .btn-main {
             background: linear-gradient(135deg, var(--primary), var(--primary-hover));
             border: none;
             font-size: 18px;
-            padding: 16px;
+            font-weight: 800;
+            padding: 18px;
             width: 100%;
             max-width: 400px;
             margin: 0 auto 12px auto;
             display: block;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
         }
+        .btn-main:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 12px 30px rgba(139, 92, 246, 0.5); }
 
-        .btn-gold { background: linear-gradient(135deg, var(--warning), #d97706); color: #000; }
-        .btn-sc { background: linear-gradient(135deg, #ff5500, #c44000); color: white; }
-        .btn-prog { background: linear-gradient(135deg, #ec4899, #be185d); color: white; }
-        .btn-mp { background: linear-gradient(135deg, #10b981, #047857); color: white; border: 2px solid #34d399; margin-top: 20px;}
+        .btn-gold { background: linear-gradient(135deg, var(--warning), #d97706); color: #000; box-shadow: 0 8px 25px rgba(245, 158, 11, 0.2); }
+        .btn-sc { background: linear-gradient(135deg, #ff5500, #c44000); color: white; box-shadow: 0 8px 25px rgba(255, 85, 0, 0.2);}
+        .btn-prog { background: linear-gradient(135deg, #ec4899, #be185d); color: white; box-shadow: 0 8px 25px rgba(236, 72, 153, 0.2);}
+        .btn-mp { background: linear-gradient(135deg, #10b981, #047857); color: white; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3); margin-top: 25px; margin-bottom: 25px; border: 1px solid #34d399;}
         
         /* --- In-Game UI --- */
-        .screen-container { display: none; max-width: 600px; margin: 0 auto; }
-        
         .stats-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 12px 15px;
-            border-radius: 15px;
-            margin-bottom: 25px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid var(--surface-border);
         }
 
-        .stats-player {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .stats-player { display: flex; align-items: center; gap: 12px; }
 
         .player-avatar {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             border: 2px solid var(--primary);
             object-fit: cover;
-            background: var(--surface);
+            background: #000;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
         }
 
-        .player-info {
-            display: flex;
-            flex-direction: column;
-            text-align: left;
-        }
+        .player-info { display: flex; flex-direction: column; text-align: left; }
+        .player-name-display { font-size: 13px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; }
 
-        .player-name-display { font-size: 12px; color: var(--text-muted); font-weight: bold; }
-
-        #score-display { font-size: 20px; font-weight: bold; color: var(--success); }
-        #lives-display { font-size: 20px; letter-spacing: 3px; }
+        #score-display { font-size: 22px; font-weight: 900; color: var(--success); }
+        #lives-display { font-size: 20px; letter-spacing: 4px; }
         
         #opponent-container { display: none; text-align: right; }
-        #opponent-display { font-size: 20px; color: var(--danger); font-weight: bold; }
+        #opponent-display { font-size: 22px; color: var(--danger); font-weight: 900; }
 
         .visualizer {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
-            background: conic-gradient(from 0deg, var(--primary), var(--bg-color));
-            margin: 0 auto 20px auto;
-            animation: spin 3s linear infinite;
+            background: conic-gradient(from 0deg, var(--primary), transparent);
+            margin: 0 auto 30px auto;
+            animation: spin 3s linear infinite, pulseGlow 2s ease-in-out infinite alternate;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 25px rgba(139, 92, 246, 0.3);
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.2); }
+            100% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.6); }
         }
 
         .visualizer-inner {
-            width: 85px;
-            height: 85px;
-            background-color: var(--surface);
+            width: 100px;
+            height: 100px;
+            background-color: var(--bg-color);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 35px;
+            font-size: 40px;
+            border: 2px solid rgba(139, 92, 246, 0.3);
         }
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -263,63 +316,58 @@
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 25px;
         }
 
         .btn-control {
-            background-color: var(--surface);
-            border: 1px solid var(--primary);
+            background-color: rgba(255,255,255,0.05);
+            border: 1px solid var(--surface-border);
             color: var(--text);
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 10px 16px;
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 13px;
             transition: 0.2s;
+            backdrop-filter: blur(5px);
         }
 
-        .btn-control:hover { background-color: var(--primary); }
-        .btn-control.danger { border-color: var(--danger); }
-        .btn-control.danger:hover { background-color: var(--danger); }
-        .btn-control.info { border-color: #3b82f6; }
-        .btn-control.info:hover { background-color: #3b82f6; }
-        .btn-control.menu-btn { border-color: #71717a; color: #d4d4d8; }
-        .btn-control.menu-btn:hover { background-color: #71717a; color: white; }
+        .btn-control:hover { background-color: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
+        .btn-control.danger:hover { background-color: var(--danger); border-color: var(--danger); }
+        .btn-control.info:hover { background-color: #3b82f6; border-color: #3b82f6; }
 
-        .options-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .options-container { display: flex; flex-direction: column; gap: 12px; }
 
         /* Text Input Mode */
         .input-wrapper { position: relative; width: 100%; margin-bottom: 15px; }
 
         #guess-input {
             width: 100%;
-            padding: 16px;
+            padding: 18px;
             font-size: 16px;
-            border-radius: 12px;
+            border-radius: 16px;
             border: 2px solid var(--primary);
-            background: var(--surface);
+            background: rgba(0,0,0,0.5);
             color: var(--text);
             outline: none;
             box-sizing: border-box;
             text-align: center;
             font-family: 'Poppins', sans-serif;
             font-weight: bold;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
         }
 
-        #guess-input:focus { box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); }
+        #guess-input:focus { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); background: rgba(0,0,0,0.8); }
 
         #suggestions-box {
             position: absolute;
             top: 100%; left: 0; width: 100%;
             background: var(--surface);
-            border: 2px solid var(--primary);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--surface-border);
             border-top: none;
-            border-radius: 0 0 12px 12px;
+            border-radius: 0 0 16px 16px;
             max-height: 200px;
             overflow-y: auto;
             z-index: 100;
@@ -329,10 +377,11 @@
         }
 
         .suggestion-item {
-            padding: 12px 15px;
-            border-bottom: 1px solid #27272a;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
             cursor: pointer;
             font-size: 14px;
+            font-weight: 600;
             color: #d4d4d8;
         }
         .suggestion-item:last-child { border-bottom: none; }
@@ -342,8 +391,8 @@
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -352,45 +401,53 @@
 
         .modal {
             background: var(--surface);
-            padding: 25px; 
-            border-radius: 20px;
+            padding: 35px 25px; 
+            border-radius: 24px;
+            border: 1px solid var(--surface-border);
             width: 90%;
-            max-width: 450px;
+            max-width: 480px;
             max-height: 90vh; 
             overflow-y: auto; 
             text-align: center;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-sizing: border-box;
         }
 
         .modal::-webkit-scrollbar { width: 8px; }
-        .modal::-webkit-scrollbar-track { background: var(--surface); border-radius: 10px; }
-        .modal::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
-        .modal::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+        .modal::-webkit-scrollbar-track { background: transparent; }
+        .modal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
 
         @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+            0% { transform: scale(0.8) translateY(20px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
         }
 
-        .modal h2 { font-size: 28px; margin: 0 0 10px 0; }
-        .modal p { font-size: 15px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.4; white-space: pre-line; }
+        .modal h2 { font-size: 32px; margin: 0 0 15px 0; font-weight: 900; letter-spacing: 1px; }
+        .modal p { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; white-space: pre-line; }
         
-        .modal.correct h2 { color: var(--success) !important; text-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
-        .modal.wrong h2 { color: var(--danger) !important; text-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
-        .modal.gameover h2 { color: var(--warning) !important; text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
-        .modal.milestone h2 { color: #8b5cf6 !important; text-shadow: 0 0 20px rgba(139, 92, 246, 0.8); font-size: 32px; }
+        /* Popup Colors */
+        .modal.correct { border-color: var(--success); box-shadow: 0 0 40px rgba(16, 185, 129, 0.2); }
+        .modal.correct h2 { color: var(--success); text-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+        
+        .modal.wrong { border-color: var(--danger); box-shadow: 0 0 40px rgba(239, 68, 68, 0.2); }
+        .modal.wrong h2 { color: var(--danger); text-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+        
+        .modal.gameover { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); }
+        .modal.gameover h2 { color: var(--warning); text-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
+        
+        .modal.milestone { border-color: #8b5cf6; box-shadow: 0 0 50px rgba(139, 92, 246, 0.3); }
+        .modal.milestone h2 { color: #8b5cf6; text-shadow: 0 0 25px rgba(139, 92, 246, 0.8); font-size: 36px; }
 
         #feedback-cover {
-            width: 160px;
-            height: 160px;
-            border-radius: 12px;
+            width: 180px;
+            height: 180px;
+            border-radius: 16px;
             object-fit: cover;
-            margin: 0 auto 15px auto;
+            margin: 0 auto 20px auto;
             display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            border: 2px solid #27272a;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            border: 2px solid var(--surface-border);
         }
 
         .modal.correct #feedback-cover {
@@ -399,101 +456,105 @@
         }
 
         @keyframes pulseCover {
-            0% { transform: scale(1); box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
-            50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); }
-            100% { transform: scale(1); box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
+            0% { transform: scale(1); box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(16, 185, 129, 0.6); }
+            100% { transform: scale(1); box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
         }
 
         .loader {
-            border: 4px solid rgba(255,255,255,0.1);
+            border: 4px solid rgba(255,255,255,0.05);
             border-top: 4px solid var(--primary);
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px auto;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
         }
 
         /* Profil Avatar Grid */
         .avatar-grid {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 12px;
+            margin-bottom: 15px;
             flex-wrap: wrap;
         }
         
         .avatar-option {
-            width: 50px;
-            height: 50px;
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
-            border: 2px solid #27272a;
+            border: 2px solid rgba(255,255,255,0.1);
             cursor: pointer;
-            transition: 0.2s;
-            background: var(--surface);
+            transition: 0.3s;
+            background: #000;
             object-fit: cover;
         }
         
-        .avatar-option:hover { border-color: var(--primary); transform: scale(1.1); }
-        .avatar-option.selected { border-color: var(--success); box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .avatar-option:hover { border-color: var(--primary); transform: scale(1.15) translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .avatar-option.selected { border-color: var(--success); box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); transform: scale(1.1); }
 
         /* Stats Box im Profil */
         .profile-stats-box {
             display: flex;
             justify-content: space-around;
-            background: var(--bg-color);
-            padding: 15px;
-            border-radius: 12px;
-            border: 2px solid #27272a;
-            margin-bottom: 20px;
+            background: rgba(0,0,0,0.4);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid var(--surface-border);
+            margin-bottom: 25px;
         }
         .stat-item { display: flex; flex-direction: column; }
-        .stat-num { font-size: 24px; font-weight: bold; color: var(--primary); }
-        .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; }
+        .stat-num { font-size: 28px; font-weight: 900; color: var(--text); }
+        .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-top: 5px;}
 
     </style>
 </head>
 <body>
 
+    <!-- MENÜ MUSIK TOGGLE -->
+    <button id="music-toggle-btn" onclick="toggleMenuMusic()" title="Menü Musik An/Aus">🔊</button>
+
     <!-- PROFILE ERSTELLEN / LOGIN -->
     <div id="profile-overlay" class="overlay">
         <div class="modal">
             <h2 id="profile-title">Profil erstellen</h2>
-            <p id="profile-desc">Wähle deinen Avatar und lege dein Profil an:</p>
+            <p id="profile-desc">Wähle deinen Avatar und lege dein lokales Profil an:</p>
             
             <div id="avatar-select-container">
                 <div class="avatar-grid" id="avatar-grid-selection">
                     <!-- Avatare werden per JS geladen -->
                 </div>
                 
-                <!-- NEU: Eigener Bild-Upload (Base64) -->
-                <div style="margin-bottom: 20px;">
-                    <label for="avatar-upload-input" class="btn" style="padding: 8px 12px; font-size: 13px; background: var(--surface); color: var(--primary); cursor: pointer; display: inline-block; width: auto; border-color: var(--primary);">🖼️ Bild vom PC hochladen</label>
+                <!-- Bild Upload -->
+                <div style="margin-bottom: 25px;">
+                    <label for="avatar-upload-input" class="btn" style="padding: 10px 15px; font-size: 13px; background: rgba(255,255,255,0.05); color: var(--text); cursor: pointer; display: inline-block; width: auto;">🖼️ Eigenes Bild hochladen</label>
                     <input type="file" id="avatar-upload-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
                 </div>
             </div>
 
-            <input type="text" id="username-input" class="btn" style="background: var(--bg-color); text-align: center; font-size: 16px; margin-bottom: 10px;" placeholder="Dein Spielername" autocomplete="off">
-            <input type="password" id="password-input" class="btn" style="background: var(--bg-color); text-align: center; font-size: 16px; margin-bottom: 15px;" placeholder="Dein Passwort">
+            <input type="text" id="username-input" class="btn" style="background: rgba(0,0,0,0.5); text-align: center; font-size: 16px; margin-bottom: 12px;" placeholder="Dein Spielername" autocomplete="off">
+            <input type="password" id="password-input" class="btn" style="background: rgba(0,0,0,0.5); text-align: center; font-size: 16px; margin-bottom: 20px;" placeholder="Dein Passwort">
             
             <div id="artist-select-container">
-                <p style="margin-bottom: 5px; font-size: 14px; color: var(--primary); font-weight: bold;">Wähle deine Sieger-Hymne:</p>
-                <select id="fav-artist-select" class="btn" style="background: var(--bg-color); text-align: center; font-size: 16px; margin-bottom: 20px; color: var(--text);">
+                <p style="margin-bottom: 8px; font-size: 13px; color: var(--primary); font-weight: 800; text-transform: uppercase;">Wähle deine Sieger-Hymne:</p>
+                <select id="fav-artist-select" class="btn" style="background: rgba(0,0,0,0.5); text-align: center; font-size: 16px; margin-bottom: 25px; color: var(--text);">
                     <!-- Artists werden via JS geladen -->
                 </select>
             </div>
             
-            <button class="btn btn-main" onclick="handleProfileLogin()">Einloggen / Speichern</button>
+            <button class="btn btn-main" onclick="handleProfileLogin()">Startklar machen 🚀</button>
             <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
-            <p id="reset-profile-btn" style="color: var(--text-muted); font-size: 12px; cursor: pointer; margin-top: 20px; text-decoration: underline;" onclick="resetProfile()">Profil zurücksetzen (Neuer Account)</p>
+            <p id="reset-profile-btn" style="color: var(--text-muted); font-size: 12px; cursor: pointer; margin-top: 25px; text-decoration: underline;" onclick="resetProfile()">Neuen Account anlegen</p>
         </div>
     </div>
 
     <!-- ECHTES PROFIL MENÜ -->
     <div id="my-profile-screen" class="screen-container">
-        <h1 style="color: var(--primary);">MEIN PROFIL</h1>
-        <img id="profile-view-avatar" src="" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); margin: 20px auto; display: block; background: var(--surface); box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); object-fit: cover;">
-        <h2 id="profile-view-name" style="margin-top: 0;">Name</h2>
+        <h1><span class="highlight-text">MEIN</span> PROFIL</h1>
+        <img id="profile-view-avatar" src="" alt="Avatar" style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--primary); margin: 25px auto; display: block; background: #000; box-shadow: 0 0 30px rgba(139, 92, 246, 0.5); object-fit: cover;">
+        <h2 id="profile-view-name" style="margin-top: 0; font-size: 28px; letter-spacing: 1px;">Name</h2>
         
         <div class="profile-stats-box">
             <div class="stat-item">
@@ -506,33 +567,36 @@
             </div>
             <div class="stat-item">
                 <span class="stat-num" id="stat-losses" style="color: var(--danger);">0</span>
-                <span class="stat-label">Niederlagen</span>
+                <span class="stat-label">L's</span>
             </div>
         </div>
 
-        <p style="margin-bottom: 5px; font-size: 14px; color: var(--text-muted); font-weight: bold; text-align: left;">Deine Sieger-Hymne:</p>
-        <select id="edit-fav-artist-select" class="btn" style="background: var(--surface); text-align: center; font-size: 16px; margin-bottom: 25px; color: var(--text);" onchange="updateFavArtist()">
+        <p style="margin-bottom: 8px; font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; text-align: left; padding-left: 5px;">🎵 Aktuelle Sieger-Hymne:</p>
+        <select id="edit-fav-artist-select" class="btn" style="background: rgba(0,0,0,0.5); text-align: center; font-size: 16px; margin-bottom: 30px; color: var(--text);" onchange="updateFavArtist()">
             <!-- Artists via JS -->
         </select>
 
-        <button class="btn-control menu-btn" style="width: 100%; padding: 15px;" onclick="showScreen('main-menu')">Zurück zum Menü</button>
+        <button class="btn-control menu-btn" style="width: 100%; padding: 18px; font-size: 15px;" onclick="showScreen('main-menu')">Zurück zum Menü 🏠</button>
     </div>
 
     <!-- SPLASH SCREEN -->
     <div id="splash-screen" class="overlay" style="display: flex;">
-        <h1 style="color: #ef4444; margin-bottom: 30px; text-shadow: 0 0 30px rgba(239, 68, 68, 0.8); font-size: 55px;">RAP QUIZ</h1>
+        <h1 style="color: var(--danger); text-shadow: 0 0 40px rgba(239, 68, 68, 0.8); font-size: 60px;">RAP QUIZ</h1>
         <img id="splash-image" src="Screenshot%202024-06-12%20230629.png" alt="Creator Splash" onerror="this.alt='Bild nicht gefunden.'; this.style.border='none';">
         <div class="creator-credits">Erstellt von Marcus den schmalen</div>
-        <button class="btn btn-main" style="background: linear-gradient(135deg, #ef4444, #991b1b); max-width: 250px;" onclick="enterMenu()">ENTER</button>
+        <button class="btn btn-main" style="background: linear-gradient(135deg, #ef4444, #991b1b); box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);" onclick="enterMenu()">ENTER</button>
     </div>
 
     <div class="container">
         <!-- HAUPTMENÜ -->
         <div id="main-menu" class="screen-container">
             
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                <h2 id="player-greeting" style="color: var(--primary); font-size: 24px; margin: 0;">Hallo, Spieler!</h2>
-                <button class="btn-control info" onclick="openProfileScreen()">👤 Mein Profil</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--surface-border); padding-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <img id="menu-avatar-display" src="" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; box-shadow: 0 0 15px rgba(139,92,246,0.4);">
+                    <h2 id="player-greeting" style="color: var(--text); font-size: 22px; margin: 0;">Hi, Spieler!</h2>
+                </div>
+                <button class="btn-control info" style="padding: 12px 15px;" onclick="openProfileScreen()">👤 Profil</button>
             </div>
             
             <div class="mode-toggle-container">
@@ -544,7 +608,7 @@
                 <span id="label-hc">Tippen (Hardcore)</span>
             </div>
 
-            <div class="mode-toggle-container" style="margin-bottom: 25px;">
+            <div class="mode-toggle-container" style="margin-bottom: 30px;">
                 <span id="label-artist-off">Nur Songtitel zeigen</span>
                 <label class="switch">
                     <input type="checkbox" id="artist-toggle" onchange="toggleArtistName()" checked>
@@ -555,34 +619,34 @@
 
             <button class="btn btn-main btn-mp" onclick="showScreen('multiplayer-lobby')">⚔️ ONLINE 1v1 SPIELEN</button>
 
-            <p class="menu-title" style="margin-top: 30px;">Haupt-Spielmodi</p>
+            <p class="menu-title">Haupt-Spielmodi</p>
             <button class="btn btn-main" onclick="startMixedMode('all')">🔀 Alles Gemischt</button>
             <button class="btn btn-main btn-prog" onclick="startProgressiveMode()">⚡ Progressiv Mode (0.1s → 10s)</button>
-            <button class="btn btn-main" style="font-size: 16px;" onclick="startMixedMode('2010s')">📅 Nur 2010-2020 Rap</button>
+            <button class="btn btn-main" style="font-size: 16px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);" onclick="startMixedMode('2010s')">📅 Nur 2010-2020 Rap</button>
             <button class="btn btn-main btn-sc" onclick="startMixedMode('soundcloud')">☁️ SoundCloud Era Enthusiast</button>
             <button class="btn btn-main btn-gold" onclick="startMixedMode('megahits')">🌟 Mega Hits (>100M Streams)</button>
 
-            <p class="menu-title" style="margin-top: 30px;">Artist Mode (Tiefgehender Katalog)</p>
+            <p class="menu-title">Artist Mode (Katalog-Quiz)</p>
             <div class="artist-grid" id="artist-grid"></div>
         </div>
 
         <!-- MULTIPLAYER LOBBY -->
         <div id="multiplayer-lobby" class="screen-container">
-            <h1 style="color: #10b981;">1v1 LOBBY</h1>
-            <p style="color: var(--text-muted); margin-bottom: 30px;">Trete gegen einen Freund an. Der Host wählt den Modus!</p>
+            <h1 style="color: var(--success); text-shadow: 0 0 20px rgba(16,185,129,0.4);">1v1 LOBBY</h1>
+            <p style="color: var(--text-muted); margin-bottom: 35px;">Trete gegen einen Freund an. Der Host wählt den Modus!</p>
             
-            <button class="btn btn-main" onclick="createRoom()">Neue Lobby erstellen (Code generieren)</button>
-            <h2 id="room-code-display" style="color: var(--success); margin: 20px 0; font-size: 32px; letter-spacing: 5px;"></h2>
+            <button class="btn btn-main" style="background: linear-gradient(135deg, #10b981, #047857); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);" onclick="createRoom()">Neue Lobby erstellen</button>
+            <h2 id="room-code-display" style="color: var(--text); margin: 25px 0; font-size: 40px; letter-spacing: 8px; font-weight: 900;"></h2>
             
-            <hr style="border-color: #27272a; margin: 25px 0;">
+            <hr style="border-color: var(--surface-border); margin: 30px 0;">
             
-            <div style="background: var(--surface); padding: 20px; border-radius: 12px; border: 2px solid #27272a; margin-bottom: 20px;">
-                <input type="number" id="join-code-input" class="btn" style="background: var(--bg-color); text-align: center; font-size: 18px; margin-bottom: 10px;" placeholder="4-stelligen Code eingeben">
-                <button class="btn btn-main btn-mp" style="margin-top: 0;" onclick="joinRoom()">Lobby Beitreten</button>
+            <div style="background: rgba(0,0,0,0.3); padding: 25px; border-radius: 20px; border: 1px solid var(--surface-border); margin-bottom: 25px;">
+                <input type="number" id="join-code-input" class="btn" style="background: rgba(0,0,0,0.6); text-align: center; font-size: 20px; margin-bottom: 15px; letter-spacing: 3px;" placeholder="4-stelligen Code">
+                <button class="btn btn-main btn-mp" style="margin: 0; box-shadow: none;" onclick="joinRoom()">Lobby Beitreten</button>
             </div>
             
-            <p id="mp-status" style="color: var(--warning); font-weight: bold; font-size: 18px;"></p>
-            <button class="btn-control menu-btn" style="width: 100%; padding: 15px; margin-top: 20px;" onclick="cancelMultiplayer()">Zurück zum Menü</button>
+            <p id="mp-status" style="color: var(--warning); font-weight: 800; font-size: 16px; text-transform: uppercase;"></p>
+            <button class="btn-control menu-btn" style="width: 100%; padding: 18px; font-size: 15px; margin-top: 25px;" onclick="cancelMultiplayer()">Zurück zum Menü 🏠</button>
         </div>
 
         <!-- SPIELBILDSCHIRM -->
@@ -594,7 +658,7 @@
                     <img id="ingame-my-avatar" class="player-avatar" src="" alt="Ich">
                     <div class="player-info">
                         <span id="ingame-my-name" class="player-name-display">Du</span>
-                        <span id="score-display">Score: 0</span>
+                        <span id="score-display">0</span>
                     </div>
                 </div>
                 
@@ -602,10 +666,10 @@
                 
                 <!-- Gegner Spieler -->
                 <div class="stats-player" id="opponent-container" style="flex-direction: row-reverse;">
-                    <img id="ingame-opp-avatar" class="player-avatar" src="" style="border-color: var(--danger);" alt="Gegner">
+                    <img id="ingame-opp-avatar" class="player-avatar" src="" style="border-color: var(--danger); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);" alt="Gegner">
                     <div class="player-info" style="text-align: right;">
                         <span id="ingame-opp-name" class="player-name-display">Gegner</span>
-                        <span id="opponent-display">Score: 0</span>
+                        <span id="opponent-display">0</span>
                     </div>
                 </div>
             </div>
@@ -615,10 +679,10 @@
             </div>
 
             <div class="game-controls">
-                <button class="btn-control menu-btn" onclick="backToMenu()">🏠 Menü</button>
+                <button class="btn-control menu-btn" onclick="backToMenu()">🏠 Beenden</button>
                 <button id="replay-btn" class="btn-control info" onclick="replaySnippet()">🔄 Replay</button>
                 <button id="add-time-btn" class="btn-control" onclick="addTime()">+3s (Max 10s)</button>
-                <button id="skip-btn" class="btn-control danger" onclick="skipSong()">⏭️ Skip (-250 Pkt)</button>
+                <button id="skip-btn" class="btn-control danger" onclick="skipSong()">⏭️ Skip (-250)</button>
             </div>
             
             <div id="options" class="options-container"></div>
@@ -628,15 +692,15 @@
                     <input type="text" id="guess-input" placeholder="Songtitel eingeben..." autocomplete="off" oninput="updateSuggestions()">
                     <div id="suggestions-box"></div>
                 </div>
-                <button class="btn btn-main" style="margin-top: 0; font-size: 16px; padding: 12px;" onclick="checkTextInput()">Einloggen</button>
+                <button class="btn btn-main" style="margin-top: 0; font-size: 16px; padding: 16px; border-radius: 16px;" onclick="checkTextInput()">Einloggen</button>
             </div>
         </div>
 
         <!-- LADE-SCREEN -->
         <div id="loading-overlay" class="overlay">
-            <div class="modal" style="background: transparent; box-shadow: none;">
+            <div class="modal" style="background: transparent; box-shadow: none; border: none;">
                 <div class="loader"></div>
-                <h2 style="color: white; font-size: 24px;" id="loading-text">Lade Datenbank...</h2>
+                <h2 style="color: white; font-size: 24px; text-shadow: 0 0 20px rgba(255,255,255,0.5);" id="loading-text">Bereite Arena vor...</h2>
             </div>
         </div>
 
@@ -646,10 +710,10 @@
                 <h2 id="feedback-title">Titel</h2>
                 
                 <img id="feedback-cover" src="" alt="Album Cover">
-                <img id="milestone-image" src="" alt="Milestone Reward" style="display: none; width: 100%; max-height: 250px; object-fit: cover; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--primary); box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);">
+                <img id="milestone-image" src="" alt="Milestone Reward" style="display: none; width: 100%; max-height: 250px; object-fit: cover; border-radius: 16px; margin-bottom: 20px; border: 2px solid var(--primary); box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);">
                 
                 <p id="feedback-desc">Beschreibung</p>
-                <h3 id="mp-result" style="color: var(--primary); display: none; margin-bottom: 15px; font-size: 16px; white-space: pre-line;"></h3>
+                <h3 id="mp-result" style="color: var(--text); display: none; margin-bottom: 25px; font-size: 15px; font-weight: 600; white-space: pre-line; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;"></h3>
                 <button id="feedback-btn" class="btn btn-main" onclick="handleFeedbackNext()" style="margin-bottom: 0;">Nächste Runde ➔</button>
             </div>
         </div>
@@ -695,7 +759,6 @@
         let myFavArtist = localStorage.getItem('rapquiz_fav_artist') || '';
         let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix';
         
-        // Lokale Stats laden oder neu erstellen
         let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, draws: 0 };
         
         const avatarOptions = [
@@ -713,7 +776,65 @@
         let gameIsOver = false;
         let opponentFinalStats = null;
 
-        // Bild von PC hochladen (Resize + Base64)
+        // MENÜ MUSIK SETUP
+        let menuAudio = new Audio();
+        menuAudio.volume = 0.2;
+        menuAudio.loop = true;
+        let isMenuMusicPlaying = false;
+
+        function toggleMenuMusic() {
+            let btn = document.getElementById('music-toggle-btn');
+            if (isMenuMusicPlaying) {
+                menuAudio.pause();
+                isMenuMusicPlaying = false;
+                btn.innerText = "🔇";
+                btn.style.opacity = "0.5";
+            } else {
+                menuAudio.play().catch(e => console.log(e));
+                isMenuMusicPlaying = true;
+                btn.innerText = "🔊";
+                btn.style.opacity = "1";
+            }
+        }
+
+        function playMenuMusic() {
+            if (!myFavArtist) return;
+            document.getElementById('music-toggle-btn').style.display = 'block';
+            
+            // Wenn schon ein Song drin ist, einfach weiterlaufen lassen
+            if (menuAudio.src && menuAudio.src !== "") {
+                if (isMenuMusicPlaying) menuAudio.play().catch(e => console.log("Autoplay blockiert."));
+                return;
+            }
+
+            // Neuen Song des Lieblingskünstlers holen
+            const cb = 'deezer_menu_' + Date.now();
+            window[cb] = function(res) {
+                if (res && res.data) {
+                    let tracks = res.data.filter(t => t.preview && t.artist.name.toLowerCase().includes(myFavArtist.toLowerCase()));
+                    if (tracks.length > 0) {
+                        let t = tracks[Math.floor(Math.random() * tracks.length)];
+                        menuAudio.src = t.preview;
+                        // Standardmäßig versuchen wir es abzuspielen
+                        menuAudio.play().then(() => {
+                            isMenuMusicPlaying = true;
+                            document.getElementById('music-toggle-btn').innerText = "🔊";
+                            document.getElementById('music-toggle-btn').style.opacity = "1";
+                        }).catch(e => {
+                            // Autoplay vom Browser blockiert
+                            isMenuMusicPlaying = false;
+                            document.getElementById('music-toggle-btn').innerText = "🔇";
+                            document.getElementById('music-toggle-btn').style.opacity = "0.5";
+                        });
+                    }
+                }
+            };
+            const script = document.createElement('script');
+            script.src = `https://api.deezer.com/search?q=artist:"${encodeURIComponent(myFavArtist)}"&limit=30&output=jsonp&callback=${cb}`;
+            document.head.appendChild(script);
+        }
+
+        // Bild Upload für Avatar
         function handleImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -733,7 +854,7 @@
                     
                     ctx.drawImage(img, x, y, size, size, 0, 0, 150, 150);
                     
-                    // Wandelt Bild in Text um, um es ohne Datenbank zu speichern
+                    // Base64 Code erzeugen
                     const base64Avatar = canvas.toDataURL('image/jpeg', 0.8);
                     myAvatar = base64Avatar;
                     
@@ -781,7 +902,6 @@
                 grid.appendChild(img);
             });
 
-            // Wenn das gespeicherte Bild ein hochgeladenes (Base64) ist, lade es wieder in die Vorschau
             if (!foundCustom && myAvatar && myAvatar.length > 100) {
                 let customPreview = document.createElement('img');
                 customPreview.id = 'custom-avatar-preview';
@@ -860,9 +980,13 @@
                 myFavArtist = fav;
             }
             
-            document.getElementById('player-greeting').innerText = `Bereit, ${playerName}?`;
+            document.getElementById('player-greeting').innerText = `Hi, ${playerName}!`;
+            document.getElementById('menu-avatar-display').src = myAvatar;
             document.getElementById('profile-overlay').style.display = 'none';
             err.style.display = 'none';
+            
+            // Starte Menü-Musik nach erfolgreichem Login
+            playMenuMusic();
         }
 
         function resetProfile() {
@@ -882,6 +1006,11 @@
             document.getElementById('username-input').value = '';
             document.getElementById('password-input').value = '';
             document.getElementById('profile-error').style.display = 'none';
+            
+            menuAudio.pause();
+            menuAudio.src = '';
+            document.getElementById('music-toggle-btn').style.display = 'none';
+            
             checkProfile();
         }
 
@@ -899,6 +1028,9 @@
         function updateFavArtist() {
             myFavArtist = document.getElementById('edit-fav-artist-select').value;
             localStorage.setItem('rapquiz_fav_artist', myFavArtist);
+            // Wechselt die Menümusik, wenn man im Profil den Artist ändert
+            menuAudio.src = '';
+            playMenuMusic();
         }
 
         function saveGameStats(result) {
@@ -910,7 +1042,7 @@
         }
 
         // ==========================================
-        // SOCKET.IO EVENTS
+        // SOCKET.IO EVENTS & ECHTES KNOCKOUT
         // ==========================================
         socket.on('roomCreated', (code) => {
             currentRoom = code;
@@ -948,22 +1080,34 @@
         });
 
         socket.on('updateOpponentStats', (data) => {
-            document.getElementById('opponent-display').innerText = `Score: ${data.score}`;
+            document.getElementById('opponent-display').innerText = data.score;
             if(data.playerName) document.getElementById('ingame-opp-name').innerText = data.playerName;
             if(data.avatar) document.getElementById('ingame-opp-avatar').src = data.avatar;
         });
 
-        // ==========================================
-        // SOFORTIGES ENDE & AUSWERTUNGS-BUG FIX
-        // ==========================================
+        // HIER IST DAS HERZSTÜCK VOM SUDDEN DEATH FIX
         socket.on('opponentGameOver', (data) => {
             opponentFinalStats = data; 
             
             if (gameIsOver) {
+                // Wir sind schon auf dem Auswertungsbildschirm
                 evaluateWinnerAndPlayAnthem();
             } else {
-                // Wenn der Gegner stirbt, beendet der Client sein Spiel hier zwangsweise sofort.
-                triggerGameOver(false); 
+                // SUDDEN DEATH: Gegner ist gestorben, bevor wir fertig waren. Wir frieren sofort ein!
+                gameIsOver = true;
+                audio.pause();
+                clearTimeout(precisionTimer);
+                
+                // Wir verstecken die Runden-Inhalte, damit man nichts mehr drücken kann
+                document.getElementById('options').style.display = 'none';
+                document.getElementById('text-input-container').style.display = 'none';
+                
+                // Wir senden dem Server unseren aktuellen Punktestand zum exakten Abbruch-Zeitpunkt
+                socket.emit('gameOver', { roomCode: currentRoom, score: score, favArtist: myFavArtist });
+                
+                // Zeige den Ladebildschirm kurz oder gehe direkt in die Auswertung
+                document.getElementById('feedback-overlay').style.display = 'flex';
+                evaluateWinnerAndPlayAnthem();
             }
         });
 
@@ -972,30 +1116,32 @@
             let title = document.getElementById('feedback-title');
             let desc = document.getElementById('feedback-desc');
             let resultText = document.getElementById('mp-result');
+            let cover = document.getElementById('feedback-cover');
             
             resultText.style.display = 'block';
+            cover.style.display = 'none';
+            
             let winnerArtist = '';
-
-            // Explizite Punkteumwandlung, um Bugs beim Vergleichen zu verhindern
             let myFinalScore = parseInt(score) || 0;
             let oppFinalScore = parseInt(opponentFinalStats.score) || 0;
 
+            // KLARE FARBEN UND ZUWEISUNGEN FÜR WIN/LOSS
             if (myFinalScore > oppFinalScore) {
-                modal.className = "modal correct"; // ERZWINGT KNALLGRÜNES POPUP FÜR SIEGER!
+                modal.className = "modal correct"; // ERZWINGT GRÜN
                 title.innerText = "🏆 DU HAST GEWONNEN!";
-                desc.innerText = `Das Duell ist vorbei!\n\nDein Score: ${myFinalScore}\nGegner Score: ${oppFinalScore}`;
+                desc.innerText = `Knockout! Dein Gegner ist raus!\n\nDein Score: ${myFinalScore}\nGegner Score: ${oppFinalScore}`;
                 resultText.innerText = `Deine Sieger-Hymne von ${myFavArtist} wird geladen... 🎵`;
                 winnerArtist = myFavArtist;
                 saveGameStats('win');
             } else if (myFinalScore < oppFinalScore) {
-                modal.className = "modal wrong"; // ERZWINGT KNALLROTES POPUP FÜR VERLIERER!
+                modal.className = "modal wrong"; // ERZWINGT ROT
                 title.innerText = "❌ DU HAST VERLOREN!";
                 desc.innerText = `Dein Gegner hat dich besiegt!\n\nDein Score: ${myFinalScore}\nGegner Score: ${oppFinalScore}`;
                 resultText.innerText = `Sieger-Hymne von ${opponentFinalStats.favArtist} wird geladen... 🎵`;
                 winnerArtist = opponentFinalStats.favArtist;
                 saveGameStats('loss');
             } else {
-                modal.className = "modal gameover"; // GELBES POPUP FÜR UNENTSCHIEDEN
+                modal.className = "modal gameover"; // ERZWINGT GELB
                 title.innerText = "🤝 UNENTSCHIEDEN!";
                 desc.innerText = `Ihr seid exakt gleichauf!\n\nBeide haben ${myFinalScore} Punkte!`;
                 resultText.style.display = 'none';
@@ -1003,9 +1149,9 @@
                 return; 
             }
 
-            sfxAudio.pause();
+            sfxAudio.pause(); // Falls der Roddy Ricch Song lief, abbrechen!
 
-            // Hymnen-Suche repariert: Zieht jetzt exakt den richtigen Artist
+            // HYMNE SUCHEN (STRENGER FILTER)
             const callbackName = 'deezer_anthem_' + Date.now();
             window[callbackName] = function(response) {
                 if (response && response.data && response.data.length > 0) {
@@ -1064,7 +1210,7 @@
         }
 
         // ==========================================
-        // SPIEL-DATEN
+        // SPIEL-DATEN & LAUNCH
         // ==========================================
         let songsPool = [];
         let playedSongIds = new Set();
@@ -1174,7 +1320,7 @@
             updateStatsDisplay();
             sfxAudio.pause(); 
             document.getElementById('suggestions-box').style.display = 'none';
-            document.getElementById('mp-result').style.display = 'none'; // Verhindert Bug bei neuer Runde
+            document.getElementById('mp-result').style.display = 'none';
             
             let milestoneImg = document.getElementById('milestone-image');
             if(milestoneImg) {
@@ -1194,10 +1340,15 @@
                 milestoneImg.style.display = 'none';
                 milestoneImg.src = '';
             }
+            
+            // Wenn man zurück ins Menü geht, Menümusik weiterspielen (wenn Toggle an ist)
+            if(isMenuMusicPlaying) {
+                menuAudio.play().catch(e => console.log(e));
+            }
         }
 
         async function startProgressiveMode() {
-            document.getElementById('loading-text').innerText = "Lade Progressiv-Modus...";
+            document.getElementById('loading-text').innerText = "Bereite Arena vor...";
             document.getElementById('loading-overlay').style.display = 'flex';
             resetGameStats();
             currentMode = 'progressive';
@@ -1218,7 +1369,7 @@
         }
 
         async function startMixedMode(mode) {
-            document.getElementById('loading-text').innerText = "Lade Datenbank...";
+            document.getElementById('loading-text').innerText = "Bereite Arena vor...";
             document.getElementById('loading-overlay').style.display = 'flex';
             resetGameStats();
             currentMode = mode;
@@ -1259,7 +1410,7 @@
         }
 
         async function startArtistMode(artist) {
-            document.getElementById('loading-text').innerText = `Lade Katalog von ${artist}...`;
+            document.getElementById('loading-text').innerText = `Bereite Arena vor...`;
             document.getElementById('loading-overlay').style.display = 'flex';
             resetGameStats();
             currentMode = 'artist';
@@ -1301,6 +1452,9 @@
         }
 
         function launchGame() {
+            // Menü-Musik pausieren, wenn das Spiel startet
+            menuAudio.pause();
+            
             document.getElementById('loading-overlay').style.display = 'none';
             showScreen('game-screen');
             
@@ -1375,7 +1529,6 @@
             }
             
             document.getElementById('suggestions-box').style.display = 'none';
-            document.getElementById('mp-result').style.display = 'none'; 
             
             let unplayedSongs = songsPool.filter(song => !playedSongIds.has(song.id));
             if (unplayedSongs.length === 0) {
@@ -1540,7 +1693,6 @@
             let btn = document.getElementById('feedback-btn');
             
             document.getElementById('suggestions-box').style.display = 'none';
-            document.getElementById('mp-result').style.display = 'none'; 
             cover.style.display = 'none';
             
             let milestoneImg = document.getElementById('milestone-image');
@@ -1590,6 +1742,7 @@
                     desc.innerText = `Ein Leben verloren!\n\nDas war:\n${currentSong.title} - ${currentSong.artist.name}`;
                 }
                 
+                // LEBEN WEG? SOFORTIGE AUSWERTUNG!
                 if (lives <= 0) {
                     setTimeout(() => triggerGameOver(false), 2000);
                 }
@@ -1625,26 +1778,28 @@
             modal.className = "modal gameover";
             cover.style.display = 'none';
             
-            title.innerText = victory ? "🏆 DURCHGESPIELT!" : "💀 GAME OVER";
-            desc.innerText = victory ? `Wahnsinn, du hast alle Songs in diesem Modus erkannt!\n\nDein finaler Score: ${score}` : `Du hast alle Leben verloren!\n\nDein finaler Score: ${score}`;
-            
-            // Sad-Song nur Solo
-            if (!victory && score < 500 && !isMultiplayer) {
-                sfxAudio.src = "roddy.mp3";
-                sfxAudio.play().catch(e => console.log("Audio Fehler:", e));
-            }
-
             if (isMultiplayer) {
+                // Ich bin tot. Ich teile das dem Gegner mit, damit er auch beendet und auswertet.
+                title.innerText = "💀 AUSGESCHIEDEN!";
+                desc.innerText = "Du hast alle Leben verloren. Warte auf die Auswertung...";
+                document.getElementById('mp-result').innerText = "Lade finales Ergebnis...";
+                document.getElementById('mp-result').style.display = 'block';
+                
                 socket.emit('gameOver', { roomCode: currentRoom, score: score, favArtist: myFavArtist });
                 
+                // Wenn der Gegner auch schon tot war (oder durch mein Emit sofort ausgewertet wird):
                 if (opponentFinalStats) {
                     evaluateWinnerAndPlayAnthem();
-                } else {
-                    document.getElementById('mp-result').innerText = "Warte auf Gegner...";
-                    document.getElementById('mp-result').style.display = 'block';
                 }
             } else {
+                title.innerText = victory ? "🏆 DURCHGESPIELT!" : "💀 GAME OVER";
+                desc.innerText = victory ? `Wahnsinn, du hast alle Songs in diesem Modus erkannt!\n\nDein finaler Score: ${score}` : `Du hast alle Leben verloren!\n\nDein finaler Score: ${score}`;
                 saveGameStats(victory ? 'win' : 'loss');
+                
+                if (!victory && score < 500) {
+                    sfxAudio.src = "roddy.mp3";
+                    sfxAudio.play().catch(e => console.log("Audio Fehler:", e));
+                }
             }
 
             btn.innerText = "Zurück zum Menü 🏠";
@@ -1658,7 +1813,7 @@
         }
 
         function updateStatsDisplay() {
-            document.getElementById('score-display').innerText = "Score: " + score;
+            document.getElementById('score-display').innerText = score;
             let hearts = "";
             for(let i=0; i<3; i++) {
                 hearts += i < lives ? "❤️" : "🖤";
