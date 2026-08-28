@@ -11,7 +11,7 @@
 
         :root {
             --bg-color: #050505;
-            --surface: rgba(20, 20, 25, 0.35); /* Transparente Kacheln */
+            --surface: rgba(20, 20, 25, 0.35);
             --surface-border: rgba(255, 255, 255, 0.15);
             --primary: #8b5cf6;
             --primary-hover: #7c3aed;
@@ -33,12 +33,11 @@
         #app-background {
             position: fixed; top: -2%; left: -2%; width: 104%; height: 104%;
             background-size: cover; background-position: center 20%;
-            filter: blur(8px) brightness(0.4); /* Klar sichtbarer Artist im Hintergrund */
+            filter: blur(8px) brightness(0.4); 
             z-index: -2; transition: background-image 1s ease-in-out;
             background-color: var(--bg-color);
         }
 
-        /* Scanline Overlay (Retro/Console Look) */
         .scanlines {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
@@ -84,11 +83,11 @@
 
         .section-title { font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; border-bottom: 2px solid var(--surface-border); padding-bottom: 10px; color: white; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
 
-        /* --- CARDS & UI (Stark Transparent / Glassmorphism) --- */
+        /* --- CARDS & UI --- */
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 40px; }
         
         .ea-card {
-            background: var(--surface); /* Transparent für den Hintergrund */
+            background: var(--surface); 
             backdrop-filter: blur(12px);
             border: 1px solid var(--surface-border);
             border-top: 1px solid rgba(255,255,255,0.25);
@@ -121,14 +120,12 @@
         .artist-tile { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; color: white; backdrop-filter: blur(5px); }
         .artist-tile:hover { background: var(--primary); border-color: var(--primary); }
 
-        /* --- FORMS & INPUTS --- */
         .ea-input { width: 100%; padding: 18px; background: rgba(0,0,0,0.7); border: 1px solid var(--surface-border); color: white; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; margin-bottom: 15px; text-align: center; transition: 0.3s; backdrop-filter: blur(5px); }
         .ea-input:focus { outline: none; border-color: var(--primary); background: rgba(0,0,0,0.9); }
 
         .btn-action { background: var(--primary); color: white; border: none; padding: 18px; font-size: 16px; font-weight: 800; border-radius: 12px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; box-shadow: 0 5px 15px rgba(139,92,246,0.3); }
         .btn-action:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139,92,246,0.5); }
 
-        /* --- MULTIPLAYER LOBBY UI --- */
         .lobby-players-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
         .lobby-player-card { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); border-radius: 12px; padding: 15px; display: flex; align-items: center; gap: 15px; backdrop-filter: blur(8px); }
         .lobby-player-card img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; object-fit: cover; }
@@ -145,7 +142,6 @@
         .team-score-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
         .team-score-num { font-size: 24px; font-weight: 900; }
         .score-blue { color: #60a5fa; } .score-red { color: #f87171; }
-        
         #lives-display { font-size: 20px; letter-spacing: 2px; text-align: center; }
 
         .visualizer { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(from 0deg, var(--primary), transparent); margin: 0 auto 40px auto; animation: spin 3s linear infinite; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(139,92,246,0.3); }
@@ -165,12 +161,11 @@
         .suggestion-item { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 14px; font-weight: 700; color: white;}
         .suggestion-item:hover { background: var(--primary); }
 
-        /* Muted Tag-Team Overlay */
         #muted-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); border-radius: 20px; z-index: 50; flex-direction: column; justify-content: center; align-items: center; border: 2px solid var(--primary); }
 
         /* --- OVERLAYS & MODALS --- */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal { background: rgba(20, 20, 25, 0.9); padding: 40px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 450px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s ease; backdrop-filter: blur(20px); }
+        .modal { background: rgba(20, 20, 25, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
         .modal h2 { font-size: 28px; margin: 0 0 10px 0; font-weight: 900; }
@@ -186,28 +181,23 @@
 </head>
 <body>
 
-    <!-- DYNAMISCHER HINTERGRUND -->
-    <div id="app-background"></div>
+    <img id="app-background" src="" alt="">
     <div class="scanlines"></div>
 
-    <!-- MENÜ MUSIK TOGGLE -->
     <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Musik An</button>
 
-    <!-- PROFILE ERSTELLEN / LOGIN -->
     <div id="profile-overlay" class="overlay" style="display: flex;">
         <div class="modal">
             <h2 id="profile-title" style="color: var(--primary);">Ultimate Team</h2>
-            <p id="profile-desc">Lege deinen Namen fest und wähle deinen <b>Lieblings-Artist</b>.<br>Sein Bild wird automatisch dein Avatar und dein HD-Hintergrund!</p>
             
-            <input type="text" id="username-input" class="ea-input" placeholder="Spielername" autocomplete="off">
-            <input type="password" id="password-input" class="ea-input" placeholder="Passwort">
+            <input type="text" id="username-input" class="ea-input" style="text-align: center;" placeholder="Spielername" autocomplete="off">
+            <input type="password" id="password-input" class="ea-input" style="text-align: center;" placeholder="Passwort">
             
-            <div id="artist-select-container">
-                <select id="fav-artist-select" class="ea-input" style="color: var(--primary); cursor: pointer;">
-                    <!-- Artists werden via JS geladen -->
-                </select>
-                
-                <p style="margin-bottom: 5px; margin-top: 10px; font-size: 12px; color: var(--primary); font-weight: 800; text-transform: uppercase; text-align: left;">2. Suche deine Menü-Musik</p>
+            <div id="artist-select-container" style="text-align: left;">
+                <p style="margin-bottom: 5px; font-size: 12px; color: var(--primary); font-weight: 800; text-transform: uppercase;">1. Wähle deinen Artist (Avatar & Hintergrund)</p>
+                <select id="fav-artist-select" class="ea-input" style="color: white; cursor: pointer;"></select>
+
+                <p style="margin-bottom: 5px; margin-top: 10px; font-size: 12px; color: var(--primary); font-weight: 800; text-transform: uppercase;">2. Suche deine Hymne (Hintergrund-Musik)</p>
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                     <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1; text-align: left;" placeholder="z.B. Sicko Mode">
                     <button class="btn-action" style="width: auto; padding: 0 20px;" onclick="searchMenuSong('setup')">🔍</button>
@@ -215,36 +205,33 @@
                 <select id="menu-song-select" class="ea-input" style="display: none; color: var(--success); font-size: 14px; cursor: pointer;"></select>
             </div>
             
-            <button class="btn-action" onclick="handleProfileLogin()">Einloggen ➔</button>
+            <button class="btn-action" onclick="handleProfileLogin()" style="margin-top: 15px;">Einloggen ➔</button>
             <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
             <p style="color: var(--text-muted); font-size: 12px; cursor: pointer; margin-top: 20px; text-decoration: underline;" onclick="resetProfile()">Neuen Account anlegen</p>
         </div>
     </div>
 
-    <!-- HAUPT LAYOUT -->
     <div id="app-layout">
-        <!-- SIDEBAR -->
         <nav id="sidebar">
             <div class="sidebar-logo">RAP<span>QUIZ</span></div>
-            
             <div class="sidebar-user">
                 <img id="sidebar-avatar" class="sidebar-avatar" src="">
                 <div class="sidebar-user-info">
                     <span id="sidebar-name" class="sidebar-name">Name</span>
+                    <span class="sidebar-status">Bereit</span>
                 </div>
             </div>
-
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+            <div class="nav-menu">
                 <div id="nav-play" class="nav-item active" onclick="switchTab('play-tab', this)">🎮 Spielen</div>
-                <div id="nav-mp" class="nav-item" onclick="switchTab('multiplayer-tab', this)">⚔️ Multiplayer (2v2)</div>
+                <div id="nav-mp" class="nav-item" onclick="switchTab('multiplayer-tab', this)">⚔️ Online 1v1</div>
                 <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 Mein Club</div>
+            </div>
+            <div class="sidebar-footer">
+                <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔇 Musik Aus</button>
             </div>
         </nav>
 
-        <!-- MAIN CONTENT -->
         <main id="main-content">
-            
-            <!-- SPIELEN TAB -->
             <div id="play-tab" class="tab-content active">
                 <div class="settings-bar">
                     <div class="settings-group">
@@ -294,48 +281,33 @@
                 <div class="artist-list" id="artist-grid"></div>
             </div>
 
-            <!-- MULTIPLAYER TAB -->
             <div id="multiplayer-tab" class="tab-content">
-                <div class="section-title">Tag-Team Lobby (Max. 4 Spieler)</div>
-                
-                <div class="cards-grid" id="lobby-setup-view" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-                    <div class="ea-card" style="border-color: var(--success); cursor: default;">
-                        <h3 style="margin-top: 0; color: var(--success); font-weight: 900;">HOST MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Erstelle den Raum. Sobald deine Freunde da sind, wählst du den Modus.</p>
-                        <button class="btn-action" style="background: var(--success);" onclick="createRoom()">Raum erstellen</button>
+                <div class="section-title">Online Lobby</div>
+                <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                    <div class="ea-card" style="border-color: var(--success); cursor: default; justify-content: flex-start;">
+                        <h3 style="margin-top: 0; color: var(--success); font-weight: 800; letter-spacing: 1px;">HOST MATCH</h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">Erstelle eine Lobby und teile den Code. Der Host wählt danach den Modus.</p>
+                        <button class="btn-action" style="background: var(--success); margin-bottom: 20px;" onclick="createRoom()">Code Generieren</button>
+                        <div style="text-align: center;">
+                            <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Dein Raum-Code:</span>
+                            <h2 id="room-code-display" style="margin: 0; font-size: 40px; letter-spacing: 8px; color: white;">----</h2>
+                        </div>
                     </div>
-
-                    <div class="ea-card" style="cursor: default;">
-                        <h3 style="margin-top: 0; color: white; font-weight: 900;">JOIN MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Gib den Code deines Freundes ein.</p>
-                        <input type="number" id="join-code-input" class="ea-input" style="letter-spacing: 5px; font-size: 20px;" placeholder="CODE">
+                    <div class="ea-card" style="cursor: default; justify-content: flex-start;">
+                        <h3 style="margin-top: 0; color: white; font-weight: 800; letter-spacing: 1px;">JOIN MATCH</h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">Gib den 4-stelligen Code deines Freundes ein, um der Lobby beizutreten.</p>
+                        <input type="number" id="join-code-input" class="ea-input" style="letter-spacing: 5px; font-size: 24px; text-align: center;" placeholder="CODE">
                         <button class="btn-action" onclick="joinRoom()">Beitreten</button>
                     </div>
                 </div>
-
-                <!-- LOBBY WAITING ROOM -->
-                <div id="lobby-waiting-view" style="display: none;">
-                    <div style="text-align: center; margin-bottom: 30px;">
-                        <h2 style="margin: 0; color: var(--text-muted); font-size: 14px; text-transform: uppercase;">Raum-Code:</h2>
-                        <h1 id="room-code-display" style="margin: 0; font-size: 50px; color: var(--success); letter-spacing: 10px;">----</h1>
-                    </div>
-                    
-                    <h3 style="color: white; font-weight: 800; border-bottom: 1px solid var(--surface-border); padding-bottom: 10px;">Team Blau</h3>
-                    <div class="lobby-players-grid" id="team-blue-grid"></div>
-                    
-                    <h3 style="color: white; font-weight: 800; border-bottom: 1px solid var(--surface-border); padding-bottom: 10px;">Team Rot</h3>
-                    <div class="lobby-players-grid" id="team-red-grid"></div>
-
-                    <button id="btn-start-multiplayer" class="btn-action" style="display: none; margin-top: 20px;" onclick="hostStartGame()">Spiel Starten (Modus wählen)</button>
-                    <p id="mp-status" style="color: var(--warning); font-weight: 800; text-align: center; margin-top: 15px; font-size: 14px;"></p>
+                <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid var(--surface-border);">
+                    <p id="mp-status" style="color: var(--warning); font-weight: 800; margin: 0; font-size: 16px; text-transform: uppercase;">Nicht verbunden</p>
                 </div>
             </div>
 
-            <!-- PROFIL TAB -->
             <div id="profile-tab" class="tab-content">
                 <div class="section-title">Mein Club</div>
-                
-                <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; backdrop-filter: blur(10px);">
+                <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center;">
                     <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
                     <div style="text-align: left;">
                         <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
@@ -358,7 +330,7 @@
                     </div>
                 </div>
 
-                <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left; backdrop-filter: blur(10px);">
+                <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Artist (Avatar & Hintergrund) ändern</h3>
                     <select id="edit-fav-artist-select" class="ea-input" onchange="updateFavArtist()"></select>
 
@@ -370,15 +342,12 @@
                     <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
                 </div>
             </div>
-
         </main>
     </div>
 
     <!-- GAME SCREEN -->
     <div id="game-screen">
         <div class="game-inner">
-            
-            <!-- STUMM OVERLAY FÜR PARTNER -->
             <div id="muted-overlay">
                 <h1 style="color: var(--primary); font-size: 60px; margin: 0;">🎧</h1>
                 <h2 style="color: white; margin-top: 10px;">DEIN PARTNER RÄT...</h2>
@@ -390,12 +359,10 @@
                     <span class="team-score-title score-blue">Team Blau</span>
                     <span id="score-blue" class="team-score-num">0</span>
                 </div>
-                
                 <div id="lives-display">
                     <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Deine Leben</div>
                     <span id="hearts-container">❤️❤️❤️</span>
                 </div>
-                
                 <div class="team-score-box">
                     <span class="team-score-title score-red">Team Rot</span>
                     <span id="score-red" class="team-score-num">0</span>
@@ -404,8 +371,14 @@
             
             <div class="visualizer"><div class="visualizer-inner">🎵</div></div>
 
+            <div class="game-controls">
+                <button onclick="backToMenu()">🏠 Aufgeben</button>
+                <button onclick="replaySnippet()" style="border-color: #3b82f6;">🔄 Replay</button>
+                <button id="add-time-btn" onclick="addTime()">+3s</button>
+                <button onclick="skipSong()" style="border-color: var(--danger); color: var(--danger);">⏭️ Skip (-250)</button>
+            </div>
+            
             <div id="options" class="options-container"></div>
-
             <div id="text-input-container" style="display: none;">
                 <input type="text" id="guess-input" class="ea-input" placeholder="Songtitel eingeben..." autocomplete="off" oninput="updateSuggestions()">
                 <div id="suggestions-box"></div>
@@ -446,74 +419,72 @@
         // ==========================================
         // SYSTEM & PROFIL
         // ==========================================
-        // WICHTIG: Server-URL hier prüfen. Wenn es mukke886-1 ist, passe es hier an!
         const SERVER_URL = 'https://mukke886.onrender.com';
         const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
         
-        // Socket Verbindung checken
-        socket.on('connect', () => {
-            let el = document.getElementById('mp-status');
-            if(el) { el.innerText = '🟢 Bereit für Multiplayer'; el.style.color = 'var(--success)'; }
-        });
-        socket.on('connect_error', () => {
-            let el = document.getElementById('mp-status');
-            if(el) { el.innerText = '🔴 Server nicht erreichbar'; el.style.color = 'var(--danger)'; }
-        });
+        socket.on('connect', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🟢 Bereit für Multiplayer'; el.style.color = 'var(--success)'; } });
+        socket.on('connect_error', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🔴 Server nicht erreichbar'; el.style.color = 'var(--danger)'; } });
 
-        let playerName = localStorage.getItem('rapquiz_username');
-        let savedPw = localStorage.getItem('rapquiz_password');
-        
-        let myFavArtist = localStorage.getItem('rapquiz_fav_artist') || '';
-        let mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || '';
-        let mySongTitle = localStorage.getItem('rapquiz_menu_song_title') || '';
-        
-        let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix';
-        let myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
+        let playerName = localStorage.getItem('rapquiz_username'); let savedPw = localStorage.getItem('rapquiz_password');
+        let myFavArtist = localStorage.getItem('rapquiz_fav_artist') || ''; let mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || ''; let mySongTitle = localStorage.getItem('rapquiz_menu_song_title') || '';
+        let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; let myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
         let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, draws: 0 };
-
         let menuAudio = new Audio(); menuAudio.volume = 0.2; menuAudio.loop = true; let isMenuMusicPlaying = false;
 
-        function switchTab(tabId, el) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            if(el) el.classList.add('active');
-            if(tabId === 'profile-tab') {
-                document.getElementById('stat-played').innerText = myStats.played; document.getElementById('stat-wins').innerText = myStats.wins; document.getElementById('stat-losses').innerText = myStats.losses;
+        // --- RADIO SHUFFLE ALGORITHMUS (ANTI-CLUSTERING) ---
+        function smartShuffle(pool) {
+            let byArtist = {};
+            for(let s of pool) {
+                if(!byArtist[s.artist.name]) byArtist[s.artist.name] = [];
+                byArtist[s.artist.name].push(s);
             }
+            for(let a in byArtist) byArtist[a].sort(() => 0.5 - Math.random());
+            
+            let result = [];
+            let artists = Object.keys(byArtist);
+            let keepGoing = true;
+            
+            while(keepGoing) {
+                keepGoing = false;
+                artists.sort(() => 0.5 - Math.random()); // Jede Runde neue Reihenfolge der Künstler
+                for(let a of artists) {
+                    if(byArtist[a].length > 0) {
+                        result.push(byArtist[a].pop());
+                        keepGoing = true;
+                    }
+                }
+            }
+            return result;
+        }
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
+            if(tabId === 'profile-tab') { document.getElementById('stat-played').innerText = myStats.played; document.getElementById('stat-wins').innerText = myStats.wins; document.getElementById('stat-losses').innerText = myStats.losses; }
         }
 
         function loadArtistVisuals(artistName) {
-            if (!artistName) return;
-            const cb = 'deezer_vis_' + Date.now();
+            if (!artistName) return; const cb = 'deezer_vis_' + Date.now();
             window[cb] = function(res) {
                 if (res && res.data && res.data.length > 0) {
-                    myBgUrl = res.data[0].picture_xl;
-                    myAvatar = res.data[0].picture_medium;
+                    myBgUrl = res.data[0].picture_xl; myAvatar = res.data[0].picture_medium;
                     localStorage.setItem('rapquiz_avatar', myAvatar); localStorage.setItem('rapquiz_bg_url', myBgUrl);
-                    document.getElementById('app-background').style.backgroundImage = `url('${myBgUrl}')`;
-                    updateAllAvatars();
+                    document.getElementById('app-background').src = myBgUrl; updateAllAvatars();
                 }
             };
             const s = document.createElement('script'); s.src = `https://api.deezer.com/search/artist?q="${encodeURIComponent(artistName)}"&limit=1&output=jsonp&callback=${cb}`; document.head.appendChild(s);
         }
 
-        function updateAllAvatars() {
-            let els = ['sidebar-avatar', 'profile-view-avatar', 'ingame-my-avatar'];
-            els.forEach(id => { let el = document.getElementById(id); if(el) el.src = myAvatar; });
-        }
+        function updateAllAvatars() { ['sidebar-avatar', 'profile-view-avatar', 'ingame-my-avatar'].forEach(id => { let el = document.getElementById(id); if(el) el.src = myAvatar; }); }
 
         function searchMenuSong(mode) {
-            let inputId = mode === 'setup' ? 'song-search-input' : 'edit-song-search-input';
-            let selectId = mode === 'setup' ? 'menu-song-select' : 'edit-menu-song-select';
+            let inputId = mode === 'setup' ? 'song-search-input' : 'edit-song-search-input'; let selectId = mode === 'setup' ? 'menu-song-select' : 'edit-menu-song-select';
             let q = document.getElementById(inputId).value.trim(); if(!q) return;
             const cb = 'deezer_song_' + Date.now();
             window[cb] = function(res) {
                 let sel = document.getElementById(selectId); sel.innerHTML = '';
                 if(res && res.data && res.data.length > 0) {
-                    res.data.filter(t => t.preview).slice(0, 10).forEach(t => {
-                        let opt = document.createElement('option'); opt.value = t.preview; opt.innerText = `${t.artist.name} - ${t.title}`; sel.appendChild(opt);
-                    });
+                    res.data.filter(t => t.preview).slice(0, 10).forEach(t => { let opt = document.createElement('option'); opt.value = t.preview; opt.innerText = `${t.artist.name} - ${t.title}`; sel.appendChild(opt); });
                     sel.style.display = 'block';
                 } else { sel.innerHTML = '<option value="">Nichts gefunden</option>'; sel.style.display = 'block'; }
             };
@@ -523,10 +494,7 @@
         function toggleMenuMusic() {
             let btn = document.getElementById('music-toggle-btn');
             if (isMenuMusicPlaying) { menuAudio.pause(); isMenuMusicPlaying = false; btn.innerHTML = "🔇 Musik Aus"; btn.style.opacity = "0.5"; } 
-            else { 
-                if(!menuAudio.src || menuAudio.src === window.location.href) menuAudio.src = mySongUrl;
-                menuAudio.play().then(() => { isMenuMusicPlaying = true; btn.innerHTML = "🔊 Musik An"; btn.style.opacity = "1"; }).catch(e => console.log("Fehler", e));
-            }
+            else { if(!menuAudio.src || menuAudio.src === window.location.href) menuAudio.src = mySongUrl; menuAudio.play().then(() => { isMenuMusicPlaying = true; btn.innerHTML = "🔊 Musik An"; btn.style.opacity = "1"; }).catch(e => console.log("Fehler", e)); }
         }
 
         window.onload = () => {
@@ -534,34 +502,26 @@
             selects.forEach(sel => { allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; if(a === myFavArtist) opt.selected = true; sel.appendChild(opt); }); });
             let grid = document.getElementById('artist-grid');
             allArtists.forEach(a => { let d = document.createElement('div'); d.className = 'artist-tile'; d.innerText = a; d.onclick = () => startArtistMode(a); grid.appendChild(d); });
-            if (myBgUrl) document.getElementById('app-background').style.backgroundImage = `url('${myBgUrl}')`;
+            if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
 
             if (!playerName || !savedPw || !mySongUrl) { document.getElementById('profile-overlay').style.display = 'flex'; } 
-            else {
-                document.getElementById('profile-title').innerText = "Willkommen zurück!";
-                document.getElementById('username-input').value = playerName; document.getElementById('username-input').disabled = true;
-                document.getElementById('artist-select-container').style.display = 'none'; document.getElementById('profile-overlay').style.display = 'flex';
-            }
+            else { document.getElementById('profile-title').innerText = "Willkommen zurück!"; document.getElementById('username-input').value = playerName; document.getElementById('username-input').disabled = true; document.getElementById('artist-select-container').style.display = 'none'; document.getElementById('profile-overlay').style.display = 'flex'; }
         };
 
         function handleProfileLogin() {
             let name = document.getElementById('username-input').value.trim(); let pw = document.getElementById('password-input').value.trim(); let err = document.getElementById('profile-error');
             if (!name || !pw) { err.innerText = "Bitte fülle alle Felder aus!"; err.style.display = 'block'; return; }
             if (savedPw && pw !== savedPw) { err.innerText = "Falsches Passwort!"; err.style.display = 'block'; return; }
-            
             if(!savedPw || !mySongUrl) {
                 let songDropdown = document.getElementById('menu-song-select');
                 if(songDropdown.style.display === 'none' || !songDropdown.value) { err.innerText = "Suche und wähle erst deinen Menü-Song!"; err.style.display = 'block'; return; }
                 myFavArtist = document.getElementById('fav-artist-select').value; mySongUrl = songDropdown.value; mySongTitle = songDropdown.options[songDropdown.selectedIndex].text;
-                localStorage.setItem('rapquiz_username', name); localStorage.setItem('rapquiz_password', pw); localStorage.setItem('rapquiz_fav_artist', myFavArtist);
-                localStorage.setItem('rapquiz_menu_song_url', mySongUrl); localStorage.setItem('rapquiz_menu_song_title', mySongTitle);
+                localStorage.setItem('rapquiz_username', name); localStorage.setItem('rapquiz_password', pw); localStorage.setItem('rapquiz_fav_artist', myFavArtist); localStorage.setItem('rapquiz_menu_song_url', mySongUrl); localStorage.setItem('rapquiz_menu_song_title', mySongTitle);
                 playerName = name; savedPw = pw; loadArtistVisuals(myFavArtist);
             }
             
             document.getElementById('profile-overlay').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex';
-            document.getElementById('sidebar-name').innerText = playerName; document.getElementById('profile-view-name').innerText = playerName;
-            document.getElementById('profile-view-hymn').innerText = mySongTitle || myFavArtist; document.getElementById('music-toggle-btn').style.display = 'block';
-            updateAllAvatars();
+            document.getElementById('sidebar-name').innerText = playerName; document.getElementById('profile-view-name').innerText = playerName; document.getElementById('profile-view-hymn').innerText = mySongTitle || myFavArtist; document.getElementById('music-toggle-btn').style.display = 'block'; updateAllAvatars();
             
             menuAudio.src = mySongUrl;
             menuAudio.play().then(() => { isMenuMusicPlaying = true; document.getElementById('music-toggle-btn').innerHTML = "🔊 Musik An"; document.getElementById('music-toggle-btn').style.opacity = "1"; }).catch(e => { isMenuMusicPlaying = false; document.getElementById('music-toggle-btn').innerHTML = "🔇 Musik Aus"; document.getElementById('music-toggle-btn').style.opacity = "0.5"; });
@@ -573,8 +533,7 @@
             let sel = document.getElementById('edit-menu-song-select');
             if(sel.value) {
                 mySongUrl = sel.value; mySongTitle = sel.options[sel.selectedIndex].text;
-                localStorage.setItem('rapquiz_menu_song_url', mySongUrl); localStorage.setItem('rapquiz_menu_song_title', mySongTitle);
-                document.getElementById('profile-view-hymn').innerText = mySongTitle; menuAudio.src = mySongUrl; if(isMenuMusicPlaying) menuAudio.play();
+                localStorage.setItem('rapquiz_menu_song_url', mySongUrl); localStorage.setItem('rapquiz_menu_song_title', mySongTitle); document.getElementById('profile-view-hymn').innerText = mySongTitle; menuAudio.src = mySongUrl; if(isMenuMusicPlaying) menuAudio.play();
             }
         }
 
@@ -582,95 +541,72 @@
         // MULTIPLAYER LOBBY & 2v2 LOGIK
         // ==========================================
         let lobbyPlayers = []; let myIndex = 0; let myTeam = 0; let isMyTurn = true; let currentRoundIndex = 0;
+        function createRoom() { isMpHost = true; socket.emit('createRoom', { name: playerName, avatar: myAvatar }); document.getElementById('mp-status').innerText = 'Verbinde...'; }
+        function joinRoom() { let c = document.getElementById('join-code-input').value; if(c){ isMpHost = false; socket.emit('joinRoom', { code: c, name: playerName, avatar: myAvatar }); document.getElementById('mp-status').innerText = 'Trete bei...'; } }
+        function cancelMultiplayer() { isMultiplayer = false; isMpHost = false; currentRoom = ''; switchTab('play-tab', document.getElementById('nav-play')); }
 
-        function createRoom() { isMpHost = true; socket.emit('createRoom', { name: playerName, avatar: myAvatar }); document.getElementById('lobby-setup-view').style.display = 'none'; document.getElementById('lobby-waiting-view').style.display = 'block'; document.getElementById('mp-status').innerText = 'Verbinde...'; }
-        function joinRoom() { let c = document.getElementById('join-code-input').value; if(c){ isMpHost = false; socket.emit('joinRoom', { code: c, name: playerName, avatar: myAvatar }); document.getElementById('lobby-setup-view').style.display = 'none'; document.getElementById('lobby-waiting-view').style.display = 'block'; document.getElementById('mp-status').innerText = 'Trete bei...'; } }
-        function cancelMultiplayer() { isMultiplayer = false; isMpHost = false; currentRoom = ''; lobbyPlayers = []; document.getElementById('lobby-waiting-view').style.display = 'none'; document.getElementById('lobby-setup-view').style.display = 'grid'; }
-
-        socket.on('roomCreated', (code) => { currentRoom = code; myIndex = 0; document.getElementById('room-code-display').innerText = code; document.getElementById('btn-start-multiplayer').style.display = 'inline-block'; document.getElementById('mp-status').innerText = 'Warte auf Mitspieler... (Max 4)'; });
-        socket.on('joinedSuccess', (data) => { currentRoom = data.roomCode; myIndex = data.myIndex; document.getElementById('room-code-display').innerText = data.roomCode; document.getElementById('btn-start-multiplayer').style.display = 'none'; document.getElementById('mp-status').innerText = 'Warte auf den Host...'; });
+        socket.on('roomCreated', (code) => { currentRoom = code; myIndex = 0; document.getElementById('room-code-display').innerText = code; document.getElementById('mp-status').innerText = 'Warte auf Mitspieler... (Max 4)'; });
+        socket.on('joinedSuccess', (data) => { currentRoom = data.roomCode; myIndex = data.myIndex; document.getElementById('room-code-display').innerText = data.roomCode; document.getElementById('mp-status').innerText = 'Warte auf den Host...'; });
         socket.on('errorMsg', (msg) => { alert(msg); cancelMultiplayer(); });
         
-        socket.on('lobbyUpdate', (players) => {
-            lobbyPlayers = players;
-            let blueGrid = document.getElementById('team-blue-grid'); let redGrid = document.getElementById('team-red-grid');
-            blueGrid.innerHTML = ''; redGrid.innerHTML = '';
-            
-            players.forEach((p, index) => {
-                let teamClass = (index % 2 === 0) ? 'team-blue' : 'team-red';
-                let teamName = (index % 2 === 0) ? 'Team Blau' : 'Team Rot';
-                let card = `<div class="lobby-player-card"><img src="${p.avatar}"><div><div style="font-size:14px; font-weight:800; color:white;">${p.name} ${index===0?'(Host)':''}</div><span class="team-indicator ${teamClass}">${teamName}</span></div></div>`;
-                if(index % 2 === 0) blueGrid.innerHTML += card; else redGrid.innerHTML += card;
-            });
+        socket.on('lobbyUpdate', (players) => { lobbyPlayers = players; });
+        socket.on('gameReady', (code) => { if(!isMpHost) { document.getElementById('mp-status').innerText = 'Host wählt gerade den Modus aus...'; } });
+        socket.on('receiveRoundData', (data) => { resetGameStats(); songsPool = data.songs; currentMode = data.mode; isHardcoreMode = data.hardcore; showArtistName = data.showArtist; document.getElementById('hardcore-toggle').checked = isHardcoreMode; document.getElementById('artist-toggle').checked = showArtistName; isMultiplayer = true; document.getElementById('loading-overlay').style.display = 'none'; launchGame(); });
+        socket.on('updateAllStats', (players) => { lobbyPlayers = players; updateStatsDisplay(); });
+        
+        socket.on('opponentGameOver', (data) => {
+            opponentFinalStats = data; 
+            if (gameIsOver) { evaluateWinnerAndPlayAnthem(); } 
+            else { gameIsOver = true; audio.pause(); clearTimeout(precisionTimer); document.getElementById('options').style.display = 'none'; document.getElementById('text-input-container').style.display = 'none'; socket.emit('gameOver', { roomCode: currentRoom, score: score, favArtist: myFavArtist }); document.getElementById('feedback-overlay').style.display = 'flex'; evaluateWinnerAndPlayAnthem(); }
         });
 
-        function hostStartGame() {
-            if(lobbyPlayers.length < 2) { alert("Mindestens 2 Spieler erforderlich!"); return; }
-            socket.emit('startGame', currentRoom);
-            document.getElementById('btn-start-multiplayer').style.display = 'none';
-            document.getElementById('mp-status').innerText = 'Wähle nun einen Modus unter "Spielen" aus!';
-            switchTab('play-tab', document.getElementById('nav-play'));
+        async function evaluateWinnerAndPlayAnthem() {
+            let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let r = document.getElementById('mp-result'); document.getElementById('feedback-cover').style.display = 'none'; r.style.display = 'block';
+            let myS = parseInt(score)||0; let opS = parseInt(opponentFinalStats.score)||0;
+            if (myS > opS) { m.className = "modal correct"; t.innerText = "🏆 GEWONNEN!"; d.innerText = `Dein Score: ${myS}\nGegner Score: ${opS}`; r.innerText = `Deine Sieges-Hymne läuft... 🎵`; myStats.wins++; } else if (myS < opS) { m.className = "modal wrong"; t.innerText = "❌ VERLOREN!"; d.innerText = `Dein Score: ${myS}\nGegner Score: ${opS}`; r.innerText = `Der Gegner feiert... 🎵`; myStats.losses++; } else { m.className = "modal gameover"; t.innerText = "🤝 UNENTSCHIEDEN!"; d.innerText = `Beide ${myS} Punkte!`; r.style.display = 'none'; myStats.draws++; localStorage.setItem('rapquiz_stats', JSON.stringify(myStats)); return; }
+            myStats.played++; localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
+            sfxAudio.pause(); if(myS > opS) { sfxAudio.src = mySongUrl; sfxAudio.volume = 1.0; sfxAudio.play().catch(e=>{}); }
         }
 
-        socket.on('gameReady', (code) => { if(!isMpHost) { document.getElementById('mp-status').innerText = 'Host wählt gerade den Modus aus...'; } });
-
-        socket.on('receiveRoundData', (data) => {
-            resetGameStats(); songsPool = data.songs; currentMode = data.mode; isHardcoreMode = data.hardcore; showArtistName = data.showArtist;
-            document.getElementById('hardcore-toggle').checked = isHardcoreMode; document.getElementById('artist-toggle').checked = showArtistName;
-            isMultiplayer = true; document.getElementById('loading-overlay').style.display = 'none'; launchGame();
-        });
-
         // ==========================================
-        // GAME LOGIC & PARALLEL FETCH (Unzerstörbar)
+        // GAME LOGIC & PARALLEL FETCH
         // ==========================================
-        let playedSongIds = new Set(); let currentSong = null; let myScore = 0; let myLives = 3;
-        let audio = new Audio(); audio.volume = 0.5; let sfxAudio = new Audio(); let maxPlayTime = 1; let precisionTimer = null;
-
+        let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; let audio = new Audio(); audio.volume = 0.5; let sfxAudio = new Audio(); 
+        
         audio.onplaying = () => { clearTimeout(precisionTimer); if (maxPlayTime < 30) { precisionTimer = setTimeout(() => { audio.pause(); }, maxPlayTime * 1000); } };
         function playAudioSnippet() { audio.currentTime = 0; clearTimeout(precisionTimer); audio.play().catch(e=>{}); }
         function toggleHardcoreMode() { isHardcoreMode = document.getElementById('hardcore-toggle').checked; }
         function toggleArtistName() { showArtistName = document.getElementById('artist-toggle').checked; }
 
-        // Paralleler Fetch mit Timeout (verhindert Ladeschleife)
         function fetchDeezer(artist) {
             return new Promise(resolve => {
                 const cb = 'deezer_' + Date.now() + Math.floor(Math.random() * 10000);
                 let isResolved = false;
-                
                 const timeout = setTimeout(() => { if(!isResolved) { isResolved = true; resolve(); } }, 3000); 
-
-                window[cb] = function(r) {
-                    if(!isResolved) {
-                        isResolved = true; clearTimeout(timeout);
-                        if (r && r.data) songsPool = songsPool.concat(r.data.filter(t => t.preview));
-                        resolve();
-                    }
-                };
+                window[cb] = function(r) { if(!isResolved) { isResolved = true; clearTimeout(timeout); if (r && r.data) songsPool = songsPool.concat(r.data.filter(t => t.preview)); resolve(); } };
                 const s = document.createElement('script'); s.src = `https://api.deezer.com/search?q=${encodeURIComponent(artist)}&limit=50&output=jsonp&callback=${cb}`; document.head.appendChild(s);
             });
         }
 
         function resetGameStats() {
-            songsPool = []; playedSongIds.clear(); myScore = 0; myLives = 3; gameIsOver = false; currentRoundIndex = 0;
-            document.getElementById('ingame-my-name').innerText = playerName;
-            updateStatsDisplay(); sfxAudio.pause(); document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
+            songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; opponentFinalStats = null;
+            document.getElementById('opponent-container').style.display = isMultiplayer ? 'flex' : 'none'; document.getElementById('lives-display').style.display = 'block'; 
+            updateAllAvatars(); document.getElementById('ingame-my-name').innerText = playerName; updateStatsDisplay(); sfxAudio.pause(); document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
         }
 
         function backToMenu() { audio.pause(); sfxAudio.pause(); clearTimeout(precisionTimer); cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; if(isMenuMusicPlaying) menuAudio.play().catch(e=>{}); }
 
         async function startMixedMode(mode) {
-            document.getElementById('loading-overlay').style.display = 'flex'; resetGameStats(); currentMode = mode;
-            let sel = [];
+            document.getElementById('loading-overlay').style.display = 'flex'; resetGameStats(); currentMode = mode; let sel = [];
             if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === 'soundcloud') sel = [...soundcloudArtists].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === '2010s') sel = [...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === 'megahits') sel = [...megaStars, ...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
-            
-            // Parallel Fetch - Extrem Schnell und sicher!
             await Promise.all(sel.map(a => fetchDeezer(a)));
-            
             if (mode === 'megahits') songsPool = songsPool.filter(s => s.rank > 600000);
             if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Nicht genug Songs gefunden. Bitte nochmal probieren!"); return; }
+            
+            songsPool = smartShuffle(songsPool); // Smart Shuffle anwenden
             if (isMultiplayer && isMpHost) syncHostData(); launchGame();
         }
 
@@ -678,6 +614,8 @@
             document.getElementById('loading-overlay').style.display = 'flex'; resetGameStats(); currentMode = 'progressive';
             await Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchDeezer(a)));
             if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Fehler beim Laden."); return; }
+            
+            songsPool = smartShuffle(songsPool); // Smart Shuffle anwenden
             if (isMultiplayer && isMpHost) syncHostData(); launchGame();
         }
 
@@ -685,30 +623,22 @@
             document.getElementById('loading-overlay').style.display = 'flex'; resetGameStats(); currentMode = 'artist';
             await fetchDeezer(artist);
             if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Nicht genug Songs für diesen Artist."); return; }
+            
+            songsPool = smartShuffle(songsPool); // Smart Shuffle anwenden
             if (isMultiplayer && isMpHost) syncHostData(); launchGame();
         }
 
         function syncHostData() {
-            let safePool = songsPool.map(s => ({ id: s.id, title: s.title, preview: s.preview, artist: { name: s.artist.name }, album: { cover_medium: s.album.cover_medium } })).sort(()=>0.5-Math.random()).slice(0, 100);
+            // Hier NICHT mehr mit Math.random() zerstören, da smartShuffle schon gearbeitet hat
+            let safePool = songsPool.map(s => ({ id: s.id, title: s.title, preview: s.preview, artist: { name: s.artist.name }, album: { cover_medium: s.album.cover_medium } })).slice(0, 100);
             socket.emit('syncRoundData', { roomCode: currentRoom, songs: safePool, mode: currentMode, hardcore: isHardcoreMode, showArtist: showArtistName });
         }
 
         function launchGame() {
             menuAudio.pause(); document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
-            
-            myTeam = myIndex % 2; 
-            if(isMultiplayer) { socket.emit('syncStats', { roomCode: currentRoom, score: myScore, lives: myLives }); }
+            if(isMultiplayer) { socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives }); }
             nextRound();
-        }
-
-        function checkIfMyTurn() {
-            if (!isMultiplayer || lobbyPlayers.length <= 2) return true; 
-            if (myLives <= 0) return false; 
-            let partnerIdx = (myIndex < 2) ? myIndex + 2 : myIndex - 2;
-            let partner = lobbyPlayers.find(p => p.id === lobbyPlayers[partnerIdx]?.id);
-            if (!partner || partner.lives <= 0) return true; 
-            return (currentRoundIndex % 2 === 0) ? (myIndex < 2) : (myIndex >= 2);
         }
 
         function updateSuggestions() {
@@ -730,33 +660,26 @@
             let unp = songsPool.filter(s => !playedSongIds.has(s.id));
             if (unp.length === 0) { triggerGameOver(true); return; }
             currentSong = unp[0]; playedSongIds.add(currentSong.id);
-            
-            isMyTurn = checkIfMyTurn();
 
             if (currentMode === 'progressive') {
                 let times = [0.1, 1, 2, 5, 10]; maxPlayTime = times[Math.min(playedSongIds.size - 1, 4)];
                 document.getElementById('add-time-btn').innerText = `+3s (${maxPlayTime}s)`;
             } else { maxPlayTime = 1; document.getElementById('add-time-btn').innerText = `+3s (1s)`; }
 
-            if (!isMyTurn) {
-                audio.volume = 0; document.getElementById('options').style.display = 'none'; document.getElementById('text-input-container').style.display = 'none'; document.getElementById('muted-overlay').style.display = 'flex';
+            if (isHardcoreMode) {
+                document.getElementById('options').style.display = 'none'; document.getElementById('text-input-container').style.display = 'block';
+                let input = document.getElementById('guess-input'); input.value = ''; input.focus();
             } else {
-                audio.volume = 0.5; document.getElementById('muted-overlay').style.display = 'none';
-                if (isHardcoreMode) {
-                    document.getElementById('options').style.display = 'none'; document.getElementById('text-input-container').style.display = 'block';
-                    let input = document.getElementById('guess-input'); input.value = ''; input.focus();
-                } else {
-                    document.getElementById('text-input-container').style.display = 'none'; document.getElementById('options').style.display = 'flex';
-                    let wrong = songsPool.filter(s => s.id !== currentSong.id).sort(()=>0.5-Math.random());
-                    let opts = [currentSong]; let seenTitles = new Set([currentSong.title]);
-                    for (let s of wrong) { if (!seenTitles.has(s.title)) { seenTitles.add(s.title); opts.push(s); } if (opts.length === 4) break; }
-                    opts.sort(()=>0.5-Math.random());
-                    let div = document.getElementById('options'); div.innerHTML = '';
-                    opts.forEach(o => {
-                        let b = document.createElement('button'); b.className = 'option-btn'; b.innerText = showArtistName ? `${o.title} - ${o.artist.name}` : o.title;
-                        b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
-                    });
-                }
+                document.getElementById('text-input-container').style.display = 'none'; document.getElementById('options').style.display = 'flex';
+                let wrong = songsPool.filter(s => s.id !== currentSong.id).sort(()=>0.5-Math.random());
+                let opts = [currentSong]; let seenTitles = new Set([currentSong.title]);
+                for (let s of wrong) { if (!seenTitles.has(s.title)) { seenTitles.add(s.title); opts.push(s); } if (opts.length === 4) break; }
+                opts.sort(()=>0.5-Math.random());
+                let div = document.getElementById('options'); div.innerHTML = '';
+                opts.forEach(o => {
+                    let b = document.createElement('button'); b.className = 'option-btn'; b.innerText = showArtistName ? `${o.title} - ${o.artist.name}` : o.title;
+                    b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
+                });
             }
             audio.src = currentSong.preview; playAudioSnippet();
         }
@@ -764,104 +687,51 @@
         function replaySnippet() { audio.currentTime = 0; playAudioSnippet(); }
         function addTime() { if (maxPlayTime < 10) { maxPlayTime += 3; if(maxPlayTime>10)maxPlayTime=10; document.getElementById('add-time-btn').innerText = `+3s (${maxPlayTime.toFixed(1)}s)`; playAudioSnippet(); } }
         function skipSong() { processAnswer(false, true); }
-        function checkTextInput() {
-            let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-            let c = currentSong.title.toLowerCase().split('(')[0].split(' feat')[0].replace(/[^a-z0-9]/g, '');
-            processAnswer(v === c || (v.length >= 4 && c.includes(v)));
-        }
+        function checkTextInput() { let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); let c = currentSong.title.toLowerCase().split('(')[0].split(' feat')[0].replace(/[^a-z0-9]/g, ''); processAnswer(v === c || (v.length >= 4 && c.includes(v))); }
 
         socket.on('teammateAnswered', (data) => { if (!isMyTurn && data.team === myTeam) processAnswer(data.correct, data.isSkip, true); });
         socket.on('triggerNextRound', (data) => { if (!isMyTurn && data.team === myTeam) { currentRoundIndex++; nextRound(); } });
 
-        function handleFeedbackNext() { 
-            if (isMultiplayer && isMyTurn) socket.emit('nextRound', { roomCode: currentRoom, team: myTeam });
-            currentRoundIndex++; nextRound(); 
-        }
-
-        function processAnswer(wasCorrect, isSkip = false, fromTeammate = false) {
+        function processAnswer(wasCorrect, isSkip = false) {
             let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover');
-            document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none'; document.getElementById('feedback-btn').onclick = handleFeedbackNext;
+            document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
+            document.getElementById('feedback-btn').onclick = nextRound;
             
-            if (isMultiplayer && isMyTurn && !fromTeammate) socket.emit('teammateAnswered', { roomCode: currentRoom, team: myTeam, correct: wasCorrect, isSkip: isSkip });
-
             let pts = maxPlayTime <= 1 ? 100 : (maxPlayTime <= 4 ? 75 : 50);
 
             if (wasCorrect) {
-                if(isMyTurn) myScore += pts; 
-                maxPlayTime = 30; playAudioSnippet(); cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
-                m.className = "modal correct"; t.innerText = "🔥 RICHTIG!"; d.innerText = `+${pts} Punkte für das Team!\n${currentSong.title} - ${currentSong.artist.name}`;
+                score += pts; maxPlayTime = 30; playAudioSnippet(); cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
+                m.className = "modal correct"; t.innerText = "🔥 RICHTIG!"; d.innerText = `+${pts} Punkte!\n${currentSong.title} - ${currentSong.artist.name}`;
             } else {
                 cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
-                if (isSkip) { 
-                    if(isMyTurn) myScore = Math.max(0, myScore - 250); 
-                    m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Punkte\n${currentSong.title} - ${currentSong.artist.name}`; 
-                } else { 
-                    if(isMyTurn) myLives--; 
-                    m.className = "modal wrong"; t.innerText = "❌ FALSCH!"; d.innerText = `${isMyTurn ? 'Du hast' : 'Dein Partner hat'} ein Leben verloren!\n${currentSong.title} - ${currentSong.artist.name}`; 
-                }
+                if (isSkip) { score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Punkte\n${currentSong.title} - ${currentSong.artist.name}`; } 
+                else { lives--; m.className = "modal wrong"; t.innerText = "❌ FALSCH!"; d.innerText = `Ein Leben verloren!\n${currentSong.title} - ${currentSong.artist.name}`; }
+                if (lives <= 0) setTimeout(() => triggerGameOver(false), 2000);
             }
-            
             updateStatsDisplay();
-            if (isMultiplayer && isMyTurn) socket.emit('syncStats', { roomCode: currentRoom, score: myScore, lives: myLives });
-            
-            document.getElementById('muted-overlay').style.display = 'none'; document.getElementById('feedback-overlay').style.display = 'flex';
-            
-            if (isMyTurn && myLives <= 0) setTimeout(() => triggerGameOver(false), 2000);
-        }
-
-        socket.on('updateAllStats', (players) => { lobbyPlayers = players; updateStatsDisplay(); });
-
-        socket.on('opponentGameOver', (data) => {
-            if (gameIsOver) return; gameIsOver = true; audio.pause(); clearTimeout(precisionTimer);
-            document.getElementById('options').style.display = 'none'; document.getElementById('text-input-container').style.display = 'none'; document.getElementById('muted-overlay').style.display = 'none';
+            if (isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
             document.getElementById('feedback-overlay').style.display = 'flex';
-            evaluateWinnerAndPlayAnthem(data.losingTeam);
-        });
+        }
 
         function triggerGameOver(victory) {
-            if (gameIsOver) return; gameIsOver = true;
-            audio.pause(); clearTimeout(precisionTimer);
+            if (gameIsOver) return; gameIsOver = true; audio.pause(); clearTimeout(precisionTimer);
+            let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let b = document.getElementById('feedback-btn'); document.getElementById('feedback-cover').style.display = 'none';
+            m.className = "modal gameover";
             
             if (isMultiplayer) {
-                let teamBlueDead = lobbyPlayers.filter(p=>p.index%2===0).every(p=>p.lives<=0);
-                let teamRedDead = lobbyPlayers.filter(p=>p.index%2===1).every(p=>p.lives<=0);
-                let losingTeam = teamBlueDead ? 0 : (teamRedDead ? 1 : -1); 
-                socket.emit('gameOver', { roomCode: currentRoom, losingTeam: losingTeam });
-                evaluateWinnerAndPlayAnthem(losingTeam);
+                t.innerText = "💀 AUSGESCHIEDEN!"; d.innerText = "Warte auf Gegner-Auswertung..."; document.getElementById('mp-result').style.display = 'block'; document.getElementById('mp-result').innerText = "Lade...";
+                socket.emit('gameOver', { roomCode: currentRoom, score: score, favArtist: myFavArtist });
+                if (opponentFinalStats) evaluateWinnerAndPlayAnthem();
             } else {
-                let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); document.getElementById('feedback-cover').style.display = 'none';
-                m.className = "modal gameover"; t.innerText = victory ? "🏆 DURCHGESPIELT!" : "💀 GAME OVER"; d.innerText = `Dein Score: ${myScore}`;
-                saveGameStats(victory ? 'win' : 'loss'); if (!victory && myScore < 500) { sfxAudio.src = "roddy.mp3"; sfxAudio.play().catch(e=>{}); }
-                document.getElementById('feedback-btn').innerText = "Beenden 🏠"; document.getElementById('feedback-btn').onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
-                document.getElementById('feedback-overlay').style.display = 'flex';
+                t.innerText = victory ? "🏆 DURCHGESPIELT!" : "💀 GAME OVER"; d.innerText = `Score: ${score}`;
+                myStats.played++; if(victory) myStats.wins++; else myStats.losses++; localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
+                if (!victory && score < 500) { sfxAudio.src = "roddy.mp3"; sfxAudio.play().catch(e=>{}); }
             }
+            b.innerText = "Beenden 🏠"; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
+            document.getElementById('feedback-overlay').style.display = 'flex';
         }
 
-        async function evaluateWinnerAndPlayAnthem(knockoutTeamIndex) {
-            let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let r = document.getElementById('mp-result'); document.getElementById('feedback-cover').style.display = 'none';
-            r.style.display = 'block';
-
-            let scoreBlue = 0; let scoreRed = 0;
-            lobbyPlayers.forEach((p, idx) => { if(idx % 2 === 0) scoreBlue += p.score; else scoreRed += p.score; });
-            let myTeamScore = (myTeam === 0) ? scoreBlue : scoreRed; let oppTeamScore = (myTeam === 0) ? scoreRed : scoreBlue;
-            let didIWin = false; let isDraw = false;
-
-            if (knockoutTeamIndex === myTeam) didIWin = false; 
-            else if (knockoutTeamIndex !== -1 && knockoutTeamIndex !== undefined) didIWin = true; 
-            else { if (myTeamScore > oppTeamScore) didIWin = true; else if (myTeamScore < oppTeamScore) didIWin = false; else isDraw = true; }
-
-            if (didIWin) { m.className = "modal correct"; t.innerText = "🏆 DEIN TEAM GEWINNT!"; d.innerText = `Score Blau: ${scoreBlue} | Score Rot: ${scoreRed}`; r.innerText = `Deine Sieges-Hymne läuft... 🎵`; saveGameStats('win'); sfxAudio.src = mySongUrl; sfxAudio.volume = 1.0; sfxAudio.play().catch(e=>{}); } 
-            else if (!isDraw) { m.className = "modal wrong"; t.innerText = "❌ DEIN TEAM VERLIERT!"; d.innerText = `Score Blau: ${scoreBlue} | Score Rot: ${scoreRed}`; r.innerText = `Der Gegner feiert... 🎵`; saveGameStats('loss'); sfxAudio.pause(); } 
-            else { m.className = "modal gameover"; t.innerText = "🤝 UNENTSCHIEDEN!"; d.innerText = `Beide Teams: ${scoreBlue} Punkte!`; r.style.display = 'none'; saveGameStats('draw'); sfxAudio.pause(); }
-            
-            document.getElementById('feedback-btn').innerText = "Beenden 🏠"; document.getElementById('feedback-btn').onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
-        }
-
-        function updateStatsDisplay() {
-            if(!isMultiplayer) { document.getElementById('score-blue').innerText = myScore; document.getElementById('score-red').innerText = "0"; document.getElementById('hearts-container').innerText = "❤️".repeat(myLives) + "🖤".repeat(3-myLives); return; }
-            let scoreBlue = 0; let scoreRed = 0; lobbyPlayers.forEach((p, idx) => { if(idx % 2 === 0) scoreBlue += p.score; else scoreRed += p.score; });
-            document.getElementById('score-blue').innerText = scoreBlue; document.getElementById('score-red').innerText = scoreRed; document.getElementById('hearts-container').innerText = "❤️".repeat(myLives) + "🖤".repeat(3-myLives);
-        }
+        function updateStatsDisplay() { document.getElementById('score-display').innerText = score; document.getElementById('lives-display').innerText = "❤️".repeat(lives) + "🖤".repeat(3-lives); }
     </script>
 </body>
 </html>
