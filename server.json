@@ -1,0 +1,80 @@
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+
+const app = express();
+// Erlaubt deinem Frontend, mit dem Backend zu kommunizieren
+app.use(cors()); 
+
+// Damit verschwindet der "Cannot GET /" Fehler!
+app.get('/', (req, res) => {
+    res.send('✅ Der Rap Quiz Multiplayer-Server läuft einwandfrei!');
+});
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*", // Jeder darf sich verbinden (hier könntest du auch deine Frontend-Render-URL eintragen)
+        methods: ["GET", "POST"]
+    }
+});
+
+// Multiplayer Logik
+io.on('connection', (socket) => {
+    console.log('Ein Spieler ist online:', socket.id);
+
+    // 1. Host erstellt eine Lobby
+    socket.on('createRoom', () => {
+        // Generiere einen 4-stelligen Code (1000 - 9999)
+        const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+        socket.join(roomCode);
+        
+        // Schick den Code zurück an den Host
+        socket.emit('roomCreated', roomCode);
+        console.log(`Lobby erstellt: ${roomCode}`);
+    });
+
+    // 2. Gegner tritt der Lobby bei
+    socket.on('joinRoom', (code) => {
+        const room = io.sockets.adapter.rooms.get(code);
+        
+        // Prüfen ob der Raum existiert und genau 1 Person (der Host) drin ist
+        if (room && room.size === 1) {
+            socket.join(code);
+            // Allen im Raum sagen, dass es losgeht
+            io.to(code).emit('gameReady', code);
+            console.log(`Spieler ist Lobby ${code} beigetreten. Spiel startet!`);
+        } else {
+            // Optional: Wenn der Code falsch ist oder der Raum voll
+            socket.emit('error', 'Lobby voll oder nicht gefunden');
+        }
+    });
+
+    // 3. Host teilt die gewählten Songs und den Modus mit dem Gegner
+    socket.on('syncRoundData', (data) => {
+        // Schickt die Daten an alle im Raum, AUßER an den Absender
+        socket.to(data.roomCode).emit('receiveRoundData', data);
+    });
+
+    // 4. Punkte-Update während des Spiels
+    socket.on('syncStats', (data) => {
+        socket.to(data.roomCode).emit('updateOpponentStats', { score: data.score });
+    });
+
+    // 5. Ein Spieler ist Game Over / hat gewonnen
+    socket.on('gameOver', (data) => {
+        socket.to(data.roomCode).emit('opponentGameOver', { score: data.score });
+    });
+
+    // Wenn jemand das Spiel schließt
+    socket.on('disconnect', () => {
+        console.log('Spieler hat das Spiel verlassen:', socket.id);
+    });
+});
+
+// Server starten
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`🚀 Server läuft auf Port ${PORT}`);
+});
