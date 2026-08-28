@@ -377,10 +377,10 @@
         .modal h2 { font-size: 28px; margin: 0 0 10px 0; }
         .modal p { font-size: 15px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.4; white-space: pre-line; }
         
-        .modal.correct h2 { color: var(--success); text-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
-        .modal.wrong h2 { color: var(--danger); text-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
-        .modal.gameover h2 { color: var(--warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
-        .modal.milestone h2 { color: #8b5cf6; text-shadow: 0 0 20px rgba(139, 92, 246, 0.8); font-size: 32px; }
+        .modal.correct h2 { color: var(--success) !important; text-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .modal.wrong h2 { color: var(--danger) !important; text-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        .modal.gameover h2 { color: var(--warning) !important; text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+        .modal.milestone h2 { color: #8b5cf6 !important; text-shadow: 0 0 20px rgba(139, 92, 246, 0.8); font-size: 32px; }
 
         #feedback-cover {
             width: 160px;
@@ -419,7 +419,7 @@
             display: flex;
             justify-content: center;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             flex-wrap: wrap;
         }
         
@@ -431,6 +431,7 @@
             cursor: pointer;
             transition: 0.2s;
             background: var(--surface);
+            object-fit: cover;
         }
         
         .avatar-option:hover { border-color: var(--primary); transform: scale(1.1); }
@@ -464,6 +465,12 @@
                 <div class="avatar-grid" id="avatar-grid-selection">
                     <!-- Avatare werden per JS geladen -->
                 </div>
+                
+                <!-- NEU: Eigener Bild-Upload (Base64) -->
+                <div style="margin-bottom: 20px;">
+                    <label for="avatar-upload-input" class="btn" style="padding: 8px 12px; font-size: 13px; background: var(--surface); color: var(--primary); cursor: pointer; display: inline-block; width: auto; border-color: var(--primary);">🖼️ Bild vom PC hochladen</label>
+                    <input type="file" id="avatar-upload-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                </div>
             </div>
 
             <input type="text" id="username-input" class="btn" style="background: var(--bg-color); text-align: center; font-size: 16px; margin-bottom: 10px;" placeholder="Dein Spielername" autocomplete="off">
@@ -485,7 +492,7 @@
     <!-- ECHTES PROFIL MENÜ -->
     <div id="my-profile-screen" class="screen-container">
         <h1 style="color: var(--primary);">MEIN PROFIL</h1>
-        <img id="profile-view-avatar" src="" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); margin: 20px auto; display: block; background: var(--surface); box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);">
+        <img id="profile-view-avatar" src="" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); margin: 20px auto; display: block; background: var(--surface); box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); object-fit: cover;">
         <h2 id="profile-view-name" style="margin-top: 0;">Name</h2>
         
         <div class="profile-stats-box">
@@ -706,13 +713,66 @@
         let gameIsOver = false;
         let opponentFinalStats = null;
 
+        // Bild von PC hochladen (Resize + Base64)
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 150;
+                    canvas.height = 150;
+                    
+                    const size = Math.min(img.width, img.height);
+                    const x = (img.width - size) / 2;
+                    const y = (img.height - size) / 2;
+                    
+                    ctx.drawImage(img, x, y, size, size, 0, 0, 150, 150);
+                    
+                    // Wandelt Bild in Text um, um es ohne Datenbank zu speichern
+                    const base64Avatar = canvas.toDataURL('image/jpeg', 0.8);
+                    myAvatar = base64Avatar;
+                    
+                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                    
+                    let customPreview = document.getElementById('custom-avatar-preview');
+                    if (!customPreview) {
+                        customPreview = document.createElement('img');
+                        customPreview.id = 'custom-avatar-preview';
+                        customPreview.className = 'avatar-option selected';
+                        customPreview.onclick = () => {
+                            document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                            customPreview.classList.add('selected');
+                            myAvatar = customPreview.src;
+                        };
+                        document.getElementById('avatar-grid-selection').appendChild(customPreview);
+                    } else {
+                        customPreview.classList.add('selected');
+                    }
+                    customPreview.src = base64Avatar;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
         function loadAvatarGrid() {
             let grid = document.getElementById('avatar-grid-selection');
             grid.innerHTML = '';
+            let foundCustom = false;
+
             avatarOptions.forEach(src => {
                 let img = document.createElement('img');
                 img.src = src;
-                img.className = 'avatar-option' + (src === myAvatar ? ' selected' : '');
+                img.className = 'avatar-option';
+                if (src === myAvatar) {
+                    img.classList.add('selected');
+                    foundCustom = true;
+                }
                 img.onclick = () => {
                     document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
                     img.classList.add('selected');
@@ -720,6 +780,20 @@
                 };
                 grid.appendChild(img);
             });
+
+            // Wenn das gespeicherte Bild ein hochgeladenes (Base64) ist, lade es wieder in die Vorschau
+            if (!foundCustom && myAvatar && myAvatar.length > 100) {
+                let customPreview = document.createElement('img');
+                customPreview.id = 'custom-avatar-preview';
+                customPreview.src = myAvatar;
+                customPreview.className = 'avatar-option selected';
+                customPreview.onclick = () => {
+                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                    customPreview.classList.add('selected');
+                    myAvatar = customPreview.src;
+                };
+                grid.appendChild(customPreview);
+            }
         }
 
         function populateArtistSelects() {
@@ -836,7 +910,7 @@
         }
 
         // ==========================================
-        // SOCKET.IO EVENTS (INKL. KNOCKOUT-UPDATE)
+        // SOCKET.IO EVENTS
         // ==========================================
         socket.on('roomCreated', (code) => {
             currentRoom = code;
@@ -880,21 +954,21 @@
         });
 
         // ==========================================
-        // SOFORTIGES ENDE & SIEGER-HYMNE (SUDDEN DEATH)
+        // SOFORTIGES ENDE & AUSWERTUNGS-BUG FIX
         // ==========================================
         socket.on('opponentGameOver', (data) => {
             opponentFinalStats = data; 
             
             if (gameIsOver) {
-                // Wir waren schon fertig, jetzt vergleichen
                 evaluateWinnerAndPlayAnthem();
             } else {
-                // NEU: Der Gegner hat keine Leben mehr! Wir zwingen unser Spiel zum Abbruch und werten sofort aus.
+                // Wenn der Gegner stirbt, beendet der Client sein Spiel hier zwangsweise sofort.
                 triggerGameOver(false); 
             }
         });
 
         async function evaluateWinnerAndPlayAnthem() {
+            let modal = document.getElementById('feedback-modal');
             let title = document.getElementById('feedback-title');
             let desc = document.getElementById('feedback-desc');
             let resultText = document.getElementById('mp-result');
@@ -902,21 +976,28 @@
             resultText.style.display = 'block';
             let winnerArtist = '';
 
-            if (score > opponentFinalStats.score) {
+            // Explizite Punkteumwandlung, um Bugs beim Vergleichen zu verhindern
+            let myFinalScore = parseInt(score) || 0;
+            let oppFinalScore = parseInt(opponentFinalStats.score) || 0;
+
+            if (myFinalScore > oppFinalScore) {
+                modal.className = "modal correct"; // ERZWINGT KNALLGRÜNES POPUP FÜR SIEGER!
                 title.innerText = "🏆 DU HAST GEWONNEN!";
-                desc.innerText = `Das Duell ist vorbei!\n\nDein Score: ${score}\nGegner Score: ${opponentFinalStats.score}`;
+                desc.innerText = `Das Duell ist vorbei!\n\nDein Score: ${myFinalScore}\nGegner Score: ${oppFinalScore}`;
                 resultText.innerText = `Deine Sieger-Hymne von ${myFavArtist} wird geladen... 🎵`;
                 winnerArtist = myFavArtist;
                 saveGameStats('win');
-            } else if (score < opponentFinalStats.score) {
+            } else if (myFinalScore < oppFinalScore) {
+                modal.className = "modal wrong"; // ERZWINGT KNALLROTES POPUP FÜR VERLIERER!
                 title.innerText = "❌ DU HAST VERLOREN!";
-                desc.innerText = `Dein Gegner hat dich besiegt!\n\nDein Score: ${score}\nGegner Score: ${opponentFinalStats.score}`;
+                desc.innerText = `Dein Gegner hat dich besiegt!\n\nDein Score: ${myFinalScore}\nGegner Score: ${oppFinalScore}`;
                 resultText.innerText = `Sieger-Hymne von ${opponentFinalStats.favArtist} wird geladen... 🎵`;
                 winnerArtist = opponentFinalStats.favArtist;
                 saveGameStats('loss');
             } else {
+                modal.className = "modal gameover"; // GELBES POPUP FÜR UNENTSCHIEDEN
                 title.innerText = "🤝 UNENTSCHIEDEN!";
-                desc.innerText = `Ihr seid exakt gleichauf!\n\nBeide haben ${score} Punkte!`;
+                desc.innerText = `Ihr seid exakt gleichauf!\n\nBeide haben ${myFinalScore} Punkte!`;
                 resultText.style.display = 'none';
                 saveGameStats('draw');
                 return; 
@@ -924,7 +1005,7 @@
 
             sfxAudio.pause();
 
-            // Deezer API Fix: Suche strikt nach dem Artist
+            // Hymnen-Suche repariert: Zieht jetzt exakt den richtigen Artist
             const callbackName = 'deezer_anthem_' + Date.now();
             window[callbackName] = function(response) {
                 if (response && response.data && response.data.length > 0) {
@@ -1093,6 +1174,7 @@
             updateStatsDisplay();
             sfxAudio.pause(); 
             document.getElementById('suggestions-box').style.display = 'none';
+            document.getElementById('mp-result').style.display = 'none'; // Verhindert Bug bei neuer Runde
             
             let milestoneImg = document.getElementById('milestone-image');
             if(milestoneImg) {
@@ -1293,6 +1375,7 @@
             }
             
             document.getElementById('suggestions-box').style.display = 'none';
+            document.getElementById('mp-result').style.display = 'none'; 
             
             let unplayedSongs = songsPool.filter(song => !playedSongIds.has(song.id));
             if (unplayedSongs.length === 0) {
@@ -1457,6 +1540,7 @@
             let btn = document.getElementById('feedback-btn');
             
             document.getElementById('suggestions-box').style.display = 'none';
+            document.getElementById('mp-result').style.display = 'none'; 
             cover.style.display = 'none';
             
             let milestoneImg = document.getElementById('milestone-image');
@@ -1541,11 +1625,10 @@
             modal.className = "modal gameover";
             cover.style.display = 'none';
             
-            // Standard-Text (wird im Multiplayer oft direkt überschrieben von evaluateWinnerAndPlayAnthem)
             title.innerText = victory ? "🏆 DURCHGESPIELT!" : "💀 GAME OVER";
             desc.innerText = victory ? `Wahnsinn, du hast alle Songs in diesem Modus erkannt!\n\nDein finaler Score: ${score}` : `Du hast alle Leben verloren!\n\nDein finaler Score: ${score}`;
             
-            // Sad-Song nur noch im Solo Modus abspielen!
+            // Sad-Song nur Solo
             if (!victory && score < 500 && !isMultiplayer) {
                 sfxAudio.src = "roddy.mp3";
                 sfxAudio.play().catch(e => console.log("Audio Fehler:", e));
