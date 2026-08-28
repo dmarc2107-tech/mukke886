@@ -18,7 +18,6 @@ const io = new Server(server, {
     }
 });
 
-// Speicher für alle aktiven Räume und Spieler
 const rooms = {};
 
 io.on('connection', (socket) => {
@@ -45,9 +44,7 @@ io.on('connection', (socket) => {
             socket.join(data.code);
             room.players.push({ id: socket.id, name: data.name, avatar: data.avatar, score: 0, lives: 3 });
             
-            // Sage dem neuen Spieler, welchen Index (0 bis 3) er hat
             socket.emit('joinedSuccess', { roomCode: data.code, myIndex: room.players.length - 1 });
-            // Update an alle im Raum senden
             io.to(data.code).emit('lobbyUpdate', room.players);
         } else {
             socket.emit('errorMsg', 'Lobby voll oder nicht gefunden');
@@ -64,7 +61,7 @@ io.on('connection', (socket) => {
         socket.to(data.roomCode).emit('receiveRoundData', data);
     });
 
-    // 5. Punkte-Updates
+    // 5. Punkte-Updates & Leben synchronisieren
     socket.on('syncStats', (data) => {
         const room = rooms[data.roomCode];
         if(room) {
