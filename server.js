@@ -4,76 +4,103 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 const app = express();
-// Erlaubt deinem Frontend, mit dem Backend zu kommunizieren
 app.use(cors()); 
 
-// Damit verschwindet der "Cannot GET /" Fehler!
 app.get('/', (req, res) => {
-    res.send('✅ Der Rap Quiz Multiplayer-Server läuft einwandfrei!');
+    res.send('✅ Der Rap Quiz Multiplayer-Server (2v2 Ready) läuft einwandfrei!');
 });
 
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*", // Jeder darf sich verbinden (hier könntest du auch deine Frontend-Render-URL eintragen)
+        origin: "*", 
         methods: ["GET", "POST"]
     }
 });
 
-// Multiplayer Logik
+// Speicher für alle aktiven Räume und Spieler
+const rooms = {};
+
 io.on('connection', (socket) => {
     console.log('Ein Spieler ist online:', socket.id);
 
     // 1. Host erstellt eine Lobby
-    socket.on('createRoom', () => {
-        // Generiere einen 4-stelligen Code (1000 - 9999)
+    socket.on('createRoom', (userData) => {
         const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
         socket.join(roomCode);
         
-        // Schick den Code zurück an den Host
+        rooms[roomCode] = {
+            host: socket.id,
+            players: [{ id: socket.id, name: userData.name, avatar: userData.avatar, score: 0, lives: 3 }]
+        };
+        
         socket.emit('roomCreated', roomCode);
-        console.log(`Lobby erstellt: ${roomCode}`);
+        io.to(roomCode).emit('lobbyUpdate', rooms[roomCode].players);
     });
 
-    // 2. Gegner tritt der Lobby bei
-    socket.on('joinRoom', (code) => {
-        const room = io.sockets.adapter.rooms.get(code);
-        
-        // Prüfen ob der Raum existiert und genau 1 Person (der Host) drin ist
-        if (room && room.size === 1) {
-            socket.join(code);
-            // Allen im Raum sagen, dass es losgeht
-            io.to(code).emit('gameReady', code);
-            console.log(`Spieler ist Lobby ${code} beigetreten. Spiel startet!`);
+    // 2. Spieler tritt bei (Max 4 Spieler)
+    socket.on('joinRoom', (data) => {
+        const room = rooms[data.code];
+        if (room && room.players.length < 4) {
+            socket.join(data.code);
+            room.players.push({ id: socket.id, name: data.name, avatar: data.avatar, score: 0, lives: 3 });
+            
+            // Sage dem neuen Spieler, welchen Index (0 bis 3) er hat
+            socket.emit('joinedSuccess', { roomCode: data.code, myIndex: room.players.length - 1 });
+            // Update an alle im Raum senden
+            io.to(data.code).emit('lobbyUpdate', room.players);
         } else {
-            // Optional: Wenn der Code falsch ist oder der Raum voll
-            socket.emit('error', 'Lobby voll oder nicht gefunden');
+            socket.emit('errorMsg', 'Lobby voll oder nicht gefunden');
         }
     });
 
-    // 3. Host teilt die gewählten Songs und den Modus mit dem Gegner
+    // 3. Host startet das Spiel
+    socket.on('startGame', (code) => {
+        io.to(code).emit('gameReady', code);
+    });
+
+    // 4. Host sendet die Songs
     socket.on('syncRoundData', (data) => {
-        // Schickt die Daten an alle im Raum, AUßER an den Absender
         socket.to(data.roomCode).emit('receiveRoundData', data);
     });
 
-    // 4. Punkte-Update während des Spiels
+    // 5. Punkte-Updates
     socket.on('syncStats', (data) => {
-        socket.to(data.roomCode).emit('updateOpponentStats', { score: data.score });
+        const room = rooms[data.roomCode];
+        if(room) {
+            const p = room.players.find(p => p.id === socket.id);
+            if(p) { p.score = data.score; p.lives = data.lives; }
+            io.to(data.roomCode).emit('updateAllStats', room.players);
+        }
     });
 
-    // 5. Ein Spieler ist Game Over / hat gewonnen
+    // 6. Tag-Team Synchronisation (Partner zieht nach)
+    socket.on('teammateAnswered', (data) => {
+        socket.to(data.roomCode).emit('teammateAnswered', data);
+    });
+    
+    socket.on('nextRound', (data) => {
+        socket.to(data.roomCode).emit('triggerNextRound', data);
+    });
+
+    // 7. Team stirbt oder Spielende
     socket.on('gameOver', (data) => {
-        socket.to(data.roomCode).emit('opponentGameOver', { score: data.score });
+        socket.to(data.roomCode).emit('opponentGameOver', data);
     });
 
-    // Wenn jemand das Spiel schließt
     socket.on('disconnect', () => {
-        console.log('Spieler hat das Spiel verlassen:', socket.id);
+        for (let code in rooms) {
+            let r = rooms[code];
+            let idx = r.players.findIndex(p => p.id === socket.id);
+            if (idx !== -1) {
+                r.players.splice(idx, 1);
+                io.to(code).emit('lobbyUpdate', r.players);
+                if (r.players.length === 0) delete rooms[code];
+            }
+        }
     });
 });
 
-// Server starten
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`🚀 Server läuft auf Port ${PORT}`);
