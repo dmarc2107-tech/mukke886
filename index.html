@@ -853,7 +853,7 @@
             launchGame();
         }
 
-        // Host schickt das fertige Paket an den Gegner
+       // Host schickt das fertige Paket an den Gegner
         function syncHostData() {
             socket.emit('syncRoundData', { 
                 roomCode: currentRoom, 
