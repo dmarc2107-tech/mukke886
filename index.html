@@ -244,6 +244,23 @@
                     </div>
                 </div>
 
+                <div class="section-title">Dein Club</div>
+                <!-- DYNAMISCHES ARTIST BANNER (2 Bilder) -->
+                <div id="fav-artist-banner" style="display: none; gap: 20px; margin-bottom: 40px;">
+                    <div style="flex: 1; position: relative; border-radius: 16px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <img id="fav-artist-img-1" src="" style="width: 100%; height: 180px; object-fit: cover; display: block;">
+                        <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.9)); padding: 20px 15px 10px; box-sizing: border-box;">
+                            <h3 style="margin: 0; color: white; text-transform: uppercase; font-size: 14px; letter-spacing: 1px;">Artist Profil</h3>
+                        </div>
+                    </div>
+                    <div style="flex: 1; position: relative; border-radius: 16px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <img id="fav-artist-img-2" src="" style="width: 100%; height: 180px; object-fit: cover; display: block;">
+                        <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.9)); padding: 20px 15px 10px; box-sizing: border-box;">
+                            <h3 id="banner-artist-name" style="margin: 0; color: var(--primary); text-transform: uppercase; font-size: 14px; letter-spacing: 1px;">Artist</h3>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="section-title">Quick Play</div>
                 <div class="cards-grid">
                     <div class="ea-card card-highlight" onclick="startMixedMode('all')">
@@ -356,17 +373,14 @@
 
             <div class="stats-bar">
                 <div class="team-score-box">
-                    <span class="team-score-title score-blue">Team Blau</span>
+                    <span class="team-score-title score-blue">Dein Score</span>
                     <span id="score-blue" class="team-score-num">0</span>
                 </div>
                 <div id="lives-display">
                     <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Deine Leben</div>
                     <span id="hearts-container">❤️❤️❤️</span>
                 </div>
-                <div class="team-score-box">
-                    <span class="team-score-title score-red">Team Rot</span>
-                    <span id="score-red" class="team-score-num">0</span>
-                </div>
+                <!-- Wird im Multiplayer vom Code gesteuert (Gegner Score) -->
             </div>
             
             <div class="visualizer"><div class="visualizer-inner">🎵</div></div>
@@ -419,7 +433,7 @@
         // ==========================================
         // SYSTEM & PROFIL
         // ==========================================
-        const SERVER_URL = 'https://mukke886.onrender.com';
+        const SERVER_URL = 'https://mukke88.onrender.com';
         const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
         
         socket.on('connect', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🟢 Bereit für Multiplayer'; el.style.color = 'var(--success)'; } });
@@ -430,8 +444,14 @@
         let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; let myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
         let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, draws: 0 };
         let menuAudio = new Audio(); menuAudio.volume = 0.2; menuAudio.loop = true; let isMenuMusicPlaying = false;
+        
+        // Neu deklariert, um Abstürze zu vermeiden
+        let gameIsOver = false;
+        let opponentFinalStats = null;
+        let isMultiplayer = false;
+        let isMpHost = false;
 
-        // --- RADIO SHUFFLE ALGORITHMUS (ANTI-CLUSTERING) ---
+        // --- RADIO SHUFFLE ALGORITHMUS ---
         function smartShuffle(pool) {
             let byArtist = {};
             for(let s of pool) {
@@ -446,7 +466,7 @@
             
             while(keepGoing) {
                 keepGoing = false;
-                artists.sort(() => 0.5 - Math.random()); // Jede Runde neue Reihenfolge der Künstler
+                artists.sort(() => 0.5 - Math.random()); 
                 for(let a of artists) {
                     if(byArtist[a].length > 0) {
                         result.push(byArtist[a].pop());
@@ -475,7 +495,15 @@
             const s = document.createElement('script'); s.src = `https://api.deezer.com/search/artist?q="${encodeURIComponent(artistName)}"&limit=1&output=jsonp&callback=${cb}`; document.head.appendChild(s);
         }
 
-        function updateAllAvatars() { ['sidebar-avatar', 'profile-view-avatar', 'ingame-my-avatar'].forEach(id => { let el = document.getElementById(id); if(el) el.src = myAvatar; }); }
+        function updateAllAvatars() { 
+            ['sidebar-avatar', 'profile-view-avatar'].forEach(id => { let el = document.getElementById(id); if(el) el.src = myAvatar; }); 
+            let b1 = document.getElementById('fav-artist-img-1'); let b2 = document.getElementById('fav-artist-img-2'); let bName = document.getElementById('banner-artist-name');
+            if (b1 && b2 && myBgUrl && myAvatar) { 
+                b1.src = myBgUrl; b2.src = myAvatar; 
+                if(bName) bName.innerText = myFavArtist; 
+                document.getElementById('fav-artist-banner').style.display = 'flex'; 
+            }
+        }
 
         function searchMenuSong(mode) {
             let inputId = mode === 'setup' ? 'song-search-input' : 'edit-song-search-input'; let selectId = mode === 'setup' ? 'menu-song-select' : 'edit-menu-song-select';
@@ -538,21 +566,19 @@
         }
 
         // ==========================================
-        // MULTIPLAYER LOBBY & 2v2 LOGIK
+        // MULTIPLAYER LOBBY 
         // ==========================================
-        let lobbyPlayers = []; let myIndex = 0; let myTeam = 0; let isMyTurn = true; let currentRoundIndex = 0;
+        let lobbyPlayers = []; let currentRoom = '';
         function createRoom() { isMpHost = true; socket.emit('createRoom', { name: playerName, avatar: myAvatar }); document.getElementById('mp-status').innerText = 'Verbinde...'; }
         function joinRoom() { let c = document.getElementById('join-code-input').value; if(c){ isMpHost = false; socket.emit('joinRoom', { code: c, name: playerName, avatar: myAvatar }); document.getElementById('mp-status').innerText = 'Trete bei...'; } }
         function cancelMultiplayer() { isMultiplayer = false; isMpHost = false; currentRoom = ''; switchTab('play-tab', document.getElementById('nav-play')); }
 
-        socket.on('roomCreated', (code) => { currentRoom = code; myIndex = 0; document.getElementById('room-code-display').innerText = code; document.getElementById('mp-status').innerText = 'Warte auf Mitspieler... (Max 4)'; });
-        socket.on('joinedSuccess', (data) => { currentRoom = data.roomCode; myIndex = data.myIndex; document.getElementById('room-code-display').innerText = data.roomCode; document.getElementById('mp-status').innerText = 'Warte auf den Host...'; });
+        socket.on('roomCreated', (code) => { currentRoom = code; document.getElementById('room-code-display').innerText = code; document.getElementById('mp-status').innerText = 'Warte auf Mitspieler...'; });
+        socket.on('joinedSuccess', (data) => { currentRoom = data.roomCode; document.getElementById('room-code-display').innerText = data.roomCode; document.getElementById('mp-status').innerText = 'Warte auf den Host...'; });
         socket.on('errorMsg', (msg) => { alert(msg); cancelMultiplayer(); });
         
-        socket.on('lobbyUpdate', (players) => { lobbyPlayers = players; });
         socket.on('gameReady', (code) => { if(!isMpHost) { document.getElementById('mp-status').innerText = 'Host wählt gerade den Modus aus...'; } });
         socket.on('receiveRoundData', (data) => { resetGameStats(); songsPool = data.songs; currentMode = data.mode; isHardcoreMode = data.hardcore; showArtistName = data.showArtist; document.getElementById('hardcore-toggle').checked = isHardcoreMode; document.getElementById('artist-toggle').checked = showArtistName; isMultiplayer = true; document.getElementById('loading-overlay').style.display = 'none'; launchGame(); });
-        socket.on('updateAllStats', (players) => { lobbyPlayers = players; updateStatsDisplay(); });
         
         socket.on('opponentGameOver', (data) => {
             opponentFinalStats = data; 
@@ -590,8 +616,7 @@
 
         function resetGameStats() {
             songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; opponentFinalStats = null;
-            document.getElementById('opponent-container').style.display = isMultiplayer ? 'flex' : 'none'; document.getElementById('lives-display').style.display = 'block'; 
-            updateAllAvatars(); document.getElementById('ingame-my-name').innerText = playerName; updateStatsDisplay(); sfxAudio.pause(); document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
+            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
         }
 
         function backToMenu() { audio.pause(); sfxAudio.pause(); clearTimeout(precisionTimer); cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; if(isMenuMusicPlaying) menuAudio.play().catch(e=>{}); }
@@ -606,7 +631,7 @@
             if (mode === 'megahits') songsPool = songsPool.filter(s => s.rank > 600000);
             if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Nicht genug Songs gefunden. Bitte nochmal probieren!"); return; }
             
-            songsPool = smartShuffle(songsPool); // Smart Shuffle anwenden
+            songsPool = smartShuffle(songsPool); 
             if (isMultiplayer && isMpHost) syncHostData(); launchGame();
         }
 
@@ -615,7 +640,7 @@
             await Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchDeezer(a)));
             if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Fehler beim Laden."); return; }
             
-            songsPool = smartShuffle(songsPool); // Smart Shuffle anwenden
+            songsPool = smartShuffle(songsPool); 
             if (isMultiplayer && isMpHost) syncHostData(); launchGame();
         }
 
@@ -624,12 +649,11 @@
             await fetchDeezer(artist);
             if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Nicht genug Songs für diesen Artist."); return; }
             
-            songsPool = smartShuffle(songsPool); // Smart Shuffle anwenden
+            songsPool = smartShuffle(songsPool); 
             if (isMultiplayer && isMpHost) syncHostData(); launchGame();
         }
 
         function syncHostData() {
-            // Hier NICHT mehr mit Math.random() zerstören, da smartShuffle schon gearbeitet hat
             let safePool = songsPool.map(s => ({ id: s.id, title: s.title, preview: s.preview, artist: { name: s.artist.name }, album: { cover_medium: s.album.cover_medium } })).slice(0, 100);
             socket.emit('syncRoundData', { roomCode: currentRoom, songs: safePool, mode: currentMode, hardcore: isHardcoreMode, showArtist: showArtistName });
         }
@@ -689,9 +713,6 @@
         function skipSong() { processAnswer(false, true); }
         function checkTextInput() { let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); let c = currentSong.title.toLowerCase().split('(')[0].split(' feat')[0].replace(/[^a-z0-9]/g, ''); processAnswer(v === c || (v.length >= 4 && c.includes(v))); }
 
-        socket.on('teammateAnswered', (data) => { if (!isMyTurn && data.team === myTeam) processAnswer(data.correct, data.isSkip, true); });
-        socket.on('triggerNextRound', (data) => { if (!isMyTurn && data.team === myTeam) { currentRoundIndex++; nextRound(); } });
-
         function processAnswer(wasCorrect, isSkip = false) {
             let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover');
             document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
@@ -731,7 +752,10 @@
             document.getElementById('feedback-overlay').style.display = 'flex';
         }
 
-        function updateStatsDisplay() { document.getElementById('score-display').innerText = score; document.getElementById('lives-display').innerText = "❤️".repeat(lives) + "🖤".repeat(3-lives); }
+        function updateStatsDisplay() { 
+            let sb = document.getElementById('score-blue'); if(sb) sb.innerText = score;
+            let hc = document.getElementById('hearts-container'); if(hc) hc.innerText = "❤️".repeat(lives) + "🖤".repeat(3-lives); 
+        }
     </script>
 </body>
 </html>
