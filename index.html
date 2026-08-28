@@ -24,10 +24,7 @@
 
         body { 
             font-family: 'Poppins', sans-serif; 
-            /* Animierter Hintergrund-Verlauf */
-            background: linear-gradient(135deg, #09090b, #18181b, #1f1033, #09090b);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+            background-color: var(--bg-color); 
             color: var(--text); 
             text-align: center; 
             margin: 0;
@@ -37,10 +34,16 @@
             min-height: 100vh;
         }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* --- DYNAMISCHER ARTIST HINTERGRUND --- */
+        #app-background {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(25px) brightness(0.3); /* Milchglas & Abdunklung für Lesbarkeit */
+            z-index: -1; /* Hinter allem */
+            transition: background-image 1.5s ease-in-out;
+            background-color: var(--bg-color); /* Fallback */
         }
 
         /* Musik-Toggle Button oben rechts */
@@ -472,29 +475,6 @@
             box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
         }
 
-        /* Profil Avatar Grid */
-        .avatar-grid {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .avatar-option {
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.1);
-            cursor: pointer;
-            transition: 0.3s;
-            background: #000;
-            object-fit: cover;
-        }
-        
-        .avatar-option:hover { border-color: var(--primary); transform: scale(1.15) translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        .avatar-option.selected { border-color: var(--success); box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); transform: scale(1.1); }
-
         /* Stats Box im Profil */
         .profile-stats-box {
             display: flex;
@@ -513,6 +493,9 @@
 </head>
 <body>
 
+    <!-- DYNAMISCHER HINTERGRUND -->
+    <div id="app-background"></div>
+
     <!-- MENÜ MUSIK TOGGLE -->
     <button id="music-toggle-btn" onclick="toggleMenuMusic()" title="Menü Musik An/Aus">🔊</button>
 
@@ -520,25 +503,13 @@
     <div id="profile-overlay" class="overlay">
         <div class="modal">
             <h2 id="profile-title">Profil erstellen</h2>
-            <p id="profile-desc">Wähle deinen Avatar und lege dein lokales Profil an:</p>
-            
-            <div id="avatar-select-container">
-                <div class="avatar-grid" id="avatar-grid-selection">
-                    <!-- Avatare werden per JS geladen -->
-                </div>
-                
-                <!-- Bild Upload -->
-                <div style="margin-bottom: 25px;">
-                    <label for="avatar-upload-input" class="btn" style="padding: 10px 15px; font-size: 13px; background: rgba(255,255,255,0.05); color: var(--text); cursor: pointer; display: inline-block; width: auto;">🖼️ Eigenes Bild hochladen</label>
-                    <input type="file" id="avatar-upload-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
-                </div>
-            </div>
+            <p id="profile-desc">Lege deinen Namen und deine Sieger-Hymne fest. Der Artist wird automatisch zu deinem Profilbild und Spiel-Hintergrund!</p>
 
             <input type="text" id="username-input" class="btn" style="background: rgba(0,0,0,0.5); text-align: center; font-size: 16px; margin-bottom: 12px;" placeholder="Dein Spielername" autocomplete="off">
             <input type="password" id="password-input" class="btn" style="background: rgba(0,0,0,0.5); text-align: center; font-size: 16px; margin-bottom: 20px;" placeholder="Dein Passwort">
             
             <div id="artist-select-container">
-                <p style="margin-bottom: 8px; font-size: 13px; color: var(--primary); font-weight: 800; text-transform: uppercase;">Wähle deine Sieger-Hymne:</p>
+                <p style="margin-bottom: 8px; font-size: 13px; color: var(--primary); font-weight: 800; text-transform: uppercase;">Wähle deinen Artist (Avatar & Hymne):</p>
                 <select id="fav-artist-select" class="btn" style="background: rgba(0,0,0,0.5); text-align: center; font-size: 16px; margin-bottom: 25px; color: var(--text);">
                     <!-- Artists werden via JS geladen -->
                 </select>
@@ -571,7 +542,7 @@
             </div>
         </div>
 
-        <p style="margin-bottom: 8px; font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; text-align: left; padding-left: 5px;">🎵 Aktuelle Sieger-Hymne:</p>
+        <p style="margin-bottom: 8px; font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; text-align: left; padding-left: 5px;">🎵 Aktueller Artist (Avatar & Hymne):</p>
         <select id="edit-fav-artist-select" class="btn" style="background: rgba(0,0,0,0.5); text-align: center; font-size: 16px; margin-bottom: 30px; color: var(--text);" onchange="updateFavArtist()">
             <!-- Artists via JS -->
         </select>
@@ -760,15 +731,6 @@
         let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix';
         
         let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, draws: 0 };
-        
-        const avatarOptions = [
-            'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix',
-            'https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka',
-            'https://api.dicebear.com/7.x/adventurer/svg?seed=Jack',
-            'https://api.dicebear.com/7.x/adventurer/svg?seed=Jocelyn',
-            'https://api.dicebear.com/7.x/adventurer/svg?seed=Max',
-            'https://api.dicebear.com/7.x/adventurer/svg?seed=Jude'
-        ];
 
         let isMultiplayer = false;
         let isMpHost = false;
@@ -801,27 +763,23 @@
             if (!myFavArtist) return;
             document.getElementById('music-toggle-btn').style.display = 'block';
             
-            // Wenn schon ein Song drin ist, einfach weiterlaufen lassen
             if (menuAudio.src && menuAudio.src !== "") {
-                if (isMenuMusicPlaying) menuAudio.play().catch(e => console.log("Autoplay blockiert."));
+                if (isMenuMusicPlaying) menuAudio.play().catch(e => console.log(e));
                 return;
             }
 
-            // Neuen Song des Lieblingskünstlers holen
-            const cb = 'deezer_menu_' + Date.now();
+            const cb = 'deezer_menu_' + Date.now() + Math.floor(Math.random()*1000);
             window[cb] = function(res) {
                 if (res && res.data) {
                     let tracks = res.data.filter(t => t.preview && t.artist.name.toLowerCase().includes(myFavArtist.toLowerCase()));
                     if (tracks.length > 0) {
                         let t = tracks[Math.floor(Math.random() * tracks.length)];
                         menuAudio.src = t.preview;
-                        // Standardmäßig versuchen wir es abzuspielen
                         menuAudio.play().then(() => {
                             isMenuMusicPlaying = true;
                             document.getElementById('music-toggle-btn').innerText = "🔊";
                             document.getElementById('music-toggle-btn').style.opacity = "1";
                         }).catch(e => {
-                            // Autoplay vom Browser blockiert
                             isMenuMusicPlaying = false;
                             document.getElementById('music-toggle-btn').innerText = "🔇";
                             document.getElementById('music-toggle-btn').style.opacity = "0.5";
@@ -834,86 +792,37 @@
             document.head.appendChild(script);
         }
 
-        // Bild Upload für Avatar
-        function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        // --- NEU: BILDER VOM ARTIST ALS AVATAR & HINTERGRUND ---
+        function loadArtistVisuals(artistName) {
+            if (!artistName) return;
+            const cb = 'deezer_visuals_' + Date.now() + Math.floor(Math.random()*1000);
+            window[cb] = function(res) {
+                if (res && res.data && res.data.length > 0) {
+                    let artistData = res.data[0]; 
+                    
+                    let bgUrl = artistData.picture_xl;
+                    let avatarUrl = artistData.picture_medium;
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = 150;
-                    canvas.height = 150;
+                    // Hintergrund dynamisch setzen
+                    document.getElementById('app-background').style.backgroundImage = `url('${bgUrl}')`;
                     
-                    const size = Math.min(img.width, img.height);
-                    const x = (img.width - size) / 2;
-                    const y = (img.height - size) / 2;
-                    
-                    ctx.drawImage(img, x, y, size, size, 0, 0, 150, 150);
-                    
-                    // Base64 Code erzeugen
-                    const base64Avatar = canvas.toDataURL('image/jpeg', 0.8);
-                    myAvatar = base64Avatar;
-                    
-                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
-                    
-                    let customPreview = document.getElementById('custom-avatar-preview');
-                    if (!customPreview) {
-                        customPreview = document.createElement('img');
-                        customPreview.id = 'custom-avatar-preview';
-                        customPreview.className = 'avatar-option selected';
-                        customPreview.onclick = () => {
-                            document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
-                            customPreview.classList.add('selected');
-                            myAvatar = customPreview.src;
-                        };
-                        document.getElementById('avatar-grid-selection').appendChild(customPreview);
-                    } else {
-                        customPreview.classList.add('selected');
-                    }
-                    customPreview.src = base64Avatar;
-                };
-                img.src = e.target.result;
+                    // Avatar automatisch setzen
+                    myAvatar = avatarUrl;
+                    localStorage.setItem('rapquiz_avatar', myAvatar);
+                    updateAllAvatars();
+                }
             };
-            reader.readAsDataURL(file);
+            const script = document.createElement('script');
+            script.src = `https://api.deezer.com/search/artist?q="${encodeURIComponent(artistName)}"&limit=1&output=jsonp&callback=${cb}`;
+            document.head.appendChild(script);
         }
 
-        function loadAvatarGrid() {
-            let grid = document.getElementById('avatar-grid-selection');
-            grid.innerHTML = '';
-            let foundCustom = false;
-
-            avatarOptions.forEach(src => {
-                let img = document.createElement('img');
-                img.src = src;
-                img.className = 'avatar-option';
-                if (src === myAvatar) {
-                    img.classList.add('selected');
-                    foundCustom = true;
-                }
-                img.onclick = () => {
-                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
-                    img.classList.add('selected');
-                    myAvatar = src;
-                };
-                grid.appendChild(img);
+        function updateAllAvatars() {
+            let els = ['profile-view-avatar', 'menu-avatar-display', 'ingame-my-avatar'];
+            els.forEach(id => {
+                let el = document.getElementById(id);
+                if(el) el.src = myAvatar;
             });
-
-            if (!foundCustom && myAvatar && myAvatar.length > 100) {
-                let customPreview = document.createElement('img');
-                customPreview.id = 'custom-avatar-preview';
-                customPreview.src = myAvatar;
-                customPreview.className = 'avatar-option selected';
-                customPreview.onclick = () => {
-                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
-                    customPreview.classList.add('selected');
-                    myAvatar = customPreview.src;
-                };
-                grid.appendChild(customPreview);
-            }
         }
 
         function populateArtistSelects() {
@@ -933,12 +842,10 @@
 
         function checkProfile() {
             populateArtistSelects();
-            loadAvatarGrid();
 
             if (!playerName || !savedPw) {
                 document.getElementById('profile-title').innerText = "Profil erstellen";
-                document.getElementById('profile-desc').innerText = "Wähle deinen Avatar und lege dein Profil an:";
-                document.getElementById('avatar-select-container').style.display = 'block';
+                document.getElementById('profile-desc').innerText = "Lege deinen Namen und deine Sieger-Hymne fest. Der Artist wird automatisch zu deinem Profilbild und Spiel-Hintergrund!";
                 document.getElementById('artist-select-container').style.display = 'block';
                 document.getElementById('profile-overlay').style.display = 'flex';
             } else {
@@ -946,7 +853,6 @@
                 document.getElementById('profile-desc').innerText = "Bitte gib dein Passwort ein, um dich einzuloggen:";
                 document.getElementById('username-input').value = playerName;
                 document.getElementById('username-input').disabled = true;
-                document.getElementById('avatar-select-container').style.display = 'none';
                 document.getElementById('artist-select-container').style.display = 'none';
                 document.getElementById('profile-overlay').style.display = 'flex';
             }
@@ -974,18 +880,16 @@
                 localStorage.setItem('rapquiz_username', name);
                 localStorage.setItem('rapquiz_password', pw);
                 localStorage.setItem('rapquiz_fav_artist', fav);
-                localStorage.setItem('rapquiz_avatar', myAvatar);
                 playerName = name;
                 savedPw = pw;
                 myFavArtist = fav;
             }
             
             document.getElementById('player-greeting').innerText = `Hi, ${playerName}!`;
-            document.getElementById('menu-avatar-display').src = myAvatar;
             document.getElementById('profile-overlay').style.display = 'none';
             err.style.display = 'none';
             
-            // Starte Menü-Musik nach erfolgreichem Login
+            loadArtistVisuals(myFavArtist);
             playMenuMusic();
         }
 
@@ -1002,6 +906,8 @@
             myAvatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix';
             myStats = { played: 0, wins: 0, losses: 0, draws: 0 };
             
+            document.getElementById('app-background').style.backgroundImage = '';
+            
             document.getElementById('username-input').disabled = false;
             document.getElementById('username-input').value = '';
             document.getElementById('password-input').value = '';
@@ -1015,8 +921,6 @@
         }
 
         function openProfileScreen() {
-            document.getElementById('profile-view-avatar').src = myAvatar;
-            document.getElementById('profile-view-name').innerText = playerName;
             document.getElementById('stat-played').innerText = myStats.played;
             document.getElementById('stat-wins').innerText = myStats.wins;
             document.getElementById('stat-losses').innerText = myStats.losses;
@@ -1028,7 +932,9 @@
         function updateFavArtist() {
             myFavArtist = document.getElementById('edit-fav-artist-select').value;
             localStorage.setItem('rapquiz_fav_artist', myFavArtist);
-            // Wechselt die Menümusik, wenn man im Profil den Artist ändert
+            
+            // Wechselt Hintergrund, Avatar und Menümusik
+            loadArtistVisuals(myFavArtist);
             menuAudio.src = '';
             playMenuMusic();
         }
@@ -1085,27 +991,22 @@
             if(data.avatar) document.getElementById('ingame-opp-avatar').src = data.avatar;
         });
 
-        // HIER IST DAS HERZSTÜCK VOM SUDDEN DEATH FIX
         socket.on('opponentGameOver', (data) => {
             opponentFinalStats = data; 
             
             if (gameIsOver) {
-                // Wir sind schon auf dem Auswertungsbildschirm
                 evaluateWinnerAndPlayAnthem();
             } else {
-                // SUDDEN DEATH: Gegner ist gestorben, bevor wir fertig waren. Wir frieren sofort ein!
+                // SUDDEN DEATH!
                 gameIsOver = true;
                 audio.pause();
                 clearTimeout(precisionTimer);
                 
-                // Wir verstecken die Runden-Inhalte, damit man nichts mehr drücken kann
                 document.getElementById('options').style.display = 'none';
                 document.getElementById('text-input-container').style.display = 'none';
                 
-                // Wir senden dem Server unseren aktuellen Punktestand zum exakten Abbruch-Zeitpunkt
                 socket.emit('gameOver', { roomCode: currentRoom, score: score, favArtist: myFavArtist });
                 
-                // Zeige den Ladebildschirm kurz oder gehe direkt in die Auswertung
                 document.getElementById('feedback-overlay').style.display = 'flex';
                 evaluateWinnerAndPlayAnthem();
             }
@@ -1125,23 +1026,22 @@
             let myFinalScore = parseInt(score) || 0;
             let oppFinalScore = parseInt(opponentFinalStats.score) || 0;
 
-            // KLARE FARBEN UND ZUWEISUNGEN FÜR WIN/LOSS
             if (myFinalScore > oppFinalScore) {
-                modal.className = "modal correct"; // ERZWINGT GRÜN
+                modal.className = "modal correct"; 
                 title.innerText = "🏆 DU HAST GEWONNEN!";
                 desc.innerText = `Knockout! Dein Gegner ist raus!\n\nDein Score: ${myFinalScore}\nGegner Score: ${oppFinalScore}`;
                 resultText.innerText = `Deine Sieger-Hymne von ${myFavArtist} wird geladen... 🎵`;
                 winnerArtist = myFavArtist;
                 saveGameStats('win');
             } else if (myFinalScore < oppFinalScore) {
-                modal.className = "modal wrong"; // ERZWINGT ROT
+                modal.className = "modal wrong"; 
                 title.innerText = "❌ DU HAST VERLOREN!";
                 desc.innerText = `Dein Gegner hat dich besiegt!\n\nDein Score: ${myFinalScore}\nGegner Score: ${oppFinalScore}`;
                 resultText.innerText = `Sieger-Hymne von ${opponentFinalStats.favArtist} wird geladen... 🎵`;
                 winnerArtist = opponentFinalStats.favArtist;
                 saveGameStats('loss');
             } else {
-                modal.className = "modal gameover"; // ERZWINGT GELB
+                modal.className = "modal gameover"; 
                 title.innerText = "🤝 UNENTSCHIEDEN!";
                 desc.innerText = `Ihr seid exakt gleichauf!\n\nBeide haben ${myFinalScore} Punkte!`;
                 resultText.style.display = 'none';
@@ -1149,9 +1049,8 @@
                 return; 
             }
 
-            sfxAudio.pause(); // Falls der Roddy Ricch Song lief, abbrechen!
+            sfxAudio.pause(); 
 
-            // HYMNE SUCHEN (STRENGER FILTER)
             const callbackName = 'deezer_anthem_' + Date.now();
             window[callbackName] = function(response) {
                 if (response && response.data && response.data.length > 0) {
@@ -1314,7 +1213,7 @@
             document.getElementById('opponent-container').style.display = isMultiplayer ? 'flex' : 'none';
             document.getElementById('lives-display').style.display = 'block'; 
             
-            document.getElementById('ingame-my-avatar').src = myAvatar;
+            updateAllAvatars();
             document.getElementById('ingame-my-name').innerText = playerName;
             
             updateStatsDisplay();
@@ -1341,7 +1240,6 @@
                 milestoneImg.src = '';
             }
             
-            // Wenn man zurück ins Menü geht, Menümusik weiterspielen (wenn Toggle an ist)
             if(isMenuMusicPlaying) {
                 menuAudio.play().catch(e => console.log(e));
             }
@@ -1452,7 +1350,6 @@
         }
 
         function launchGame() {
-            // Menü-Musik pausieren, wenn das Spiel startet
             menuAudio.pause();
             
             document.getElementById('loading-overlay').style.display = 'none';
@@ -1742,7 +1639,6 @@
                     desc.innerText = `Ein Leben verloren!\n\nDas war:\n${currentSong.title} - ${currentSong.artist.name}`;
                 }
                 
-                // LEBEN WEG? SOFORTIGE AUSWERTUNG!
                 if (lives <= 0) {
                     setTimeout(() => triggerGameOver(false), 2000);
                 }
@@ -1779,7 +1675,6 @@
             cover.style.display = 'none';
             
             if (isMultiplayer) {
-                // Ich bin tot. Ich teile das dem Gegner mit, damit er auch beendet und auswertet.
                 title.innerText = "💀 AUSGESCHIEDEN!";
                 desc.innerText = "Du hast alle Leben verloren. Warte auf die Auswertung...";
                 document.getElementById('mp-result').innerText = "Lade finales Ergebnis...";
@@ -1787,7 +1682,6 @@
                 
                 socket.emit('gameOver', { roomCode: currentRoom, score: score, favArtist: myFavArtist });
                 
-                // Wenn der Gegner auch schon tot war (oder durch mein Emit sofort ausgewertet wird):
                 if (opponentFinalStats) {
                     evaluateWinnerAndPlayAnthem();
                 }
