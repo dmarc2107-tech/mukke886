@@ -96,6 +96,21 @@
 
         .section-title { font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; border-bottom: 2px solid var(--surface-border); padding-bottom: 10px; color: white; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
 
+        /* --- NEUES BANNER DESIGN --- */
+        .banner-container { 
+            display: flex; align-items: center; gap: 25px; padding: 25px; 
+            border-radius: 16px; border: 2px solid var(--primary); 
+            background: linear-gradient(135deg, rgba(20,20,25,0.9), rgba(139,92,246,0.15)); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 40px; 
+        }
+        .banner-img { 
+            width: 140px; height: 140px; border-radius: 16px; object-fit: cover; 
+            border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 8px 20px rgba(0,0,0,0.5); flex-shrink: 0; 
+        }
+        .banner-text-box { text-align: left; }
+        .banner-subtitle { margin: 0 0 5px 0; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 2px; }
+        .banner-title { margin: 0; color: white; text-transform: uppercase; font-size: 32px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 15px rgba(139,92,246,0.8); }
+
         /* --- MOBILE MEDIA QUERY --- */
         @media (max-width: 768px) {
             #mobile-menu-btn { display: block; }
@@ -110,7 +125,11 @@
             h1 { font-size: 32px; }
             .section-title { font-size: 22px; }
             #music-toggle-btn { top: 20px; right: 20px; padding: 10px; font-size: 12px; z-index: 90;}
-            #fav-artist-banner img { height: 150px !important; }
+            
+            .banner-container { flex-direction: column; text-align: center; padding: 20px; gap: 15px;}
+            .banner-text-box { text-align: center; }
+            .banner-img { width: 120px; height: 120px; }
+            .banner-title { font-size: 24px; }
         }
 
         /* --- CARDS & UI --- */
@@ -269,12 +288,13 @@
                 </div>
 
                 <div class="section-title">Dein Club</div>
-                <!-- DYNAMISCHES GROßES ARTIST BANNER -->
-                <div id="fav-artist-banner" style="display: none; margin-bottom: 40px; position: relative; border-radius: 16px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                    <img id="fav-artist-img-1" src="" style="width: 100%; height: 220px; object-fit: cover; display: block; object-position: center 20%;">
-                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.9)); padding: 40px 25px 20px; box-sizing: border-box;">
-                        <h3 style="margin: 0 0 5px 0; color: white; text-transform: uppercase; font-size: 14px; letter-spacing: 2px;">Dein Ultimate Team Artist</h3>
-                        <h2 id="banner-artist-name" style="margin: 0; color: var(--primary); text-transform: uppercase; font-size: 28px; font-weight: 900; letter-spacing: 1px;">Artist</h2>
+                
+                <!-- NEUES VIERECKIGES ARTIST BANNER DESIGN -->
+                <div id="fav-artist-banner" class="banner-container" style="display: none;">
+                    <img id="fav-artist-img-1" src="" class="banner-img">
+                    <div class="banner-text-box">
+                        <h3 class="banner-subtitle">Dein Ultimate Team Artist</h3>
+                        <h2 id="banner-artist-name" class="banner-title">Artist</h2>
                     </div>
                 </div>
 
@@ -385,7 +405,6 @@
                     <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
                 </div>
                 
-                <!-- Abmelden / Account wechseln Button -->
                 <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Abmelden / Account wechseln</button>
             </div>
         </main>
@@ -395,10 +414,7 @@
     <div id="game-screen">
         <div class="game-inner">
 
-            <!-- DYNAMISCHE SCORE LEISTE FÜR 1-4 SPIELER -->
-            <div class="stats-bar" id="game-stats-bar">
-                <!-- Wird per Javascript generiert -->
-            </div>
+            <div class="stats-bar" id="game-stats-bar"></div>
             
             <div class="visualizer"><div class="visualizer-inner">🎵</div></div>
 
@@ -433,7 +449,6 @@
             <img id="feedback-cover" src="">
             <p id="feedback-desc">Beschreibung</p>
             
-            <!-- HIER KOMMT DAS LIVE MULTIPLAYER LEADERBOARD REIN -->
             <div id="mp-result" style="display: none; margin-bottom: 25px;"></div>
             
             <button id="feedback-btn" class="btn-action">Weiter ➔</button>
@@ -453,7 +468,7 @@
         // ==========================================
         // SYSTEM & PROFIL
         // ==========================================
-        const SERVER_URL = 'https://mukke88.onrender.com';
+        const SERVER_URL = 'https://mukke886.onrender.com';
         const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
         
         socket.on('connect', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🟢 Bereit für Multiplayer'; el.style.color = 'var(--success)'; } });
@@ -503,7 +518,6 @@
             document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
             if(tabId === 'profile-tab') { document.getElementById('stat-played').innerText = myStats.played; document.getElementById('stat-wins').innerText = myStats.wins; document.getElementById('stat-losses').innerText = myStats.losses; }
             
-            // Schließt die Sidebar auf Mobile automatisch nach Tab-Klick
             if (window.innerWidth <= 768) {
                 document.getElementById('sidebar').classList.remove('open');
                 document.getElementById('sidebar-overlay').classList.remove('active');
@@ -528,7 +542,7 @@
             if (b1 && myBgUrl) { 
                 b1.src = myBgUrl; 
                 if(bName) bName.innerText = myFavArtist; 
-                document.getElementById('fav-artist-banner').style.display = 'block'; 
+                document.getElementById('fav-artist-banner').style.display = 'flex'; 
             }
         }
 
@@ -571,7 +585,6 @@
             if (!playerName || !savedPw || !mySongUrl) { 
                 document.getElementById('profile-overlay').style.display = 'flex'; 
             } else { 
-                // Auto-Login ausführen ohne Modal zu zeigen
                 document.getElementById('profile-overlay').style.display = 'none';
                 handleProfileLogin(true); 
             }
@@ -615,7 +628,6 @@
                 updateAllAvatars();
             }
             
-            // Versucht Musik abzuspielen (wird von manchen Browsern beim Auto-Login blockiert)
             menuAudio.src = mySongUrl;
             menuAudio.play().then(() => { 
                 isMenuMusicPlaying = true; 
