@@ -6,6 +6,8 @@
     <title>Ultimate Rap Quiz</title>
     <!-- Socket.io für 2-4 Spieler Multiplayer -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <!-- YouTube Iframe API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700;800;900&display=swap');
 
@@ -229,6 +231,9 @@
 </head>
 <body>
 
+    <!-- Versteckter YouTube Player -->
+    <div id="yt-player" style="position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;"></div>
+
     <img id="app-background" src="" alt="">
     <div class="scanlines"></div>
 
@@ -246,9 +251,9 @@
                 <p style="margin-bottom: 5px; font-size: 12px; color: var(--primary); font-weight: 800; text-transform: uppercase;">1. Wähle deinen Artist (Avatar & Hintergrund)</p>
                 <select id="fav-artist-select" class="ea-input" style="color: white; cursor: pointer;"></select>
 
-                <p style="margin-bottom: 5px; margin-top: 10px; font-size: 12px; color: var(--primary); font-weight: 800; text-transform: uppercase;">2. Suche deine Hymne (Hintergrund-Musik)</p>
+                <p style="margin-bottom: 5px; margin-top: 10px; font-size: 12px; color: var(--primary); font-weight: 800; text-transform: uppercase;">2. Suche deine Hymne ODER füge YouTube-Link ein</p>
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1; text-align: left;" placeholder="z.B. Sicko Mode">
+                    <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1; text-align: left;" placeholder="z.B. Sicko Mode ODER https://youtube.com/...">
                     <button class="btn-action" style="width: auto; padding: 0 20px;" onclick="searchMenuSong('setup')">🔍</button>
                 </div>
                 <select id="menu-song-select" class="ea-input" style="display: none; color: var(--success); font-size: 14px; cursor: pointer;"></select>
@@ -431,7 +436,7 @@
 
                     <h3 style="margin-top: 20px; font-size: 14px; text-transform: uppercase;">2. Hymne & Menü-Musik ändern</h3>
                     <div style="display:flex; gap:10px; margin-bottom:10px;">
-                        <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="Song suchen...">
+                        <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="Song suchen ODER YouTube-Link einfügen...">
                         <button class="btn-action" style="width:auto; padding:0 20px;" onclick="searchMenuSong('edit')">🔍</button>
                     </div>
                     <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
@@ -519,7 +524,28 @@
         let myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
         
         let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, draws: 0, totalScore: 0 };
-        if (myStats.totalScore === undefined) myStats.totalScore = 0; // Update für alte Speicherstände
+        if (myStats.totalScore === undefined) myStats.totalScore = 0; 
+
+        // --- YOUTUBE INTEGRATION LOGIK ---
+        let ytPlayer;
+        let ytReady = false;
+        let ytContext = 'menu'; // 'menu' oder 'winner'
+
+        function onYouTubeIframeAPIReady() {
+            ytPlayer = new YT.Player('yt-player', {
+                height: '1', width: '1',
+                playerVars: { 'autoplay': 0, 'controls': 0, 'showinfo': 0, 'rel': 0 },
+                events: {
+                    'onReady': () => { ytReady = true; },
+                    'onStateChange': (event) => {
+                        // Loopt das Video im Menü automatisch
+                        if (event.data === YT.PlayerState.ENDED && ytContext === 'menu') {
+                            ytPlayer.seekTo(0); ytPlayer.playVideo();
+                        }
+                    }
+                }
+            });
+        }
 
         let menuAudio = new Audio(); menuAudio.loop = true; menuAudio.crossOrigin = "anonymous"; menuAudio.volume = globalVolume * 0.4;
         let isMenuMusicPlaying = false;
@@ -546,9 +572,54 @@
         function changeVolume(val) {
             globalVolume = parseFloat(val);
             localStorage.setItem('rapquiz_volume', globalVolume);
-            menuAudio.volume = globalVolume * 0.4; // Menü immer etwas leiser
+            menuAudio.volume = globalVolume * 0.4;
             audio.volume = globalVolume;
             sfxAudio.volume = globalVolume;
+            if(ytReady && ytPlayer.setVolume) {
+                let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100;
+                ytPlayer.setVolume(globalVolume * vol); 
+            }
+        }
+
+        // --- MUSIK STEUERUNG (YouTube & MP3) ---
+        function playMenuMusic(url) {
+            if(!url) return;
+            isMenuMusicPlaying = true;
+            ytContext = 'menu';
+            
+            if (url.startsWith('yt:')) {
+                menuAudio.pause();
+                let vid = url.substring(3);
+                if(ytReady && ytPlayer.loadVideoById) {
+                    ytPlayer.setVolume(globalVolume * 40);
+                    ytPlayer.loadVideoById(vid);
+                } else {
+                    setTimeout(() => playMenuMusic(url), 500); // Wartet bis YouTube geladen ist
+                }
+            } else {
+                if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+                menuAudio.src = url; menuAudio.volume = globalVolume * 0.4;
+                menuAudio.play().catch(e=>{});
+            }
+            let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
+            btns.forEach(b => { if(b) { b.innerHTML = "🔊 Musik An"; b.style.opacity = "1"; } });
+        }
+
+        function pauseMenuMusic() {
+            menuAudio.pause();
+            if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+        }
+
+        function resumeMenuMusic() {
+            if (!isMenuMusicPlaying) return;
+            ytContext = 'menu';
+            if (mySongUrl.startsWith('yt:')) {
+                if(ytReady && ytPlayer.playVideo) {
+                    ytPlayer.setVolume(globalVolume * 40); ytPlayer.playVideo();
+                }
+            } else {
+                menuAudio.play().catch(e=>{});
+            }
         }
 
         // --- LEVEL SYSTEM LOGIK ---
@@ -597,10 +668,8 @@
                 document.getElementById('stat-losses').innerText = myStats.losses; 
                 updateLevelDisplay();
             }
-            
             if (window.innerWidth <= 768) {
-                document.getElementById('sidebar').classList.remove('open');
-                document.getElementById('sidebar-overlay').classList.remove('active');
+                document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active');
             }
         }
 
@@ -627,13 +696,26 @@
         }
 
         function searchMenuSong(mode) {
-            let inputId = mode === 'setup' ? 'song-search-input' : 'edit-song-search-input'; let selectId = mode === 'setup' ? 'menu-song-select' : 'edit-menu-song-select';
+            let inputId = mode === 'setup' ? 'song-search-input' : 'edit-song-search-input'; 
+            let selectId = mode === 'setup' ? 'menu-song-select' : 'edit-menu-song-select';
             let q = document.getElementById(inputId).value.trim(); if(!q) return;
+
+            let sel = document.getElementById(selectId);
+            
+            // Check ob es ein YouTube Link ist
+            let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+            if (ytMatch) {
+                let vid = ytMatch[1];
+                sel.innerHTML = `<option value="yt:${vid}">YouTube Track: ${vid} (Volle Länge)</option>`;
+                sel.style.display = 'block';
+                return;
+            }
+
             const cb = 'deezer_song_' + Date.now();
             window[cb] = function(res) {
-                let sel = document.getElementById(selectId); sel.innerHTML = '';
+                sel.innerHTML = '';
                 if(res && res.data && res.data.length > 0) {
-                    res.data.filter(t => t.preview).slice(0, 10).forEach(t => { let opt = document.createElement('option'); opt.value = t.preview; opt.innerText = `${t.artist.name} - ${t.title}`; sel.appendChild(opt); });
+                    res.data.filter(t => t.preview).slice(0, 10).forEach(t => { let opt = document.createElement('option'); opt.value = t.preview; opt.innerText = `${t.artist.name} - ${t.title} (30s Snippet)`; sel.appendChild(opt); });
                     sel.style.display = 'block';
                 } else { sel.innerHTML = '<option value="">Nichts gefunden</option>'; sel.style.display = 'block'; }
             };
@@ -643,14 +725,10 @@
         function toggleMenuMusic() {
             let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
             if (isMenuMusicPlaying) { 
-                menuAudio.pause(); isMenuMusicPlaying = false; 
+                isMenuMusicPlaying = false; pauseMenuMusic(); 
                 btns.forEach(b => { if(b) { b.innerHTML = "🔇 Musik Aus"; b.style.opacity = "0.5"; } });
             } else { 
-                if(!menuAudio.src || menuAudio.src === window.location.href) menuAudio.src = mySongUrl; 
-                menuAudio.play().then(() => { 
-                    isMenuMusicPlaying = true; 
-                    btns.forEach(b => { if(b) { b.innerHTML = "🔊 Musik An"; b.style.opacity = "1"; } });
-                }).catch(e => console.log("Fehler", e)); 
+                playMenuMusic(mySongUrl);
             }
         }
 
@@ -675,7 +753,6 @@
 
         function handleProfileLogin(isAutoLogin = false) {
             let err = document.getElementById('profile-error');
-            
             if (!isAutoLogin) {
                 let name = document.getElementById('username-input').value.trim(); 
                 let pw = document.getElementById('password-input').value.trim(); 
@@ -683,7 +760,7 @@
                 if (savedPw && pw !== savedPw) { err.innerText = "Falsches Passwort!"; err.style.display = 'block'; return; }
                 if(!savedPw || !mySongUrl) {
                     let songDropdown = document.getElementById('menu-song-select');
-                    if(songDropdown.style.display === 'none' || !songDropdown.value) { err.innerText = "Suche und wähle erst deinen Menü-Song!"; err.style.display = 'block'; return; }
+                    if(songDropdown.style.display === 'none' || !songDropdown.value) { err.innerText = "Suche und wähle erst deine Hymne aus!"; err.style.display = 'block'; return; }
                     myFavArtist = document.getElementById('fav-artist-select').value; 
                     mySongUrl = songDropdown.value; 
                     mySongTitle = songDropdown.options[songDropdown.selectedIndex].text;
@@ -709,14 +786,7 @@
             if(musicBtn && window.innerWidth > 768) musicBtn.style.display = 'block';
             if (isAutoLogin && myAvatar && myBgUrl) updateAllAvatars();
             
-            menuAudio.src = mySongUrl;
-            menuAudio.play().then(() => { 
-                isMenuMusicPlaying = true; 
-                if(musicBtn) { musicBtn.innerHTML = "🔊 Musik An"; musicBtn.style.opacity = "1"; }
-            }).catch(e => { 
-                isMenuMusicPlaying = false; 
-                if(musicBtn) { musicBtn.innerHTML = "🔇 Musik Aus"; musicBtn.style.opacity = "0.5"; }
-            });
+            playMenuMusic(mySongUrl);
         }
 
         function resetProfile() { localStorage.clear(); location.reload(); }
@@ -725,7 +795,8 @@
             let sel = document.getElementById('edit-menu-song-select');
             if(sel.value) {
                 mySongUrl = sel.value; mySongTitle = sel.options[sel.selectedIndex].text;
-                localStorage.setItem('rapquiz_menu_song_url', mySongUrl); localStorage.setItem('rapquiz_menu_song_title', mySongTitle); document.getElementById('profile-view-hymn').innerText = mySongTitle; menuAudio.src = mySongUrl; if(isMenuMusicPlaying) menuAudio.play();
+                localStorage.setItem('rapquiz_menu_song_url', mySongUrl); localStorage.setItem('rapquiz_menu_song_title', mySongTitle); document.getElementById('profile-view-hymn').innerText = mySongTitle; 
+                playMenuMusic(mySongUrl);
             }
         }
 
@@ -849,7 +920,6 @@
                     myStats.played++; 
                     if(amIFirst) myStats.wins++; else myStats.losses++;
                     
-                    // PLUS XP BEIM MULTIPLAYER ENDE
                     myStats.totalScore = (myStats.totalScore || 0) + score;
                     localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
                     updateLevelDisplay();
@@ -864,7 +934,7 @@
         // --- SUDDEN DEATH LOKALE LOGIK ---
         function triggerSuddenDeathLocal(tiedIds) {
             let amITied = tiedIds.includes(socket.id);
-            sfxAudio.pause(); 
+            sfxAudio.pause(); if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
             
             tiedIds.forEach(id => delete matchEndData[id]); 
             
@@ -896,6 +966,19 @@
         }
 
         // --- DER SIEGER BILDSCHIRM (7 SEKUNDEN HYMNE) ---
+        function playWinnerAnthem(url) {
+            sfxAudio.pause(); pauseMenuMusic();
+            if (url && url.startsWith('yt:')) {
+                let vid = url.substring(3);
+                if(ytReady && ytPlayer.loadVideoById) {
+                    ytContext = 'winner';
+                    ytPlayer.setVolume(globalVolume * 100); ytPlayer.loadVideoById(vid);
+                }
+            } else {
+                sfxAudio.src = url || 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
+            }
+        }
+
         function showWinnerScreen(winner) {
             let m = document.getElementById('feedback-modal'); m.className = "modal correct"; 
             document.getElementById('feedback-title').innerText = "🏆 GEWINNER 🏆";
@@ -911,11 +994,11 @@
                 <p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>
             `;
             
-            sfxAudio.pause(); sfxAudio.src = winner.anthem || 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
+            playWinnerAnthem(winner.anthem);
             document.getElementById('feedback-btn').style.display = 'none'; 
             
             setTimeout(() => {
-                sfxAudio.pause();
+                sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
                 cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
                 document.getElementById('feedback-title').innerText = "📊 ENDSTAND"; document.getElementById('feedback-desc').innerText = "";
                 renderMpLeaderboard(); 
@@ -928,9 +1011,6 @@
         // GAME LOGIC & PARALLEL FETCH
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
-        
-        let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
-        let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
         
         let currentPlayId = 0; 
         function playAudioSnippet(isReplay = false) { 
@@ -975,10 +1055,15 @@
 
         function resetGameStats() {
             songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
-            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
+            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+            document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
         }
 
-        function backToMenu() { audio.pause(); sfxAudio.pause(); clearTimeout(precisionTimer); cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; if(isMenuMusicPlaying) menuAudio.play().catch(e=>{}); }
+        function backToMenu() { 
+            audio.pause(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+            clearTimeout(precisionTimer); cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; 
+            resumeMenuMusic(); 
+        }
 
         async function startMixedMode(mode) {
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
@@ -1030,7 +1115,8 @@
         }
 
         function launchGame() {
-            menuAudio.pause(); document.getElementById('loading-overlay').style.display = 'none';
+            pauseMenuMusic(); // Pausiert das Menü, aber merkt sich, dass es eigentlich "an" war
+            document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
             if(isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
             nextRound();
@@ -1088,7 +1174,6 @@
         function skipSong() { processAnswer(false, true); }
         function checkTextInput() { let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); let c = currentSong.title.toLowerCase().split('(')[0].split(' feat')[0].replace(/[^a-z0-9]/g, ''); processAnswer(v === c || (v.length >= 4 && c.includes(v))); }
 
-        // --- SYNCHRONER AUTO-ADVANCE FÜR MULTIPLAYER ---
         function checkAllAnswered() {
             if (!isMultiplayer) return;
             let btn = document.getElementById('feedback-btn'); let res = document.getElementById('mp-result');
@@ -1172,7 +1257,6 @@
             } else {
                 t.innerText = victory ? "🏆 DURCHGESPIELT!" : "💀 GAME OVER"; d.innerText = `Dein Score: ${score}`;
                 
-                // SINGLEPLAYER XP ADDITION
                 myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
                 myStats.totalScore = (myStats.totalScore || 0) + score;
                 localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
@@ -1184,7 +1268,6 @@
             }
         }
 
-        // --- DEUTLICH GRÖSSERE IN-GAME AVATARS ---
         function updateStatsDisplay() { 
             const bar = document.getElementById('game-stats-bar');
             if(!bar) return;
