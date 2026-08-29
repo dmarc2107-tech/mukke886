@@ -289,7 +289,6 @@
 
                 <div class="section-title">Dein Club</div>
                 
-                <!-- NEUES VIERECKIGES ARTIST BANNER DESIGN -->
                 <div id="fav-artist-banner" class="banner-container" style="display: none;">
                     <img id="fav-artist-img-1" src="" class="banner-img">
                     <div class="banner-text-box">
@@ -322,7 +321,7 @@
                     <div class="ea-card" onclick="startMixedMode('2010s')">
                         <div class="ea-card-icon">📅</div>
                         <div class="ea-card-title">2010-2020 Rap</div>
-                        <div class="ea-card-desc">Die goldene Trap-Ära (Nur US/UK).</div>
+                        <div class="ea-card-desc">Die goldene Trap-Ära (Nur US/UK Originale).</div>
                     </div>
                     <div class="ea-card card-sc" onclick="startMixedMode('soundcloud')">
                         <div class="ea-card-icon">☁️</div>
@@ -335,7 +334,7 @@
                 <div class="artist-list" id="artist-grid"></div>
             </div>
 
-            <!-- MULTIPLAYER TAB (2 bis 4 Spieler) -->
+            <!-- MULTIPLAYER TAB -->
             <div id="multiplayer-tab" class="tab-content">
                 <div class="section-title">Online Multiplayer (2-4 Spieler)</div>
                 <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
@@ -586,6 +585,7 @@
             allArtists.forEach(a => { let d = document.createElement('div'); d.className = 'artist-tile'; d.innerText = a; d.onclick = () => startArtistMode(a); grid.appendChild(d); });
             if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
 
+            // Auto-Login Logik
             if (!playerName || !savedPw || !mySongUrl) { 
                 document.getElementById('profile-overlay').style.display = 'flex'; 
             } else { 
@@ -746,10 +746,18 @@
             if(gameIsOver) renderMpLeaderboard(); 
         });
 
+        // Backend leitet Signale weiter: Wer hat schon geantwortet?
         socket.on('teammateAnswered', (data) => {
             if (data.type === 'ROUND_ANSWERED') {
                 playersAnsweredThisRound.add(data.id);
                 checkAllAnswered();
+            }
+        });
+
+        // Trigger vom Host für die nächste Runde!
+        socket.on('triggerNextRound', () => {
+            if (!isMpHost && lives > 0 && !gameIsOver) {
+                nextRound();
             }
         });
 
@@ -767,15 +775,18 @@
                 let sorted = Object.values(matchEndData).sort((a,b) => b.score - a.score);
                 let winner = sorted[0];
                 let amIFirst = (winner.id === socket.id);
+                
                 myStats.played++; 
                 if(amIFirst) myStats.wins++; else myStats.losses++;
                 localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
+                
                 showWinnerScreen(winner);
             } else {
                 renderMpLeaderboard();
             }
         }
 
+        // --- DER NEUE SIEGER BILDSCHIRM (7 SEKUNDEN HYMNE) ---
         function showWinnerScreen(winner) {
             let m = document.getElementById('feedback-modal'); 
             m.className = "modal correct"; 
@@ -817,10 +828,15 @@
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; let audio = new Audio(); audio.volume = 0.5; let sfxAudio = new Audio(); 
         
+        let currentPlayId = 0; // VERHINDERT DEN +3S BUG
         function playAudioSnippet() { 
             audio.currentTime = 0; clearTimeout(precisionTimer); 
+            let playId = ++currentPlayId;
             audio.play().then(() => {
-                if (maxPlayTime < 30) precisionTimer = setTimeout(() => { audio.pause(); }, maxPlayTime * 1000);
+                if (playId !== currentPlayId) return; // Verhindert Bug bei schnellem Klicken
+                if (maxPlayTime < 30) {
+                    precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000);
+                }
             }).catch(e=>{}); 
         }
 
@@ -832,9 +848,18 @@
                 const cb = 'deezer_' + Date.now() + Math.floor(Math.random() * 10000);
                 let isResolved = false;
                 const timeout = setTimeout(() => { if(!isResolved) { isResolved = true; resolve(); } }, 3000); 
-                window[cb] = function(r) { if(!isResolved) { isResolved = true; clearTimeout(timeout); if (r && r.data) songsPool = songsPool.concat(r.data.filter(t => t.preview)); resolve(); } };
-                // Strikte Artist-Suche zur Vermeidung falscher Featurings (besonders im 2010s Mode)
-                const query = `artist:"${artist}"`;
+                window[cb] = function(r) { 
+                    if(!isResolved) { 
+                        isResolved = true; clearTimeout(timeout); 
+                        if (r && r.data) {
+                            // DOPPELTER FILTER: Strikter API Tag UND Code-Verifizierung (Tschüss Remixe!)
+                            let filtered = r.data.filter(t => t.preview && t.artist.name.toLowerCase() === artist.toLowerCase());
+                            songsPool = songsPool.concat(filtered); 
+                        } 
+                        resolve(); 
+                    } 
+                };
+                const query = `artist:"${artist}"`; // Zwingt Deezer nur den Hauptkünstler zu suchen
                 const s = document.createElement('script'); s.src = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=50&output=jsonp&callback=${cb}`; document.head.appendChild(s);
             });
         }
@@ -918,6 +943,8 @@
 
         function nextRound() {
             document.getElementById('feedback-overlay').style.display = 'none'; audio.pause(); clearTimeout(precisionTimer); document.getElementById('suggestions-box').style.display = 'none';
+            
+            // Sync Reset
             playersAnsweredThisRound.clear();
             if(isMultiplayer) expectedAnswers = Math.max(1, lobbyPlayers.filter(p => p.lives > 0).length);
             
@@ -945,27 +972,33 @@
                     b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
                 });
             }
-            audio.src = currentSong.preview; playAudioSnippet();
+            playAudioSnippet();
         }
 
-        function replaySnippet() { audio.currentTime = 0; playAudioSnippet(); }
+        function replaySnippet() { playAudioSnippet(); }
         function addTime() { if (maxPlayTime < 10) { maxPlayTime += 3; if(maxPlayTime>10)maxPlayTime=10; document.getElementById('add-time-btn').innerText = `+3s (${maxPlayTime.toFixed(1)}s)`; playAudioSnippet(); } }
         function skipSong() { processAnswer(false, true); }
         function checkTextInput() { let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); let c = currentSong.title.toLowerCase().split('(')[0].split(' feat')[0].replace(/[^a-z0-9]/g, ''); processAnswer(v === c || (v.length >= 4 && c.includes(v))); }
 
+        // --- SYNCHRONER AUTO-ADVANCE FÜR MULTIPLAYER ---
         function checkAllAnswered() {
             if (!isMultiplayer) return;
             let btn = document.getElementById('feedback-btn');
             let res = document.getElementById('mp-result');
-            
+
             if (playersAnsweredThisRound.size >= expectedAnswers) {
-                res.innerText = 'Alle haben getippt!';
-                res.style.color = 'var(--success)';
-                btn.style.display = 'block';
-                btn.innerText = 'Nächste Runde ➔';
+                res.innerHTML = '<span style="color: var(--success); font-weight: 900;">Alle haben getippt! Weiter in 3s...</span>';
+                btn.style.display = 'none'; // Auto-Advance, kein Button nötig
+
+                // Der Host triggert die nächste Runde nach 3 Sekunden Wartezeit für alle
+                if (isMpHost) {
+                    setTimeout(() => {
+                        socket.emit('nextRound', { roomCode: currentRoom });
+                        if (lives > 0 && !gameIsOver) nextRound();
+                    }, 3000);
+                }
             } else {
-                res.innerText = `Warte auf Mitspieler... (${playersAnsweredThisRound.size}/${expectedAnswers})`;
-                res.style.color = 'var(--warning)';
+                res.innerHTML = `<span style="color: var(--warning); font-weight: 800;">Warte auf Mitspieler... (${playersAnsweredThisRound.size}/${expectedAnswers})</span>`;
                 btn.style.display = 'none';
             }
         }
@@ -973,6 +1006,8 @@
         function processAnswer(wasCorrect, isSkip = false) {
             let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover');
             document.getElementById('suggestions-box').style.display = 'none'; 
+            
+            // Singleplayer Button Logik
             document.getElementById('feedback-btn').onclick = nextRound;
             
             let pts = maxPlayTime <= 1 ? 100 : (maxPlayTime <= 4 ? 75 : 50);
@@ -984,7 +1019,6 @@
                 cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
                 if (isSkip) { score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Punkte\n${currentSong.title} - ${currentSong.artist.name}`; } 
                 else { lives--; m.className = "modal wrong"; t.innerText = "❌ FALSCH!"; d.innerText = `Ein Leben verloren!\n${currentSong.title} - ${currentSong.artist.name}`; }
-                if (lives <= 0) { setTimeout(() => triggerGameOver(false), 2000); return; } // Tot? Direkter Exit aus der Runde
             }
             
             if (isMultiplayer) {
@@ -996,10 +1030,13 @@
             } else {
                 document.getElementById('mp-result').style.display = 'none';
                 document.getElementById('feedback-btn').style.display = 'block';
+                document.getElementById('feedback-btn').innerText = "Nächste Runde ➔";
             }
             
             updateStatsDisplay();
             document.getElementById('feedback-overlay').style.display = 'flex';
+
+            if (lives <= 0) { setTimeout(() => triggerGameOver(false), 2000); }
         }
 
         function triggerGameOver(victory) {
@@ -1034,6 +1071,7 @@
             }
         }
 
+        // --- DEUTLICH GRÖSSERE IN-GAME AVATARS ---
         function updateStatsDisplay() { 
             const bar = document.getElementById('game-stats-bar');
             if(!bar) return;
