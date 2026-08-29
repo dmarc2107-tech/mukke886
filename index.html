@@ -218,32 +218,10 @@
         .modal.wrong { border-color: var(--danger); box-shadow: 0 0 40px rgba(239, 68, 68, 0.2); } .modal.wrong h2 { color: var(--danger); }
         .modal.gameover { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); } .modal.gameover h2 { color: var(--warning); }
         
-        /* Sudden Death Style */
         .modal.warning { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.4); } 
         .modal.warning h2 { color: var(--warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
 
         .loader { border: 4px solid rgba(255,255,255,0.05); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
-        
-        /* --- MOBILE MEDIA QUERY --- */
-        @media (max-width: 768px) {
-            #mobile-menu-btn { display: block; }
-            #sidebar {
-                position: fixed; top: 0; left: -100%; width: 280px; height: 100%;
-                z-index: 10; transition: left 0.3s ease;
-            }
-            #sidebar.open { left: 0; }
-            #sidebar-overlay.active { display: block; }
-            #main-content { padding: 80px 20px 20px 20px; }
-            .cards-grid { grid-template-columns: 1fr; }
-            h1 { font-size: 32px; }
-            .section-title { font-size: 22px; }
-            #music-toggle-btn { top: 20px; right: 20px; padding: 10px; font-size: 12px; z-index: 90;}
-            
-            .banner-container { flex-direction: column; text-align: center; padding: 20px; gap: 15px;}
-            .banner-text-box { text-align: center; }
-            .banner-img { width: 120px; height: 120px; }
-            .banner-title { font-size: 24px; }
-        }
     </style>
 </head>
 <body>
@@ -287,10 +265,10 @@
         <div class="modal warning">
             <h2>👑 VIP ACCESS</h2>
             <p style="color: white; font-weight: 600;">Dieser Modus und der Multiplayer-Bereich sind exklusiv für VIP-Supporter freigeschaltet.</p>
-            <p style="font-size: 13px; color: #d4d4d8;">Unterstütze das Projekt, decke die Serverkosten und schalte sofort alle Modes frei!</p>
+            <p style="font-size: 13px; color: #d4d4d8;">Unterstütze das Projekt, decke die Serverkosten und schalte sofort alle Modes frei! (1€ für 30 Tage)</p>
             
-            <!-- HIER IST DEIN BUY ME A COFFEE LINK -->
-            <button class="btn-action btn-gold" style="margin-bottom: 15px;" onclick="window.open('https://buymeacoffee.com/pizzaholiker', '_blank')">Auf Buy Me a Coffee freischalten ➔</button>
+            <!-- HIER KOMMT DEIN KO-FI LINK REIN -->
+            <button class="btn-action btn-gold" style="margin-bottom: 15px;" onclick="window.open('https://ko-fi.com/DEIN_KOFI_LINK', '_blank')">Auf Ko-fi freischalten ➔</button>
             
             <p style="margin-top:15px; font-size:12px; cursor:pointer; color:var(--text-muted); text-decoration: underline;" onclick="document.getElementById('premium-overlay').style.display='none'">Zurück zum Menü</p>
         </div>
@@ -444,7 +422,7 @@
                 <!-- VIP CODE BEREICH -->
                 <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 VIP-Code einlösen</h3>
-                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Du hast auf Buy Me a Coffee supportet? Löse hier deinen Code ein, um Multiplayer und alle Modes freizuschalten.</p>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Du hast auf Ko-fi supportet? Löse hier deinen Code ein, um Multiplayer und alle Modes freizuschalten.</p>
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="Dein Code...">
                         <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Einlösen</button>
@@ -561,7 +539,7 @@
         
         // DEINE SUPABASE EINSTELLUNGEN
         const supabaseUrl = 'https://tvcnushrhteworueftfy.supabase.co';
-        const supabaseKey = 'sb_publishable_VftGljbGfzD1urJFrw5Ygw_9jV4-1bD'; 
+        const supabaseKey = 'sb_publishable_VftGljbGfzD1urJFrw5Ygw_9jV4-1bD'; // Normalerweise ein JWT Token (fängt oft mit eyJ an), probiere diesen!
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         let globalVolume = parseFloat(localStorage.getItem('rapquiz_volume')); if (isNaN(globalVolume)) globalVolume = 0.5;
@@ -574,7 +552,7 @@
         let myAvatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; 
         let myBgUrl = '';
         let myQuote = '';
-        let isPremium = false;
+        let isPremium = false; // Das Herzstück für die Paywall!
         
         let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
 
@@ -643,7 +621,7 @@
         function switchTab(tabId, el) {
             if (tabId === 'multiplayer-tab' && !isPremium) {
                 document.getElementById('premium-overlay').style.display = 'flex';
-                return;
+                return; // Blockiert den Tab!
             }
 
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -655,7 +633,7 @@
         // --- KATEGORIE PREMIUM CHECK ---
         function checkPremiumAndStart(mode) {
             if (isPremium) {
-                if(mode === 'artist') { }
+                if(mode === 'artist') { /* Wird über Onclick in artist-tile gesteuert */ }
                 else { startMixedMode(mode); }
             } else {
                 document.getElementById('premium-overlay').style.display = 'flex';
@@ -668,7 +646,7 @@
                 if (res && res.data && res.data.length > 0) {
                     myBgUrl = res.data[0].picture_xl; myAvatar = res.data[0].picture_medium;
                     document.getElementById('app-background').src = myBgUrl; updateAllAvatars();
-                    saveProfileToDB(); 
+                    saveProfileToDB(); // Sync mit Cloud
                 }
             };
             const s = document.createElement('script'); s.src = `https://api.deezer.com/search/artist?q="${encodeURIComponent(artistName)}"&limit=1&output=jsonp&callback=${cb}`; document.head.appendChild(s);
@@ -684,7 +662,7 @@
             let inputId = mode === 'setup' ? 'song-search-input' : 'edit-song-search-input'; let selectId = mode === 'setup' ? 'menu-song-select' : 'edit-menu-song-select';
             let q = document.getElementById(inputId).value.trim(); if(!q) return; let sel = document.getElementById(selectId);
             let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-            if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = `<option value="yt:${vid}">YouTube Track: ${vid} (Volle Länge)</option>`; sel.style.display = 'block'; return; }
+            if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = `<option value="yt:${vid}">YouTube Track (Volle Länge)</option>`; sel.style.display = 'block'; return; }
             const cb = 'deezer_song_' + Date.now();
             window[cb] = function(res) {
                 sel.innerHTML = '';
@@ -728,10 +706,14 @@
             
             if (!name || !pw) { err.innerText = "Bitte fülle Name und Passwort aus!"; err.style.display = 'block'; btn.innerText = "Login / Registrieren ➔"; btn.disabled = false; return; }
             
+            // Künstliche Email generieren für Supabase
             let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
+
+            // Versuche Login
             let { data, error } = await supabase.auth.signInWithPassword({ email: fakeEmail, password: pw });
 
             if (error) {
+                // Wenn Login fehlschlägt, versuche zu registrieren
                 let songDropdown = document.getElementById('menu-song-select');
                 if(songDropdown.style.display === 'none' || !songDropdown.value) { 
                     err.innerText = "Du bist neu! Bitte wähle erst Artist & Hymne aus."; err.style.display = 'block'; 
@@ -745,13 +727,14 @@
                 }
                 data = signUpData;
                 
+                // Setze Start-Werte
                 myFavArtist = document.getElementById('fav-artist-select').value; 
                 mySongUrl = songDropdown.value; 
                 mySongTitle = songDropdown.options[songDropdown.selectedIndex].text;
                 myQuote = getArtistQuote(myFavArtist);
                 playerName = name;
                 
-                setTimeout(() => saveProfileToDB(), 2000); 
+                setTimeout(() => saveProfileToDB(), 2000); // Warten bis DB Trigger durch ist
             }
 
             if (data?.user) {
@@ -764,7 +747,7 @@
             
             if (profile) {
                 playerName = profile.username;
-                myFavArtist = profile.anthem_url ? "Artist" : ""; 
+                myFavArtist = profile.anthem_url ? "Artist" : ""; // Fallback
                 mySongUrl = profile.anthem_url;
                 myAvatar = profile.avatar_url;
                 myQuote = profile.quote || "Ready to dominate!";
@@ -776,6 +759,7 @@
                 document.getElementById('premium-badge').style.display = 'inline-block';
                 document.getElementById('vip-redeem-section').style.display = 'none';
                 
+                // Entferne alle Schloss-Symbole von den Kategorien
                 document.querySelectorAll('.locked-check').forEach(el => {
                     el.classList.remove('locked-check');
                 });
@@ -814,10 +798,10 @@
             }
         }
 
-        // --- VIP CODE EINLÖSEN (BUY ME A COFFEE) ---
+        // --- VIP CODE EINLÖSEN ---
         async function redeemVIPCode() {
             let code = document.getElementById('vip-code-input').value.trim();
-            if(code === 'RAPQUIZ-VIP-2026' || code === 'MARCUS-VIP-886') { 
+            if(code === 'RAPQUIZ-VIP-2026' || code === 'MARCUS-VIP-886') { // HIER DEINE GEHEIMCODES!
                 isPremium = true;
                 const { data: session } = await supabase.auth.getSession();
                 if (session?.session?.user) {
@@ -826,7 +810,7 @@
                 alert("🎉 SUCCESS! Du bist jetzt VIP und hast alle Modi freigeschaltet!");
                 location.reload();
             } else {
-                alert("❌ Falscher Code. Bitte spende auf Buy Me a Coffee, um einen Code zu bekommen.");
+                alert("❌ Falscher Code. Bitte spende 1€ auf Ko-fi um einen Code zu bekommen.");
             }
         }
 
@@ -839,7 +823,7 @@
             myFavArtist = document.getElementById('edit-fav-artist-select').value; 
             myQuote = getArtistQuote(myFavArtist);
             document.getElementById('profile-view-quote').innerText = myQuote; 
-            loadArtistVisuals(myFavArtist); 
+            loadArtistVisuals(myFavArtist); // saveProfileToDB() wird in loadArtistVisuals getriggert
         }
         
         function updateFavSong() {
@@ -978,10 +962,9 @@
                     let winner = sorted[0];
                     let amIFirst = (winner.id === socket.id);
                     
-                    myStats.played++; 
                     if(amIFirst) myStats.wins++; else myStats.losses++;
+                    updateDbScore(score); // Cloud Update
                     
-                    updateDbScore(score);
                     showWinnerScreen(winner);
                 }
             } else { 
@@ -1009,12 +992,7 @@
                 playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
                 expectedAnswers = tiedIds.length;
                 
-                if (isMpHost) {
-                    setTimeout(() => {
-                        socket.emit('nextRound', { roomCode: currentRoom });
-                        nextRound();
-                    }, 4000);
-                }
+                if (isMpHost) { setTimeout(() => { socket.emit('nextRound', { roomCode: currentRoom }); nextRound(); }, 4000); }
             } else {
                 document.getElementById('feedback-desc').innerText = "Gleichstand! Die Finalisten kämpfen im Sudden Death um den Sieg...";
             }
@@ -1325,7 +1303,7 @@
             } else {
                 t.innerText = victory ? "🏆 DURCHGESPIELT!" : "💀 GAME OVER"; d.innerText = `Dein Score: ${score}`;
                 
-                myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
+                if(victory) myStats.wins++; else myStats.losses++; myStats.played++;
                 updateDbScore(score);
 
                 if (!victory && score < 500) { sfxAudio.src = "roddy.mp3"; sfxAudio.play().catch(e=>{}); }
