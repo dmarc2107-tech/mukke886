@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ultimate Rap Quiz</title>
     
-    <!-- Supabase SDK for Cloud Database -->
+    <!-- Supabase SDK für die Datenbank -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Socket.io for 2-4 Player Multiplayer -->
+    <!-- Socket.io für 2-4 Spieler Multiplayer -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <!-- YouTube Iframe API -->
     <script src="https://www.youtube.com/iframe_api"></script>
@@ -35,7 +35,7 @@
             margin: 0; padding: 0; user-select: none; overflow: hidden; width: 100vw; height: 100vh;
         }
 
-        /* --- DYNAMIC ARTIST BACKGROUND --- */
+        /* --- DYNAMISCHER ARTIST HINTERGRUND --- */
         #app-background {
             position: fixed; top: -2%; left: -2%; width: 104%; height: 104%;
             background-size: cover; background-position: center 20%;
@@ -102,7 +102,7 @@
 
         .section-title { font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; border-bottom: 2px solid var(--surface-border); padding-bottom: 10px; color: white; text-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between; }
 
-        /* --- BANNER DESIGN --- */
+        /* --- NEUES BANNER DESIGN --- */
         .banner-container { 
             display: flex; align-items: center; gap: 25px; padding: 25px; 
             border-radius: 16px; border: 2px solid var(--primary); 
@@ -117,7 +117,7 @@
         .banner-subtitle { margin: 0 0 5px 0; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 2px; }
         .banner-title { margin: 0; color: white; text-transform: uppercase; font-size: 32px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 15px rgba(139,92,246,0.8); }
 
-        /* --- VOLUME SLIDER --- */
+        /* --- RANGE SLIDER (LAUTSTÄRKE) --- */
         input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(139,92,246,0.8); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
@@ -137,6 +137,7 @@
         }
         .ea-card:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(139, 92, 246, 0.25); }
         
+        /* Premium Lock Overlay für gesperrte Cards */
         .locked-card::after {
             content: "🔒 PREMIUM"; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
@@ -217,14 +218,19 @@
         .modal.wrong { border-color: var(--danger); box-shadow: 0 0 40px rgba(239, 68, 68, 0.2); } .modal.wrong h2 { color: var(--danger); }
         .modal.gameover { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); } .modal.gameover h2 { color: var(--warning); }
         
+        /* Sudden Death Style */
         .modal.warning { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.4); } 
         .modal.warning h2 { color: var(--warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
 
         .loader { border: 4px solid rgba(255,255,255,0.05); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
         
+        /* --- MOBILE MEDIA QUERY --- */
         @media (max-width: 768px) {
             #mobile-menu-btn { display: block; }
-            #sidebar { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; z-index: 10; transition: left 0.3s ease; }
+            #sidebar {
+                position: fixed; top: 0; left: -100%; width: 280px; height: 100%;
+                z-index: 10; transition: left 0.3s ease;
+            }
             #sidebar.open { left: 0; }
             #sidebar-overlay.active { display: block; }
             #main-content { padding: 80px 20px 20px 20px; }
@@ -232,6 +238,7 @@
             h1 { font-size: 32px; }
             .section-title { font-size: 22px; }
             #music-toggle-btn { top: 20px; right: 20px; padding: 10px; font-size: 12px; z-index: 90;}
+            
             .banner-container { flex-direction: column; text-align: center; padding: 20px; gap: 15px;}
             .banner-text-box { text-align: center; }
             .banner-img { width: 120px; height: 120px; }
@@ -241,36 +248,36 @@
 </head>
 <body>
 
-    <!-- Hidden YouTube Player -->
+    <!-- Versteckter YouTube Player -->
     <div id="yt-player" style="position: absolute; top: -9999px; left: -9999px; width: 200px; height: 200px; opacity: 0; pointer-events: none;"></div>
 
     <img id="app-background" src="" alt="">
     <div class="scanlines"></div>
 
-    <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
+    <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Musik An</button>
 
-    <!-- PROFIL SETUP (Login / Register) -->
+    <!-- PROFIL SETUP (Login/Registrieren via Supabase) -->
     <div id="profile-overlay" class="overlay">
         <div class="modal">
             <h2 id="profile-title" style="color: var(--primary);">Cloud Login</h2>
-            <p style="margin-top:-5px; font-size:12px;">Your account is securely stored in the cloud.</p>
+            <p style="margin-top:-5px; font-size:12px;">Dein Account wird sicher in der Cloud gespeichert.</p>
             
-            <input type="text" id="username-input" class="ea-input" style="text-align: center;" placeholder="Username" autocomplete="off">
-            <input type="password" id="password-input" class="ea-input" style="text-align: center;" placeholder="Password">
+            <input type="text" id="username-input" class="ea-input" style="text-align: center;" placeholder="Spielername" autocomplete="off">
+            <input type="password" id="password-input" class="ea-input" style="text-align: center;" placeholder="Passwort">
             
             <div id="artist-select-container" style="text-align: left;">
-                <p style="margin-bottom: 5px; font-size: 12px; color: var(--primary); font-weight: 800; text-transform: uppercase;">1. Choose your Artist (Avatar & Background)</p>
+                <p style="margin-bottom: 5px; font-size: 12px; color: var(--primary); font-weight: 800; text-transform: uppercase;">1. Wähle deinen Artist (Avatar & Hintergrund)</p>
                 <select id="fav-artist-select" class="ea-input" style="color: white; cursor: pointer;"></select>
 
-                <p style="margin-bottom: 5px; margin-top: 10px; font-size: 12px; color: var(--primary); font-weight: 800; text-transform: uppercase;">2. Search Anthem OR Paste YouTube Link</p>
+                <p style="margin-bottom: 5px; margin-top: 10px; font-size: 12px; color: var(--primary); font-weight: 800; text-transform: uppercase;">2. Suche deine Hymne ODER füge YouTube-Link ein</p>
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1; text-align: left;" placeholder="e.g. Sicko Mode OR https://youtube.com/...">
+                    <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1; text-align: left;" placeholder="z.B. Sicko Mode ODER https://youtube.com/...">
                     <button class="btn-action" style="width: auto; padding: 0 20px;" onclick="searchMenuSong('setup')">🔍</button>
                 </div>
                 <select id="menu-song-select" class="ea-input" style="display: none; color: var(--success); font-size: 14px; cursor: pointer;"></select>
             </div>
             
-            <button id="login-btn" class="btn-action" onclick="handleProfileLogin()" style="margin-top: 15px;">Login / Register ➔</button>
+            <button id="login-btn" class="btn-action" onclick="handleProfileLogin()" style="margin-top: 15px;">Login / Registrieren ➔</button>
             <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
         </div>
     </div>
@@ -279,18 +286,19 @@
     <div id="premium-overlay" class="overlay">
         <div class="modal warning">
             <h2>👑 VIP ACCESS</h2>
-            <p style="color: white; font-weight: 600;">This mode and multiplayer are exclusive for VIP supporters.</p>
-            <p style="font-size: 13px; color: #d4d4d8;">Support the project, cover server costs, and instantly unlock all game modes!</p>
+            <p style="color: white; font-weight: 600;">Dieser Modus und der Multiplayer-Bereich sind exklusiv für VIP-Supporter freigeschaltet.</p>
+            <p style="font-size: 13px; color: #d4d4d8;">Unterstütze das Projekt, decke die Serverkosten und schalte sofort alle Modes frei!</p>
             
-            <button class="btn-action btn-gold" style="margin-bottom: 15px;" onclick="window.open('https://buymeacoffee.com/pizzaholiker', '_blank')">Unlock on Buy Me a Coffee ➔</button>
+            <!-- HIER IST DEIN BUY ME A COFFEE LINK -->
+            <button class="btn-action btn-gold" style="margin-bottom: 15px;" onclick="window.open('https://buymeacoffee.com/pizzaholiker', '_blank')">Auf Buy Me a Coffee freischalten ➔</button>
             
-            <p style="margin-top:15px; font-size:12px; cursor:pointer; color:var(--text-muted); text-decoration: underline;" onclick="document.getElementById('premium-overlay').style.display='none'">Back to Menu</p>
+            <p style="margin-top:15px; font-size:12px; cursor:pointer; color:var(--text-muted); text-decoration: underline;" onclick="document.getElementById('premium-overlay').style.display='none'">Zurück zum Menü</p>
         </div>
     </div>
 
     <!-- MAIN APP LAYOUT -->
     <div id="app-layout">
-        <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Menu</button>
+        <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Menü</button>
         <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <nav id="sidebar">
@@ -306,12 +314,12 @@
                 </div>
             </div>
             <div class="nav-menu">
-                <div id="nav-play" class="nav-item active" onclick="switchTab('play-tab', this)">🎮 Play</div>
+                <div id="nav-play" class="nav-item active" onclick="switchTab('play-tab', this)">🎮 Spielen</div>
                 <div id="nav-mp" class="nav-item" onclick="switchTab('multiplayer-tab', this)">⚔️ Online (2-4) <span style="font-size:10px; color:var(--warning);">VIP</span></div>
-                <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 My Club</div>
+                <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 Mein Club</div>
             </div>
             <div class="sidebar-footer">
-                <button id="music-toggle-btn-sidebar" onclick="toggleMenuMusic()" style="background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 700; width: 80%; margin: 0 auto; display: block;">🔇 Music Off</button>
+                <button id="music-toggle-btn-sidebar" onclick="toggleMenuMusic()" style="background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 700; width: 80%; margin: 0 auto; display: block;">🔇 Musik Aus</button>
                 <div style="display:flex; align-items:center; gap:10px; margin-top:15px; padding: 0 15px;">
                     <span style="font-size:16px;">🔉</span>
                     <input type="range" id="volume-slider" min="0" max="1" step="0.05" oninput="changeVolume(this.value)">
@@ -321,25 +329,25 @@
         </nav>
 
         <main id="main-content">
-            <!-- PLAY TAB -->
+            <!-- SPIELEN TAB -->
             <div id="play-tab" class="tab-content active">
                 <div class="settings-bar">
                     <div class="settings-group">
-                        <span class="settings-label">Hardcore (Typing)</span>
+                        <span class="settings-label">Hardcore (Tippen)</span>
                         <label class="switch"><input type="checkbox" id="hardcore-toggle" onchange="toggleHardcoreMode()"><span class="slider red"></span></label>
                     </div>
                     <div class="settings-group">
-                        <span class="settings-label">Show Artist</span>
+                        <span class="settings-label">Artist Anzeigen</span>
                         <label class="switch"><input type="checkbox" id="artist-toggle" onchange="toggleArtistName()" checked><span class="slider green"></span></label>
                     </div>
                 </div>
 
-                <div class="section-title">Your Club</div>
+                <div class="section-title">Dein Club</div>
                 
                 <div id="fav-artist-banner" class="banner-container" style="display: none;">
                     <img id="fav-artist-img-1" src="" class="banner-img">
                     <div class="banner-text-box">
-                        <h3 class="banner-subtitle">Your Favorite Artist</h3>
+                        <h3 class="banner-subtitle">Dein Lieblingsartist</h3>
                         <h2 id="banner-artist-name" class="banner-title">Artist</h2>
                     </div>
                 </div>
@@ -348,27 +356,27 @@
                 <div class="cards-grid">
                     <div class="ea-card card-highlight" onclick="startMixedMode('all')">
                         <div class="ea-card-icon">🔀</div>
-                        <div class="ea-card-title">All Mixed</div>
-                        <div class="ea-card-desc">The ultimate test across all eras.</div>
+                        <div class="ea-card-title">Alles Gemischt</div>
+                        <div class="ea-card-desc">Der ultimative Test über alle Epochen.</div>
                     </div>
                     <div class="ea-card" onclick="startProgressiveMode()">
                         <div class="ea-card-icon">⚡</div>
-                        <div class="ea-card-title">Progressive Mode</div>
-                        <div class="ea-card-desc">Starts at 0.1s. For real pros only.</div>
+                        <div class="ea-card-title">Progressiv Modus</div>
+                        <div class="ea-card-desc">Startet bei 0.1s. Nur für echte Profis.</div>
                     </div>
                     <div class="ea-card card-gold" onclick="startMixedMode('megahits')">
                         <div class="ea-card-icon">🌟</div>
                         <div class="ea-card-title">Mega Hits</div>
-                        <div class="ea-card-desc">Over 100M streams. The classics.</div>
+                        <div class="ea-card-desc">Über 100M Streams. Die Klassiker.</div>
                     </div>
                 </div>
 
-                <div class="section-title">Premium Categories <span style="font-size:12px; color:var(--warning); vertical-align: middle;">VIP</span></div>
+                <div class="section-title">Premium Kategorien <span style="font-size:12px; color:var(--warning); vertical-align: middle;">VIP</span></div>
                 <div class="cards-grid">
                     <div class="ea-card locked-check" onclick="checkPremiumAndStart('2010s')">
                         <div class="ea-card-icon">📅</div>
                         <div class="ea-card-title">2010-2020 Rap</div>
-                        <div class="ea-card-desc">The golden trap era (US/UK only).</div>
+                        <div class="ea-card-desc">Die goldene Trap-Ära (Nur US/UK).</div>
                     </div>
                     <div class="ea-card locked-check" onclick="checkPremiumAndStart('soundcloud')">
                         <div class="ea-card-icon">☁️</div>
@@ -377,49 +385,49 @@
                     </div>
                 </div>
 
-                <div class="section-title">Catalog Quiz (Artist Mode) <span style="font-size:12px; color:var(--warning); vertical-align: middle;">VIP</span></div>
+                <div class="section-title">Katalog Quiz (Artist Mode) <span style="font-size:12px; color:var(--warning); vertical-align: middle;">VIP</span></div>
                 <div class="artist-list" id="artist-grid"></div>
             </div>
 
             <!-- MULTIPLAYER TAB -->
             <div id="multiplayer-tab" class="tab-content">
-                <div class="section-title">Online Multiplayer (2-4 Players)</div>
+                <div class="section-title">Online Multiplayer (2-4 Spieler)</div>
                 <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
                     <div class="ea-card" style="border-color: var(--success); cursor: default; justify-content: flex-start;">
                         <h3 style="margin-top: 0; color: var(--success); font-weight: 800; letter-spacing: 1px;">HOST MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Create a lobby for 2 to 4 players. Host chooses mode to start.</p>
-                        <button class="btn-action" style="background: var(--success); margin-bottom: 20px;" onclick="createRoom()">Generate Code</button>
+                        <p style="font-size: 13px; color: var(--text-muted);">Erstelle eine Lobby für 2 bis 4 Spieler. Der Host wählt den Modus zum Starten.</p>
+                        <button class="btn-action" style="background: var(--success); margin-bottom: 20px;" onclick="createRoom()">Code Generieren</button>
                         <div style="text-align: center;">
-                            <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Your Room Code:</span>
+                            <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Dein Raum-Code:</span>
                             <h2 id="room-code-display" style="margin: 0; font-size: 40px; letter-spacing: 8px; color: white;">----</h2>
                         </div>
                     </div>
                     <div class="ea-card" style="cursor: default; justify-content: flex-start;">
                         <h3 style="margin-top: 0; color: white; font-weight: 800; letter-spacing: 1px;">JOIN MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Enter your friend's 4-digit code to join the lobby.</p>
+                        <p style="font-size: 13px; color: var(--text-muted);">Gib den 4-stelligen Code deines Freundes ein, um der Lobby beizutreten.</p>
                         <input type="number" id="join-code-input" class="ea-input" style="letter-spacing: 5px; font-size: 24px; text-align: center;" placeholder="CODE">
-                        <button class="btn-action" onclick="joinRoom()">Join</button>
+                        <button class="btn-action" onclick="joinRoom()">Beitreten</button>
                     </div>
                 </div>
                 
                 <div style="background: rgba(0,0,0,0.5); padding: 25px; border-radius: 16px; text-align: center; border: 1px solid var(--surface-border); margin-top: 20px;">
-                    <h3 style="margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase; color: white; letter-spacing: 1px;">Players in Lobby</h3>
+                    <h3 style="margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase; color: white; letter-spacing: 1px;">Spieler in der Lobby</h3>
                     <div id="lobby-players-container" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px;">
-                        <span style="color: var(--text-muted); font-size: 14px;">No one here yet...</span>
+                        <span style="color: var(--text-muted); font-size: 14px;">Noch niemand hier...</span>
                     </div>
-                    <p id="mp-status" style="color: var(--warning); font-weight: 800; margin: 0; font-size: 16px; text-transform: uppercase;">Not connected</p>
+                    <p id="mp-status" style="color: var(--warning); font-weight: 800; margin: 0; font-size: 16px; text-transform: uppercase;">Nicht verbunden</p>
                 </div>
             </div>
 
-            <!-- PROFILE TAB -->
+            <!-- PROFIL TAB -->
             <div id="profile-tab" class="tab-content">
-                <div class="section-title">My Club</div>
+                <div class="section-title">Mein Club</div>
                 <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
                     <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
                     <div style="text-align: left; flex: 1;">
                         <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
-                        <p id="profile-view-quote" style="margin: 0 0 10px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
-                        <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Anthem: <span id="profile-view-hymn" style="color: white;">Artist</span></p>
+                        <p id="profile-view-quote" style="margin: 0 0 10px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Zitat"</p>
+                        <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Hymne: <span id="profile-view-hymn" style="color: white;">Artist</span></p>
                         
                         <div style="width: 100%; max-width: 400px;">
                             <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
@@ -433,29 +441,29 @@
                     </div>
                 </div>
 
-                <!-- VIP CODE REDEEM -->
+                <!-- VIP CODE BEREICH -->
                 <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 Redeem VIP Code</h3>
-                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Supported on Buy Me a Coffee? Enter your code here to unlock multiplayer and all modes.</p>
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 VIP-Code einlösen</h3>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Du hast auf Buy Me a Coffee supportet? Löse hier deinen Code ein, um Multiplayer und alle Modes freizuschalten.</p>
                     <div style="display:flex; gap:10px;">
-                        <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="Your code...">
-                        <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Redeem</button>
+                        <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="Dein Code...">
+                        <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Einlösen</button>
                     </div>
                 </div>
 
                 <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Change Artist (Avatar & Background)</h3>
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Artist (Avatar & Hintergrund) ändern</h3>
                     <select id="edit-fav-artist-select" class="ea-input" onchange="updateFavArtist()"></select>
 
-                    <h3 style="margin-top: 20px; font-size: 14px; text-transform: uppercase;">2. Change Anthem & Menu Music</h3>
+                    <h3 style="margin-top: 20px; font-size: 14px; text-transform: uppercase;">2. Hymne & Menü-Musik ändern</h3>
                     <div style="display:flex; gap:10px; margin-bottom:10px;">
-                        <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="Search song OR paste YouTube Link...">
+                        <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="Song suchen ODER YouTube-Link einfügen...">
                         <button class="btn-action" style="width:auto; padding:0 20px;" onclick="searchMenuSong('edit')">🔍</button>
                     </div>
                     <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
                 </div>
                 
-                <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Log Out / Switch Account</button>
+                <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Abmelden / Account wechseln</button>
             </div>
         </main>
     </div>
@@ -466,42 +474,42 @@
             <div class="stats-bar" id="game-stats-bar"></div>
             <div class="visualizer"><div class="visualizer-inner">🎵</div></div>
             <div class="game-controls">
-                <button onclick="backToMenu()">🏠 Quit</button>
+                <button onclick="backToMenu()">🏠 Aufgeben</button>
                 <button onclick="replaySnippet()" style="border-color: #3b82f6;">🔄 Replay</button>
                 <button id="add-time-btn" onclick="addTime()">+3s</button>
                 <button onclick="skipSong()" style="border-color: var(--danger); color: var(--danger);">⏭️ Skip (-250)</button>
             </div>
             <div id="options" class="options-container"></div>
             <div id="text-input-container" style="display: none;">
-                <input type="text" id="guess-input" class="ea-input" placeholder="Enter song title..." autocomplete="off" oninput="updateSuggestions()">
+                <input type="text" id="guess-input" class="ea-input" placeholder="Songtitel eingeben..." autocomplete="off" oninput="updateSuggestions()">
                 <div id="suggestions-box"></div>
-                <button class="btn-action" onclick="checkTextInput()">Confirm</button>
+                <button class="btn-action" onclick="checkTextInput()">Bestätigen</button>
             </div>
         </div>
     </div>
 
-    <!-- LOADING SCREEN -->
+    <!-- LADE-SCREEN -->
     <div id="loading-overlay" class="overlay">
         <div style="text-align: center;">
             <div class="loader"></div>
-            <h2 id="loading-text" style="color: white; font-size: 20px; letter-spacing: 2px; text-transform: uppercase;">Please Wait...</h2>
+            <h2 id="loading-text" style="color: white; font-size: 20px; letter-spacing: 2px; text-transform: uppercase;">Bitte Warten...</h2>
         </div>
     </div>
 
     <!-- FEEDBACK & END SCREEN -->
     <div id="feedback-overlay" class="overlay">
         <div id="feedback-modal" class="modal">
-            <h2 id="feedback-title">Title</h2>
+            <h2 id="feedback-title">Titel</h2>
             <img id="feedback-cover" src="">
-            <p id="feedback-desc">Description</p>
+            <p id="feedback-desc">Beschreibung</p>
             <div id="mp-result" style="display: none; margin-bottom: 25px;"></div>
-            <button id="feedback-btn" class="btn-action">Next ➔</button>
+            <button id="feedback-btn" class="btn-action">Weiter ➔</button>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // ARTIST DATA & QUOTES
+        // ARTIST DATEN & ZITATE
         // ==========================================
         const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean', 'Bones'];
         const artists2010s = ['Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa', 'Offset', 'Quavo', 'Yeat', 'Central Cee'];
@@ -549,14 +557,16 @@
         const SERVER_URL = 'https://mukke886.onrender.com';
         const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
         
-        socket.on('connect', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🟢 Ready for Multiplayer'; el.style.color = 'var(--success)'; } });
+        socket.on('connect', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🟢 Bereit für Multiplayer'; el.style.color = 'var(--success)'; } });
         
+        // DEINE SUPABASE EINSTELLUNGEN
         const supabaseUrl = 'https://tvcnushrhteworueftfy.supabase.co';
         const supabaseKey = 'sb_publishable_VftGljbGfzD1urJFrw5Ygw_9jV4-1bD'; 
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         let globalVolume = parseFloat(localStorage.getItem('rapquiz_volume')); if (isNaN(globalVolume)) globalVolume = 0.5;
 
+        // Globale Variablen
         let playerName = ''; 
         let myFavArtist = ''; 
         let mySongUrl = ''; 
@@ -577,7 +587,7 @@
                 events: {
                     'onReady': () => { ytReady = true; },
                     'onStateChange': (event) => { if (event.data === YT.PlayerState.ENDED && ytContext === 'menu') { ytPlayer.seekTo(0); ytPlayer.playVideo(); } },
-                    'onError': (event) => { if (event.data === 101 || event.data === 150) { alert("❌ YouTube blocked this official video due to copyright embedding restrictions.\nPlease search for a 'Lyrics' or 'Audio' video instead!"); } }
+                    'onError': (event) => { if (event.data === 101 || event.data === 150) { alert("❌ YouTube blockiert dieses offizielle Video wegen Copyright-Sperre.\nSuche nach einem 'Lyrics' oder 'Audio' Video für deinen Song!"); } }
                 }
             });
         }
@@ -605,7 +615,7 @@
                 if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
                 menuAudio.src = url; menuAudio.volume = globalVolume * 0.4; menuAudio.play().catch(e=>{});
             }
-            [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')].forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
+            [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')].forEach(b => { if(b) { b.innerHTML = "🔊 Musik An"; b.style.opacity = "1"; } });
         }
         function pauseMenuMusic() { menuAudio.pause(); if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo(); }
         function resumeMenuMusic() {
@@ -629,6 +639,7 @@
             return result;
         }
 
+        // --- TAB SWITCH MIT PREMIUM CHECK FÜR MULTIPLAYER ---
         function switchTab(tabId, el) {
             if (tabId === 'multiplayer-tab' && !isPremium) {
                 document.getElementById('premium-overlay').style.display = 'flex';
@@ -641,9 +652,11 @@
             if (window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active'); }
         }
 
+        // --- KATEGORIE PREMIUM CHECK ---
         function checkPremiumAndStart(mode) {
             if (isPremium) {
-                if(mode === 'artist') {} else { startMixedMode(mode); }
+                if(mode === 'artist') { }
+                else { startMixedMode(mode); }
             } else {
                 document.getElementById('premium-overlay').style.display = 'flex';
             }
@@ -671,20 +684,20 @@
             let inputId = mode === 'setup' ? 'song-search-input' : 'edit-song-search-input'; let selectId = mode === 'setup' ? 'menu-song-select' : 'edit-menu-song-select';
             let q = document.getElementById(inputId).value.trim(); if(!q) return; let sel = document.getElementById(selectId);
             let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-            if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = `<option value="yt:${vid}">YouTube Track: ${vid} (Full Length)</option>`; sel.style.display = 'block'; return; }
+            if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = `<option value="yt:${vid}">YouTube Track: ${vid} (Volle Länge)</option>`; sel.style.display = 'block'; return; }
             const cb = 'deezer_song_' + Date.now();
             window[cb] = function(res) {
                 sel.innerHTML = '';
                 if(res && res.data && res.data.length > 0) {
                     res.data.filter(t => t.preview).slice(0, 10).forEach(t => { let opt = document.createElement('option'); opt.value = t.preview; opt.innerText = `${t.artist.name} - ${t.title} (30s Snippet)`; sel.appendChild(opt); });
                     sel.style.display = 'block';
-                } else { sel.innerHTML = '<option value="">No songs found</option>'; sel.style.display = 'block'; }
+                } else { sel.innerHTML = '<option value="">Nichts gefunden</option>'; sel.style.display = 'block'; }
             };
             const s = document.createElement('script'); s.src = `https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=10&output=jsonp&callback=${cb}`; document.head.appendChild(s);
         }
 
         // ==========================================
-        // AUTHENTICATION & DB SYNC (SUPABASE)
+        // AUTHENTIFIZIERUNG & DATENBANK SYNC (SUPABASE)
         // ==========================================
         window.onload = async () => {
             let volSlider = document.getElementById('volume-slider'); if(volSlider) volSlider.value = globalVolume;
@@ -697,6 +710,7 @@
                 grid.appendChild(d); 
             });
 
+            // Auto-Login Prüfen
             const { data: session } = await supabase.auth.getSession();
             if (session?.session?.user) {
                 document.getElementById('profile-overlay').style.display = 'none';
@@ -707,12 +721,12 @@
         };
 
         async function handleProfileLogin() {
-            let btn = document.getElementById('login-btn'); btn.innerText = "Loading..."; btn.disabled = true;
+            let btn = document.getElementById('login-btn'); btn.innerText = "Lade..."; btn.disabled = true;
             let err = document.getElementById('profile-error'); err.style.display = 'none';
             let name = document.getElementById('username-input').value.trim(); 
             let pw = document.getElementById('password-input').value.trim(); 
             
-            if (!name || !pw) { err.innerText = "Please fill in username and password!"; err.style.display = 'block'; btn.innerText = "Login / Register ➔"; btn.disabled = false; return; }
+            if (!name || !pw) { err.innerText = "Bitte fülle Name und Passwort aus!"; err.style.display = 'block'; btn.innerText = "Login / Registrieren ➔"; btn.disabled = false; return; }
             
             let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
             let { data, error } = await supabase.auth.signInWithPassword({ email: fakeEmail, password: pw });
@@ -720,14 +734,14 @@
             if (error) {
                 let songDropdown = document.getElementById('menu-song-select');
                 if(songDropdown.style.display === 'none' || !songDropdown.value) { 
-                    err.innerText = "New user! Please select your Artist & Anthem first."; err.style.display = 'block'; 
-                    btn.innerText = "Login / Register ➔"; btn.disabled = false; return; 
+                    err.innerText = "Du bist neu! Bitte wähle erst Artist & Hymne aus."; err.style.display = 'block'; 
+                    btn.innerText = "Login / Registrieren ➔"; btn.disabled = false; return; 
                 }
 
                 let { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email: fakeEmail, password: pw });
                 if (signUpError) {
-                    err.innerText = "Error: Password too weak or server offline."; err.style.display = 'block'; 
-                    btn.innerText = "Login / Register ➔"; btn.disabled = false; return;
+                    err.innerText = "Fehler: Passwort zu schwach oder Server offline."; err.style.display = 'block'; 
+                    btn.innerText = "Login / Registrieren ➔"; btn.disabled = false; return;
                 }
                 data = signUpData;
                 
@@ -800,6 +814,7 @@
             }
         }
 
+        // --- VIP CODE EINLÖSEN (BUY ME A COFFEE) ---
         async function redeemVIPCode() {
             let code = document.getElementById('vip-code-input').value.trim();
             if(code === 'RAPQUIZ-VIP-2026' || code === 'MARCUS-VIP-886') { 
@@ -808,10 +823,10 @@
                 if (session?.session?.user) {
                     await supabase.from('profiles').update({ is_premium: true }).eq('id', session.session.user.id);
                 }
-                alert("🎉 SUCCESS! You are now VIP and have unlocked all modes!");
+                alert("🎉 SUCCESS! Du bist jetzt VIP und hast alle Modi freigeschaltet!");
                 location.reload();
             } else {
-                alert("❌ Incorrect code. Please support on Buy Me a Coffee to receive a code.");
+                alert("❌ Falscher Code. Bitte spende auf Buy Me a Coffee, um einen Code zu bekommen.");
             }
         }
 
@@ -838,14 +853,14 @@
         }
 
         // ==========================================
-        // MULTIPLAYER LOBBY LOGIC (2-4 Players)
+        // MULTIPLAYER LOBBY LOGIK (2-4 Spieler)
         // ==========================================
         function encodeAvatarAndQuote() { return myAvatar + '|Q|' + myQuote; }
 
         function createRoom() { 
             isMultiplayer = true; isMpHost = true; 
             socket.emit('createRoom', { name: playerName, avatar: encodeAvatarAndQuote() }); 
-            document.getElementById('mp-status').innerText = 'Connecting...'; 
+            document.getElementById('mp-status').innerText = 'Verbinde...'; 
         }
         
         function joinRoom() { 
@@ -853,7 +868,7 @@
             if(c) { 
                 isMultiplayer = true; isMpHost = false; 
                 socket.emit('joinRoom', { code: c, name: playerName, avatar: encodeAvatarAndQuote() }); 
-                document.getElementById('mp-status').innerText = 'Joining...'; 
+                document.getElementById('mp-status').innerText = 'Trete bei...'; 
             } 
         }
         
@@ -869,12 +884,12 @@
                 let statusEl = document.getElementById('mp-status');
                 if(isMpHost) {
                     if(players.length >= 2) {
-                        statusEl.innerHTML = `🟢 Ready! You can now choose a mode<br>in the left menu to start.`; statusEl.style.color = 'var(--success)';
+                        statusEl.innerHTML = `🟢 Bereit! Du kannst jetzt links im Menü<br>einen Modus wählen und starten.`; statusEl.style.color = 'var(--success)';
                     } else {
-                        statusEl.innerText = `Waiting for players... (${players.length}/4)`; statusEl.style.color = 'var(--warning)';
+                        statusEl.innerText = `Warte auf Mitspieler... (${players.length}/4)`; statusEl.style.color = 'var(--warning)';
                     }
                 } else {
-                    statusEl.innerText = `🟢 In lobby (${players.length}/4). Waiting for host to start...`; statusEl.style.color = 'var(--success)';
+                    statusEl.innerText = `🟢 In der Lobby (${players.length}/4). Warte, bis der Host das Spiel startet...`; statusEl.style.color = 'var(--success)';
                 }
             }
             if (gameIsOver) checkMatchEnd(); 
@@ -883,7 +898,7 @@
         function renderLobbyPlayers() {
             const container = document.getElementById('lobby-players-container');
             if(!container) return;
-            if(lobbyPlayers.length === 0) { container.innerHTML = '<span style="color: var(--text-muted); font-size: 14px;">No one here yet...</span>'; return; }
+            if(lobbyPlayers.length === 0) { container.innerHTML = '<span style="color: var(--text-muted); font-size: 14px;">Noch niemand hier...</span>'; return; }
             container.innerHTML = '';
             lobbyPlayers.forEach(p => {
                 let isMe = p.id === socket.id;
@@ -895,7 +910,7 @@
                     <div style="background: rgba(20,20,25,0.8); padding: 10px 15px; border-radius: 12px; border: 1px solid ${isMe ? 'var(--primary)' : 'var(--surface-border)'}; display: flex; align-items: center; gap: 15px; width: 100%; max-width: 320px; text-align: left;">
                         <img src="${pAv}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid ${isMe ? 'var(--primary)' : 'white'}; flex-shrink: 0;">
                         <div style="display: flex; flex-direction: column; overflow: hidden;">
-                            <span style="font-weight: 800; font-size: 15px; color: white;">${p.name} ${isMe ? '(You)' : ''}</span>
+                            <span style="font-weight: 800; font-size: 15px; color: white;">${p.name} ${isMe ? '(Du)' : ''}</span>
                             <span style="font-size: 11px; color: var(--text-muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title='${pQt.replace(/'/g, "&apos;")}'>${pQt}</span>
                         </div>
                     </div>
@@ -906,7 +921,7 @@
         socket.on('gameReady', (code) => { 
             if(!isMpHost) { 
                 document.getElementById('loading-overlay').style.display = 'flex';
-                document.getElementById('loading-text').innerText = "Loading game data from host...";
+                document.getElementById('loading-text').innerText = "Lade Spieldaten vom Host...";
             } 
         });
 
@@ -974,6 +989,7 @@
             }
         }
 
+        // --- SUDDEN DEATH LOKALE LOGIK ---
         function triggerSuddenDeathLocal(tiedIds) {
             let amITied = tiedIds.includes(socket.id);
             sfxAudio.pause(); if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
@@ -988,7 +1004,7 @@
             
             if (amITied) {
                 lives = 1; gameIsOver = false; isWinnerScreenShown = false;
-                document.getElementById('feedback-desc').innerText = "Tie! You get 1 life. Whoever misses next, loses!";
+                document.getElementById('feedback-desc').innerText = "Gleichstand! Ihr bekommt 1 Leben. Wer jetzt falsch liegt, verliert!";
                 
                 playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
                 expectedAnswers = tiedIds.length;
@@ -1000,13 +1016,14 @@
                     }, 4000);
                 }
             } else {
-                document.getElementById('feedback-desc').innerText = "Tie! Finalists are fighting in Sudden Death...";
+                document.getElementById('feedback-desc').innerText = "Gleichstand! Die Finalisten kämpfen im Sudden Death um den Sieg...";
             }
             
             document.getElementById('feedback-overlay').style.display = 'flex';
             updateStatsDisplay();
         }
 
+        // --- DER SIEGER BILDSCHIRM (7 SEKUNDEN HYMNE) ---
         function playWinnerAnthem(url) {
             sfxAudio.pause(); pauseMenuMusic();
             if (url && url.startsWith('yt:')) {
@@ -1028,8 +1045,8 @@
             let wQt = parts.length > 1 ? parts[1] : '';
 
             let m = document.getElementById('feedback-modal'); m.className = "modal correct"; 
-            document.getElementById('feedback-title').innerText = "🏆 WINNER 🏆";
-            document.getElementById('feedback-desc').innerText = "Playing winner's anthem...";
+            document.getElementById('feedback-title').innerText = "🏆 GEWINNER 🏆";
+            document.getElementById('feedback-desc').innerText = "Die Hymne des Gewinners läuft...";
             
             let cov = document.getElementById('feedback-cover');
             cov.src = wAv; cov.style.display = 'block'; cov.style.borderRadius = '50%';
@@ -1048,9 +1065,9 @@
             setTimeout(() => {
                 sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
                 cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
-                document.getElementById('feedback-title').innerText = "📊 FINAL STANDINGS"; document.getElementById('feedback-desc').innerText = "";
+                document.getElementById('feedback-title').innerText = "📊 ENDSTAND"; document.getElementById('feedback-desc').innerText = "";
                 renderMpLeaderboard(); 
-                let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Exit 🏠";
+                let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Beenden 🏠";
                 btn.onclick = () => { document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
             }, 7000);
         }
@@ -1119,7 +1136,7 @@
         async function startMixedMode(mode) {
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
             document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = "Loading database...";
+            document.getElementById('loading-text').innerText = "Lade Datenbank...";
             resetGameStats(); currentMode = mode; let sel = [];
             
             if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars].sort(()=>0.5-Math.random()).slice(0,8);
@@ -1128,7 +1145,7 @@
             if (mode === 'megahits') sel = [...megaStars, ...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
             await Promise.all(sel.map(a => fetchDeezer(a)));
             if (mode === 'megahits') songsPool = songsPool.filter(s => s.rank > 600000);
-            if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Not enough songs found. Please try again!"); return; }
+            if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Nicht genug Songs gefunden. Bitte nochmal probieren!"); return; }
             
             songsPool = smartShuffle(songsPool); 
             if (isMultiplayer && isMpHost) syncHostData(); launchGame();
@@ -1137,11 +1154,11 @@
         async function startProgressiveMode() {
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
             document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
+            document.getElementById('loading-text').innerText = "Lade Progressiv-Modus...";
             resetGameStats(); currentMode = 'progressive';
             
             await Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchDeezer(a)));
-            if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading."); return; }
+            if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Fehler beim Laden."); return; }
             
             songsPool = smartShuffle(songsPool); 
             if (isMultiplayer && isMpHost) syncHostData(); launchGame();
@@ -1150,11 +1167,11 @@
         async function startArtistMode(artist) {
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
             document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
+            document.getElementById('loading-text').innerText = `Lade Katalog von ${artist}...`;
             resetGameStats(); currentMode = 'artist';
             
             await fetchDeezer(artist);
-            if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Not enough songs for this artist."); return; }
+            if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Nicht genug Songs für diesen Artist."); return; }
             
             songsPool = smartShuffle(songsPool); 
             if (isMultiplayer && isMpHost) syncHostData(); launchGame();
@@ -1230,17 +1247,17 @@
             let btn = document.getElementById('feedback-btn'); let res = document.getElementById('mp-result');
 
             if (playersAnsweredThisRound.size >= expectedAnswers) {
-                res.innerHTML = '<span style="color: var(--success); font-weight: 900;">All players guessed!</span>';
-                btn.style.display = 'block'; btn.innerText = 'Next Round ➔';
+                res.innerHTML = '<span style="color: var(--success); font-weight: 900;">Alle haben getippt!</span>';
+                btn.style.display = 'block'; btn.innerText = 'Nächste Runde ➔';
                 
                 btn.onclick = () => {
                     playersReadyForNextRound.add(socket.id);
                     socket.emit('teammateAnswered', { type: 'READY_NEXT', id: socket.id, roomCode: currentRoom });
-                    btn.style.display = 'none'; res.innerHTML = '<span style="color: var(--warning); font-weight: 800;">Waiting for other players...</span>';
+                    btn.style.display = 'none'; res.innerHTML = '<span style="color: var(--warning); font-weight: 800;">Warte auf Mitspieler...</span>';
                     checkAllReady();
                 };
             } else {
-                res.innerHTML = `<span style="color: var(--warning); font-weight: 800;">Waiting for players... (${playersAnsweredThisRound.size}/${expectedAnswers})</span>`;
+                res.innerHTML = `<span style="color: var(--warning); font-weight: 800;">Warte auf Mitspieler... (${playersAnsweredThisRound.size}/${expectedAnswers})</span>`;
                 btn.style.display = 'none';
             }
         }
@@ -1263,11 +1280,11 @@
 
             if (wasCorrect) {
                 score += pts; maxPlayTime = 30; playAudioSnippet(true); cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
-                m.className = "modal correct"; t.innerText = "🔥 CORRECT!"; d.innerText = `+${pts} Points!\n${currentSong.title} - ${currentSong.artist.name}`;
+                m.className = "modal correct"; t.innerText = "🔥 RICHTIG!"; d.innerText = `+${pts} Punkte!\n${currentSong.title} - ${currentSong.artist.name}`;
             } else {
                 cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
-                if (isSkip) { score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Points\n${currentSong.title} - ${currentSong.artist.name}`; } 
-                else { lives--; m.className = "modal wrong"; t.innerText = "❌ WRONG!"; d.innerText = `Lost a life!\n${currentSong.title} - ${currentSong.artist.name}`; }
+                if (isSkip) { score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Punkte\n${currentSong.title} - ${currentSong.artist.name}`; } 
+                else { lives--; m.className = "modal wrong"; t.innerText = "❌ FALSCH!"; d.innerText = `Ein Leben verloren!\n${currentSong.title} - ${currentSong.artist.name}`; }
             }
             
             if (isMultiplayer) {
@@ -1278,7 +1295,7 @@
                 checkAllAnswered();
             } else {
                 document.getElementById('mp-result').style.display = 'none';
-                let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Next Round ➔"; btn.onclick = nextRound;
+                let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Nächste Runde ➔"; btn.onclick = nextRound;
             }
             
             updateStatsDisplay(); document.getElementById('feedback-overlay').style.display = 'flex';
@@ -1299,20 +1316,20 @@
                 let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
                 matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
                 
-                t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
-                document.getElementById('mp-result').style.display = 'block'; document.getElementById('mp-result').innerHTML = "Loading live data...";
+                t.innerText = "⏳ WARTE AUF SPIELER..."; d.innerText = "Das Match läuft noch für die anderen. Live-Auswertung:"; 
+                document.getElementById('mp-result').style.display = 'block'; document.getElementById('mp-result').innerHTML = "Lade Live-Daten...";
                 b.style.display = 'none'; 
                 document.getElementById('feedback-overlay').style.display = 'flex';
                 
                 renderMpLeaderboard(); checkMatchEnd();
             } else {
-                t.innerText = victory ? "🏆 COMPLETED!" : "💀 GAME OVER"; d.innerText = `Your Score: ${score}`;
+                t.innerText = victory ? "🏆 DURCHGESPIELT!" : "💀 GAME OVER"; d.innerText = `Dein Score: ${score}`;
                 
                 myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
                 updateDbScore(score);
 
                 if (!victory && score < 500) { sfxAudio.src = "roddy.mp3"; sfxAudio.play().catch(e=>{}); }
-                b.innerText = "Exit 🏠"; b.style.display = 'block'; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
+                b.innerText = "Beenden 🏠"; b.style.display = 'block'; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
                 document.getElementById('feedback-overlay').style.display = 'flex';
             }
         }
@@ -1324,11 +1341,11 @@
             if(!isMultiplayer) {
                 bar.innerHTML = `
                     <div class="team-score-box">
-                        <span class="team-score-title" style="color: white;">Your Score</span>
+                        <span class="team-score-title" style="color: white;">Dein Score</span>
                         <span class="team-score-num" style="color: var(--primary);">${score}</span>
                     </div>
                     <div style="text-align: center;">
-                        <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Lives</div>
+                        <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Deine Leben</div>
                         <span style="font-size: 20px; letter-spacing: 2px;">${"❤️".repeat(lives) + "🖤".repeat(3-lives)}</span>
                     </div>
                 `;
@@ -1359,7 +1376,7 @@
             
             let sorted = [...lobbyPlayers].map(p => { return matchEndData[p.id] ? matchEndData[p.id] : p; }).sort((a,b) => b.score - a.score);
             
-            let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Standings</h3>';
+            let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Platzierung</h3>';
             html += '<div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
             
             sorted.forEach((p, index) => {
