@@ -65,7 +65,8 @@
         h1 { color: var(--text); font-size: 40px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 25px rgba(0,0,0,0.8); }
 
         /* --- LAYOUT & MOBILE UI --- */
-        #app-layout { display: none; width: 100%; height: 100%; flex-direction: row; }
+        /* WICHTIG: App-Layout ist jetzt sofort sichtbar, nicht mehr versteckt! */
+        #app-layout { display: flex; width: 100%; height: 100%; flex-direction: row; }
 
         #mobile-menu-btn {
             position: fixed; top: 20px; left: 20px;
@@ -231,32 +232,6 @@
     <div class="scanlines"></div>
     <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
 
-    <!-- PROFIL SETUP OVERLAY -->
-    <div id="profile-overlay" class="overlay" style="display: flex;">
-        <div class="modal" style="border-top: 5px solid var(--primary);">
-            <h2 id="profile-title" style="color: white; margin-bottom: 5px;">WELCOME TO<br><span style="color: var(--primary);">RAPMUSIK GUESSR</span></h2>
-            <p style="font-size:13px; color: var(--text-muted); margin-bottom: 25px;">Create your profile or login to your cloud account.</p>
-            
-            <input type="text" id="username-input" class="ea-input" style="text-align: left;" placeholder="👤 Username" autocomplete="off">
-            <input type="password" id="password-input" class="ea-input" style="text-align: left;" placeholder="🔑 Password">
-            
-            <div id="artist-select-container" style="text-align: left; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--surface-border);">
-                <p style="margin: 0 0 10px 0; font-size: 12px; color: white; font-weight: 800; text-transform: uppercase;">1. Choose your Avatar / Artist</p>
-                <select id="fav-artist-select" class="ea-input" style="margin-bottom: 20px; padding: 15px;"></select>
-
-                <p style="margin: 0 0 10px 0; font-size: 12px; color: white; font-weight: 800; text-transform: uppercase;">2. Search your Anthem (or YouTube Link)</p>
-                <div style="display: flex; gap: 10px; margin-bottom: 0;">
-                    <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1; padding: 15px;" placeholder="e.g. Sicko Mode...">
-                    <button class="btn-action" style="width: auto; padding: 0 20px; margin: 0; font-size: 18px;" onclick="searchMenuSong('setup')">🔍</button>
-                </div>
-                <select id="menu-song-select" class="ea-input" style="display: none; color: var(--success); font-size: 14px; cursor: pointer; margin-top: 15px; padding: 15px;"></select>
-            </div>
-            
-            <button id="login-btn" class="btn-action" onclick="handleProfileLogin()">Login / Register ➔</button>
-            <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
-        </div>
-    </div>
-
     <!-- PREMIUM PAYWALL OVERLAY -->
     <div id="premium-overlay" class="overlay" style="display: none;">
         <div class="modal warning">
@@ -276,9 +251,9 @@
         <nav id="sidebar">
             <div class="sidebar-logo">RAPMUSIK<span>GUESSR</span></div>
             <div class="sidebar-user">
-                <img id="sidebar-avatar" class="sidebar-avatar" src="">
+                <img id="sidebar-avatar" class="sidebar-avatar" src="https://api.dicebear.com/7.x/adventurer/svg?seed=Guest">
                 <div class="sidebar-user-info">
-                    <span id="sidebar-name" class="sidebar-name">Name</span>
+                    <span id="sidebar-name" class="sidebar-name">Guest</span>
                     <span class="sidebar-status" style="display:flex; gap:10px; align-items:center;">
                         <span id="premium-badge" style="display:none; background: var(--warning); color: black; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 900;">VIP</span>
                         <span id="sidebar-level" style="color:var(--primary); font-weight:900; font-size:12px;">Lvl 1</span>
@@ -376,50 +351,78 @@
             <!-- PROFILE TAB -->
             <div id="profile-tab" class="tab-content">
                 <div class="section-title">My Club</div>
-                <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
-                    <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
-                    <div style="text-align: left; flex: 1;">
-                        <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
-                        <p id="profile-view-quote" style="margin: 0 0 10px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
-                        <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Anthem: <span id="profile-view-hymn" style="color: white;">Artist</span></p>
-                        <div style="width: 100%; max-width: 400px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
-                                <span>Level <span id="profile-level-num">1</span></span>
-                                <span><span id="profile-xp-current">0</span> / 4000 XP</span>
-                            </div>
-                            <div style="background: rgba(255,255,255,0.1); width: 100%; height: 8px; border-radius: 4px; overflow: hidden;">
-                                <div id="profile-xp-bar" style="background: var(--success); width: 0%; height: 100%; transition: width 0.5s ease;"></div>
+
+                <!-- GUEST LOGIN SECTION (Wird nur angezeigt, wenn man nicht eingeloggt ist) -->
+                <div id="guest-login-section" style="background: rgba(0,0,0,0.5); padding: 30px; border-radius: 16px; border: 1px solid var(--primary); text-align: left; margin-bottom: 30px;">
+                    <h2 style="color: white; margin-top: 0; font-weight: 900;">Create your Club</h2>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">You are currently playing as a Guest. Register or login to save your stats, set your anthem, and unlock cloud saves.</p>
+                    
+                    <input type="text" id="username-input" class="ea-input" placeholder="👤 Username" autocomplete="off">
+                    <input type="password" id="password-input" class="ea-input" placeholder="🔑 Password">
+                    
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--surface-border);">
+                        <p style="margin: 0 0 10px 0; font-size: 12px; color: white; font-weight: 800; text-transform: uppercase;">1. Choose your Avatar / Artist</p>
+                        <select id="fav-artist-select" class="ea-input" style="margin-bottom: 20px; padding: 15px;"></select>
+
+                        <p style="margin: 0 0 10px 0; font-size: 12px; color: white; font-weight: 800; text-transform: uppercase;">2. Search your Anthem (or YouTube Link)</p>
+                        <div style="display: flex; gap: 10px; margin-bottom: 0;">
+                            <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1; padding: 15px;" placeholder="e.g. Sicko Mode...">
+                            <button class="btn-action" style="width: auto; padding: 0 20px; margin: 0; font-size: 18px;" onclick="searchMenuSong('setup')">🔍</button>
+                        </div>
+                        <select id="menu-song-select" class="ea-input" style="display: none; color: var(--success); font-size: 14px; cursor: pointer; margin-top: 15px; padding: 15px;"></select>
+                    </div>
+                    
+                    <button id="login-btn" class="btn-action" onclick="handleProfileLogin()">Login / Register ➔</button>
+                    <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
+                </div>
+
+                <!-- LOGGED IN SECTION (Wird nur angezeigt, wenn man eingeloggt ist) -->
+                <div id="logged-in-section" style="display: none;">
+                    <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
+                        <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
+                        <div style="text-align: left; flex: 1;">
+                            <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
+                            <p id="profile-view-quote" style="margin: 0 0 10px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
+                            <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Anthem: <span id="profile-view-hymn" style="color: white;">Artist</span></p>
+                            <div style="width: 100%; max-width: 400px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
+                                    <span>Level <span id="profile-level-num">1</span></span>
+                                    <span><span id="profile-xp-current">0</span> / 4000 XP</span>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.1); width: 100%; height: 8px; border-radius: 4px; overflow: hidden;">
+                                    <div id="profile-xp-bar" style="background: var(--success); width: 0%; height: 100%; transition: width 0.5s ease;"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
-                    <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
-                </div>
-
-                <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 Redeem Gumroad License</h3>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="e.g. A7X9-B2M4-99PL-Q1ZS">
-                        <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Verify</button>
+                    <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
+                        <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
+                        <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
                     </div>
-                </div>
 
-                <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Change Artist (Avatar & Background)</h3>
-                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 20px;" onchange="updateFavArtist()"></select>
-
-                    <h3 style="margin-top: 20px; font-size: 14px; text-transform: uppercase;">2. Change Anthem & Menu Music</h3>
-                    <div style="display:flex; gap:10px; margin-bottom:10px;">
-                        <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="Search song OR paste YouTube Link...">
-                        <button class="btn-action" style="width:auto; padding:0 20px;" onclick="searchMenuSong('edit')">🔍</button>
+                    <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
+                        <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 Redeem Gumroad License</h3>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="e.g. A7X9-B2M4-99PL-Q1ZS">
+                            <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Verify</button>
+                        </div>
                     </div>
-                    <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
+
+                    <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
+                        <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Change Artist (Avatar & Background)</h3>
+                        <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 20px;" onchange="updateFavArtist()"></select>
+
+                        <h3 style="margin-top: 20px; font-size: 14px; text-transform: uppercase;">2. Change Anthem & Menu Music</h3>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="Search song OR paste YouTube Link...">
+                            <button class="btn-action" style="width:auto; padding:0 20px;" onclick="searchMenuSong('edit')">🔍</button>
+                        </div>
+                        <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
+                    </div>
+                    
+                    <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Log Out / Delete Account Data</button>
                 </div>
-                
-                <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Log Out / Switch Account</button>
             </div>
         </main>
     </div>
@@ -523,7 +526,7 @@
             }
         } catch(e) {}
 
-        let playerName = ''; let myFavArtist = ''; let mySongUrl = ''; let myAvatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; let myBgUrl = ''; let myQuote = ''; let isPremium = false; let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
+        let playerName = 'Guest'; let myFavArtist = ''; let mySongUrl = ''; let myAvatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=Guest'; let myBgUrl = ''; let myQuote = 'Ready to play!'; let isPremium = false; let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
         let ytPlayer; let ytReady = false; let ytContext = 'menu';
         
         function onYouTubeIframeAPIReady() {
@@ -545,7 +548,7 @@
         let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = '';
         let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
 
-        // --- SOFORTIGES LADEN DER DROPDOWNS BEIM START ---
+        // --- SOFORTIGES LADEN BEIM START (OHNE BLOCKIEREN) ---
         document.addEventListener('DOMContentLoaded', async () => {
             let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
             selects.forEach(sel => { 
@@ -562,36 +565,38 @@
                 grid.appendChild(d); 
             });
 
+            // GUEST DEFAULTS (Damit man sofort spielen kann)
+            playerName = "Guest_" + Math.floor(Math.random() * 10000);
+            document.getElementById('sidebar-name').innerText = "Guest";
+
             try {
                 if (supabase) {
                     const { data: session } = await supabase.auth.getSession();
                     if (session?.session?.user) {
-                        document.getElementById('profile-overlay').style.display = 'none';
                         await loadProfileFromDB(session.session.user.id);
                         return;
                     }
                 }
             } catch(e) {}
 
-            // Fallback auf LocalStorage falls kein Supabase-Login aktiv
-            playerName = localStorage.getItem('rapquiz_username'); 
+            // LocalStorage Check (Falls man lokal eingeloggt ist)
+            let savedName = localStorage.getItem('rapquiz_username'); 
             let savedPw = localStorage.getItem('rapquiz_password');
-            mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || '';
-            isPremium = localStorage.getItem('rapquiz_vip') === 'true';
-
-            if (!playerName || !savedPw || !mySongUrl) { 
-                document.getElementById('profile-overlay').style.display = 'flex'; 
-            } else { 
-                document.getElementById('profile-title').innerHTML = 'WELCOME BACK!<br><span style="color: var(--primary);">RAPMUSIK GUESSR</span>'; 
-                document.getElementById('username-input').value = playerName; 
-                document.getElementById('username-input').disabled = true; 
-                document.getElementById('artist-select-container').style.display = 'none'; 
-                document.getElementById('profile-overlay').style.display = 'flex'; 
+            if (savedName && savedPw) {
+                playerName = savedName;
+                myFavArtist = localStorage.getItem('rapquiz_fav_artist') || ''; 
+                mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || ''; 
+                myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; 
+                myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
+                myQuote = localStorage.getItem('rapquiz_quote') || '';
+                isPremium = localStorage.getItem('rapquiz_vip') === 'true';
+                myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, totalScore: 0 };
+                finalizeLoginUI();
             }
         });
 
         // ==========================================
-        // UI HELPERS & LOGIN (Mit Supabase Support)
+        // UI HELPERS & LOGIN (GUEST vs LOGGED IN)
         // ==========================================
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('active'); }
@@ -668,6 +673,8 @@
                 if (res && res.data && res.data.length > 0) {
                     myBgUrl = res.data[0].picture_xl; myAvatar = res.data[0].picture_medium;
                     document.getElementById('app-background').src = myBgUrl; updateAllAvatars();
+                    localStorage.setItem('rapquiz_avatar', myAvatar);
+                    localStorage.setItem('rapquiz_bg_url', myBgUrl);
                     saveProfileToDB(); 
                 }
             };
@@ -704,6 +711,7 @@
             let err = document.getElementById('profile-error'); err.style.display = 'none';
             let name = document.getElementById('username-input').value.trim(); 
             let pw = document.getElementById('password-input').value.trim(); 
+            let songDropdown = document.getElementById('menu-song-select');
             
             if (!name || !pw) { err.innerText = "Please fill in username and password!"; err.style.display = 'block'; btn.innerText = "Login / Register ➔"; btn.disabled = false; return; }
 
@@ -712,9 +720,9 @@
                 let { data, error } = await supabase.auth.signInWithPassword({ email: fakeEmail, password: pw });
 
                 if (error) {
-                    let songDropdown = document.getElementById('menu-song-select');
+                    // Registration Path
                     if(songDropdown.style.display === 'none' || !songDropdown.value) { 
-                        err.innerText = "Please complete Step 2 (Search your Anthem) first!"; err.style.display = 'block'; 
+                        err.innerText = "Please complete Step 2 (Search your Anthem) to register!"; err.style.display = 'block'; 
                         btn.innerText = "Login / Register ➔"; btn.disabled = false; return; 
                     }
 
@@ -743,9 +751,8 @@
             let savedPw = localStorage.getItem('rapquiz_password');
             if (savedPw && pw !== savedPw) { err.innerText = "Wrong Password!"; err.style.display = 'block'; btn.innerText = "Login / Register ➔"; btn.disabled = false; return; }
 
-            let songDropdown = document.getElementById('menu-song-select');
             if(!savedPw && (songDropdown.style.display === 'none' || !songDropdown.value)) {
-                err.innerText = "Please complete Step 2 (Search your Anthem) first!"; err.style.display = 'block'; 
+                err.innerText = "Please complete Step 2 (Search your Anthem) to register!"; err.style.display = 'block'; 
                 btn.innerText = "Login / Register ➔"; btn.disabled = false; return;
             }
 
@@ -789,8 +796,10 @@
                 });
             }
 
-            document.getElementById('profile-overlay').style.display = 'none'; 
-            document.getElementById('app-layout').style.display = 'flex';
+            // GUEST MENU VERSTECKEN, LOGGED IN ZEIGEN
+            document.getElementById('guest-login-section').style.display = 'none'; 
+            document.getElementById('logged-in-section').style.display = 'block';
+            
             document.getElementById('sidebar-name').innerText = playerName; 
             document.getElementById('profile-view-name').innerText = playerName; 
             document.getElementById('profile-view-quote').innerText = myQuote; 
@@ -814,6 +823,7 @@
 
         async function updateDbScore(addedScore) {
             myStats.totalScore += addedScore;
+            localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
             updateLevelDisplay();
             if (!supabase) return;
             const { data: session } = await supabase.auth.getSession();
@@ -866,6 +876,8 @@
         function updateFavArtist() { 
             myFavArtist = document.getElementById('edit-fav-artist-select').value; 
             myQuote = getArtistQuote(myFavArtist);
+            localStorage.setItem('rapquiz_fav_artist', myFavArtist);
+            localStorage.setItem('rapquiz_quote', myQuote);
             document.getElementById('profile-view-quote').innerText = myQuote; 
             loadArtistVisuals(myFavArtist); 
         }
@@ -1110,17 +1122,26 @@
             if (unp.length === 0) { triggerGameOver(true); return; }
             currentSong = unp[0]; playedSongIds.add(currentSong.id);
 
-            maxPlayTime = 1; document.getElementById('add-time-btn').innerText = `+3s (1s)`;
-            document.getElementById('text-input-container').style.display = 'none'; document.getElementById('options').style.display = 'flex';
-            let wrong = songsPool.filter(s => s.id !== currentSong.id).sort(()=>0.5-Math.random());
-            let opts = [currentSong]; let seenTitles = new Set([currentSong.title]);
-            for (let s of wrong) { if (!seenTitles.has(s.title)) { seenTitles.add(s.title); opts.push(s); } if (opts.length === 4) break; }
-            opts.sort(()=>0.5-Math.random());
-            let div = document.getElementById('options'); div.innerHTML = '';
-            opts.forEach(o => {
-                let b = document.createElement('button'); b.className = 'option-btn'; b.innerText = `${o.title} - ${o.artist.name}`;
-                b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
-            });
+            if (currentMode === 'progressive') {
+                let times = [0.1, 1, 2, 5, 10]; maxPlayTime = times[Math.min(playedSongIds.size - 1, 4)];
+                document.getElementById('add-time-btn').innerText = `+3s (${maxPlayTime}s)`;
+            } else { maxPlayTime = 1; document.getElementById('add-time-btn').innerText = `+3s (1s)`; }
+
+            if (isHardcoreMode) {
+                document.getElementById('options').style.display = 'none'; document.getElementById('text-input-container').style.display = 'block';
+                let input = document.getElementById('guess-input'); input.value = ''; input.focus();
+            } else {
+                document.getElementById('text-input-container').style.display = 'none'; document.getElementById('options').style.display = 'flex';
+                let wrong = songsPool.filter(s => s.id !== currentSong.id).sort(()=>0.5-Math.random());
+                let opts = [currentSong]; let seenTitles = new Set([currentSong.title]);
+                for (let s of wrong) { if (!seenTitles.has(s.title)) { seenTitles.add(s.title); opts.push(s); } if (opts.length === 4) break; }
+                opts.sort(()=>0.5-Math.random());
+                let div = document.getElementById('options'); div.innerHTML = '';
+                opts.forEach(o => {
+                    let b = document.createElement('button'); b.className = 'option-btn'; b.innerText = showArtistName ? `${o.title} - ${o.artist.name}` : o.title;
+                    b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
+                });
+            }
             audio.src = currentSong.preview; playAudioSnippet(false);
         }
 
@@ -1158,7 +1179,7 @@
         function processAnswer(wasCorrect, isSkip = false) {
             let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover');
             document.getElementById('suggestions-box').style.display = 'none'; 
-            let pts = 100;
+            let pts = maxPlayTime <= 1 ? 100 : (maxPlayTime <= 4 ? 75 : 50);
 
             if (wasCorrect) {
                 score += pts; maxPlayTime = 30; playAudioSnippet(true); cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
