@@ -481,7 +481,8 @@
         let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; 
         let myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
         let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, draws: 0 };
-        let menuAudio = new Audio(); menuAudio.volume = 0.2; menuAudio.loop = true; let isMenuMusicPlaying = false;
+        let menuAudio = new Audio(); menuAudio.volume = 0.2; menuAudio.loop = true; menuAudio.crossOrigin = "anonymous";
+        let isMenuMusicPlaying = false;
         
         let gameIsOver = false;
         let isMultiplayer = false;
@@ -493,6 +494,7 @@
         let matchEndData = {}; 
         let isWinnerScreenShown = false; 
         let playersAnsweredThisRound = new Set();
+        let playersReadyForNextRound = new Set();
         let expectedAnswers = 1;
 
         function toggleSidebar() {
@@ -585,7 +587,6 @@
             allArtists.forEach(a => { let d = document.createElement('div'); d.className = 'artist-tile'; d.innerText = a; d.onclick = () => startArtistMode(a); grid.appendChild(d); });
             if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
 
-            // Auto-Login Logik
             if (!playerName || !savedPw || !mySongUrl) { 
                 document.getElementById('profile-overlay').style.display = 'flex'; 
             } else { 
@@ -596,7 +597,6 @@
 
         function handleProfileLogin(isAutoLogin = false) {
             let err = document.getElementById('profile-error');
-            
             if (!isAutoLogin) {
                 let name = document.getElementById('username-input').value.trim(); 
                 let pw = document.getElementById('password-input').value.trim(); 
@@ -627,10 +627,7 @@
             
             let musicBtn = document.getElementById('music-toggle-btn');
             if(musicBtn && window.innerWidth > 768) musicBtn.style.display = 'block';
-            
-            if (isAutoLogin && myAvatar && myBgUrl) {
-                updateAllAvatars();
-            }
+            if (isAutoLogin && myAvatar && myBgUrl) updateAllAvatars();
             
             menuAudio.src = mySongUrl;
             menuAudio.play().then(() => { 
@@ -656,8 +653,7 @@
         // MULTIPLAYER LOBBY LOGIK (2-4 Spieler)
         // ==========================================
         function createRoom() { 
-            isMultiplayer = true; 
-            isMpHost = true; 
+            isMultiplayer = true; isMpHost = true; 
             socket.emit('createRoom', { name: playerName, avatar: myAvatar }); 
             document.getElementById('mp-status').innerText = 'Verbinde...'; 
         }
@@ -665,8 +661,7 @@
         function joinRoom() { 
             let c = document.getElementById('join-code-input').value; 
             if(c) { 
-                isMultiplayer = true; 
-                isMpHost = false; 
+                isMultiplayer = true; isMpHost = false; 
                 socket.emit('joinRoom', { code: c, name: playerName, avatar: myAvatar }); 
                 document.getElementById('mp-status').innerText = 'Trete bei...'; 
             } 
@@ -674,35 +669,22 @@
         
         function cancelMultiplayer() { isMultiplayer = false; isMpHost = false; currentRoom = ''; switchTab('play-tab', document.getElementById('nav-play')); }
 
-        socket.on('roomCreated', (code) => { 
-            currentRoom = code; 
-            document.getElementById('room-code-display').innerText = code; 
-        });
-        
-        socket.on('joinedSuccess', (data) => { 
-            currentRoom = data.roomCode; 
-            document.getElementById('room-code-display').innerText = data.roomCode; 
-        });
-        
+        socket.on('roomCreated', (code) => { currentRoom = code; document.getElementById('room-code-display').innerText = code; });
+        socket.on('joinedSuccess', (data) => { currentRoom = data.roomCode; document.getElementById('room-code-display').innerText = data.roomCode; });
         socket.on('errorMsg', (msg) => { alert(msg); cancelMultiplayer(); });
         
         socket.on('lobbyUpdate', (players) => { 
-            lobbyPlayers = players; 
-            renderLobbyPlayers();
-            
+            lobbyPlayers = players; renderLobbyPlayers();
             if(currentRoom) {
                 let statusEl = document.getElementById('mp-status');
                 if(isMpHost) {
                     if(players.length >= 2) {
-                        statusEl.innerHTML = `🟢 Bereit! Du kannst jetzt links im Menü<br>einen Modus wählen und starten.`;
-                        statusEl.style.color = 'var(--success)';
+                        statusEl.innerHTML = `🟢 Bereit! Du kannst jetzt links im Menü<br>einen Modus wählen und starten.`; statusEl.style.color = 'var(--success)';
                     } else {
-                        statusEl.innerText = `Warte auf Mitspieler... (${players.length}/4)`;
-                        statusEl.style.color = 'var(--warning)';
+                        statusEl.innerText = `Warte auf Mitspieler... (${players.length}/4)`; statusEl.style.color = 'var(--warning)';
                     }
                 } else {
-                    statusEl.innerText = `🟢 In der Lobby (${players.length}/4). Warte, bis der Host das Spiel startet...`;
-                    statusEl.style.color = 'var(--success)';
+                    statusEl.innerText = `🟢 In der Lobby (${players.length}/4). Warte, bis der Host das Spiel startet...`; statusEl.style.color = 'var(--success)';
                 }
             }
             if (gameIsOver) checkMatchEnd(); 
@@ -711,10 +693,7 @@
         function renderLobbyPlayers() {
             const container = document.getElementById('lobby-players-container');
             if(!container) return;
-            if(lobbyPlayers.length === 0) {
-                container.innerHTML = '<span style="color: var(--text-muted); font-size: 14px;">Noch niemand hier...</span>';
-                return;
-            }
+            if(lobbyPlayers.length === 0) { container.innerHTML = '<span style="color: var(--text-muted); font-size: 14px;">Noch niemand hier...</span>'; return; }
             container.innerHTML = '';
             lobbyPlayers.forEach(p => {
                 let isMe = p.id === socket.id;
@@ -746,23 +725,23 @@
             if(gameIsOver) renderMpLeaderboard(); 
         });
 
-        // Backend leitet Signale weiter: Wer hat schon geantwortet?
         socket.on('teammateAnswered', (data) => {
             if (data.type === 'ROUND_ANSWERED') {
-                playersAnsweredThisRound.add(data.id);
-                checkAllAnswered();
+                playersAnsweredThisRound.add(data.id); checkAllAnswered();
+            } else if (data.type === 'READY_NEXT') {
+                playersReadyForNextRound.add(data.id); checkAllReady();
             }
         });
 
-        // Trigger vom Host für die nächste Runde!
         socket.on('triggerNextRound', () => {
-            if (!isMpHost && lives > 0 && !gameIsOver) {
-                nextRound();
-            }
+            if (!isMpHost && lives > 0 && !gameIsOver) nextRound();
         });
 
         socket.on('opponentGameOver', (data) => {
             matchEndData[data.id] = data; 
+            // Toter Spieler blockiert die Runde nicht mehr:
+            playersAnsweredThisRound.add(data.id); playersReadyForNextRound.add(data.id);
+            checkAllAnswered(); checkAllReady();
             if (gameIsOver) checkMatchEnd(); 
         });
 
@@ -781,27 +760,18 @@
                 localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
                 
                 showWinnerScreen(winner);
-            } else {
-                renderMpLeaderboard();
-            }
+            } else { renderMpLeaderboard(); }
         }
 
         // --- DER NEUE SIEGER BILDSCHIRM (7 SEKUNDEN HYMNE) ---
         function showWinnerScreen(winner) {
-            let m = document.getElementById('feedback-modal'); 
-            m.className = "modal correct"; 
-            
+            let m = document.getElementById('feedback-modal'); m.className = "modal correct"; 
             document.getElementById('feedback-title').innerText = "🏆 GEWINNER 🏆";
             document.getElementById('feedback-desc').innerText = "Die Hymne des Gewinners läuft...";
             
             let cov = document.getElementById('feedback-cover');
-            cov.src = winner.avatar;
-            cov.style.display = 'block';
-            cov.style.borderRadius = '50%';
-            cov.style.width = '160px'; 
-            cov.style.height = '160px';
-            cov.style.border = '4px solid var(--warning)';
-            cov.style.boxShadow = '0 0 40px rgba(245, 158, 11, 0.8)';
+            cov.src = winner.avatar; cov.style.display = 'block'; cov.style.borderRadius = '50%';
+            cov.style.width = '160px'; cov.style.height = '160px'; cov.style.border = '4px solid var(--warning)'; cov.style.boxShadow = '0 0 40px rgba(245, 158, 11, 0.8)';
             
             document.getElementById('mp-result').style.display = 'block';
             document.getElementById('mp-result').innerHTML = `
@@ -816,7 +786,6 @@
                 sfxAudio.pause();
                 cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
                 document.getElementById('feedback-title').innerText = "📊 ENDSTAND"; document.getElementById('feedback-desc').innerText = "";
-                
                 renderMpLeaderboard(); 
                 let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Beenden 🏠";
                 btn.onclick = () => { document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
@@ -826,18 +795,24 @@
         // ==========================================
         // GAME LOGIC & PARALLEL FETCH
         // ==========================================
-        let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; let audio = new Audio(); audio.volume = 0.5; let sfxAudio = new Audio(); 
+        let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; let audio = new Audio(); audio.volume = 0.5; audio.crossOrigin = "anonymous"; let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous";
         
-        let currentPlayId = 0; // VERHINDERT DEN +3S BUG
-        function playAudioSnippet() { 
-            audio.currentTime = 0; clearTimeout(precisionTimer); 
+        let currentPlayId = 0; // Verhinderung des Zeit-Bugs beim Klicken
+        function playAudioSnippet(isReplay = false) { 
+            clearTimeout(precisionTimer); 
             let playId = ++currentPlayId;
-            audio.play().then(() => {
-                if (playId !== currentPlayId) return; // Verhindert Bug bei schnellem Klicken
-                if (maxPlayTime < 30) {
-                    precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000);
-                }
-            }).catch(e=>{}); 
+            
+            if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
+            
+            let p = audio.play();
+            if (p !== undefined) {
+                p.then(() => {
+                    if (playId !== currentPlayId) return; 
+                    if (maxPlayTime < 30) {
+                        precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000);
+                    }
+                }).catch(e=>{});
+            }
         }
 
         function toggleHardcoreMode() { isHardcoreMode = document.getElementById('hardcore-toggle').checked; }
@@ -852,20 +827,21 @@
                     if(!isResolved) { 
                         isResolved = true; clearTimeout(timeout); 
                         if (r && r.data) {
-                            // DOPPELTER FILTER: Strikter API Tag UND Code-Verifizierung (Tschüss Remixe!)
-                            let filtered = r.data.filter(t => t.preview && t.artist.name.toLowerCase() === artist.toLowerCase());
+                            // STRIKTER FILTER FÜR US/UK KÜNSTLER (Verhindert French/German Remixe komplett)
+                            let filtered = r.data.filter(t => t.preview && t.artist.name.toLowerCase().includes(artist.toLowerCase()));
                             songsPool = songsPool.concat(filtered); 
                         } 
                         resolve(); 
                     } 
                 };
-                const query = `artist:"${artist}"`; // Zwingt Deezer nur den Hauptkünstler zu suchen
+                // API Query zwingt Deezer, den Artist als Hauptkünstler zu behandeln
+                const query = `artist:"${artist}"`;
                 const s = document.createElement('script'); s.src = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=50&output=jsonp&callback=${cb}`; document.head.appendChild(s);
             });
         }
 
         function resetGameStats() {
-            songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear();
+            songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
             updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
         }
 
@@ -923,7 +899,7 @@
         function launchGame() {
             menuAudio.pause(); document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
-            if(isMultiplayer) { socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives }); }
+            if(isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
             nextRound();
         }
 
@@ -944,8 +920,8 @@
         function nextRound() {
             document.getElementById('feedback-overlay').style.display = 'none'; audio.pause(); clearTimeout(precisionTimer); document.getElementById('suggestions-box').style.display = 'none';
             
-            // Sync Reset
-            playersAnsweredThisRound.clear();
+            // Sync Reset für die neue Runde
+            playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
             if(isMultiplayer) expectedAnswers = Math.max(1, lobbyPlayers.filter(p => p.lives > 0).length);
             
             let unp = songsPool.filter(s => !playedSongIds.has(s.id));
@@ -972,34 +948,43 @@
                     b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
                 });
             }
-            playAudioSnippet();
+            audio.src = currentSong.preview; 
+            playAudioSnippet(false);
         }
 
-        function replaySnippet() { playAudioSnippet(); }
-        function addTime() { if (maxPlayTime < 10) { maxPlayTime += 3; if(maxPlayTime>10)maxPlayTime=10; document.getElementById('add-time-btn').innerText = `+3s (${maxPlayTime.toFixed(1)}s)`; playAudioSnippet(); } }
+        function replaySnippet() { playAudioSnippet(true); }
+        function addTime() { if (maxPlayTime < 10) { maxPlayTime += 3; if(maxPlayTime>10)maxPlayTime=10; document.getElementById('add-time-btn').innerText = `+3s (${maxPlayTime.toFixed(1)}s)`; playAudioSnippet(true); } }
         function skipSong() { processAnswer(false, true); }
         function checkTextInput() { let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); let c = currentSong.title.toLowerCase().split('(')[0].split(' feat')[0].replace(/[^a-z0-9]/g, ''); processAnswer(v === c || (v.length >= 4 && c.includes(v))); }
 
         // --- SYNCHRONER AUTO-ADVANCE FÜR MULTIPLAYER ---
         function checkAllAnswered() {
             if (!isMultiplayer) return;
-            let btn = document.getElementById('feedback-btn');
-            let res = document.getElementById('mp-result');
+            let btn = document.getElementById('feedback-btn'); let res = document.getElementById('mp-result');
 
             if (playersAnsweredThisRound.size >= expectedAnswers) {
-                res.innerHTML = '<span style="color: var(--success); font-weight: 900;">Alle haben getippt! Weiter in 3s...</span>';
-                btn.style.display = 'none'; // Auto-Advance, kein Button nötig
-
-                // Der Host triggert die nächste Runde nach 3 Sekunden Wartezeit für alle
-                if (isMpHost) {
-                    setTimeout(() => {
-                        socket.emit('nextRound', { roomCode: currentRoom });
-                        if (lives > 0 && !gameIsOver) nextRound();
-                    }, 3000);
-                }
+                res.innerHTML = '<span style="color: var(--success); font-weight: 900;">Alle haben getippt!</span>';
+                btn.style.display = 'block';
+                btn.innerText = 'Nächste Runde ➔';
+                btn.onclick = () => {
+                    playersReadyForNextRound.add(socket.id);
+                    socket.emit('teammateAnswered', { type: 'READY_NEXT', id: socket.id, roomCode: currentRoom });
+                    btn.style.display = 'none'; res.innerHTML = '<span style="color: var(--warning); font-weight: 800;">Warte auf Mitspieler...</span>';
+                    checkAllReady();
+                };
             } else {
                 res.innerHTML = `<span style="color: var(--warning); font-weight: 800;">Warte auf Mitspieler... (${playersAnsweredThisRound.size}/${expectedAnswers})</span>`;
                 btn.style.display = 'none';
+            }
+        }
+
+        function checkAllReady() {
+            if (!isMultiplayer) return;
+            if (playersReadyForNextRound.size >= expectedAnswers) {
+                if (isMpHost) {
+                    socket.emit('nextRound', { roomCode: currentRoom });
+                    if (lives > 0 && !gameIsOver) nextRound();
+                }
             }
         }
 
@@ -1007,13 +992,10 @@
             let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover');
             document.getElementById('suggestions-box').style.display = 'none'; 
             
-            // Singleplayer Button Logik
-            document.getElementById('feedback-btn').onclick = nextRound;
-            
             let pts = maxPlayTime <= 1 ? 100 : (maxPlayTime <= 4 ? 75 : 50);
 
             if (wasCorrect) {
-                score += pts; maxPlayTime = 30; playAudioSnippet(); cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
+                score += pts; maxPlayTime = 30; playAudioSnippet(true); cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
                 m.className = "modal correct"; t.innerText = "🔥 RICHTIG!"; d.innerText = `+${pts} Punkte!\n${currentSong.title} - ${currentSong.artist.name}`;
             } else {
                 cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
@@ -1029,39 +1011,32 @@
                 checkAllAnswered();
             } else {
                 document.getElementById('mp-result').style.display = 'none';
-                document.getElementById('feedback-btn').style.display = 'block';
-                document.getElementById('feedback-btn').innerText = "Nächste Runde ➔";
+                let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Nächste Runde ➔"; btn.onclick = nextRound;
             }
             
-            updateStatsDisplay();
-            document.getElementById('feedback-overlay').style.display = 'flex';
-
-            if (lives <= 0) { setTimeout(() => triggerGameOver(false), 2000); }
+            updateStatsDisplay(); document.getElementById('feedback-overlay').style.display = 'flex';
+            if (lives <= 0) { 
+                document.getElementById('feedback-btn').style.display = 'none'; 
+                setTimeout(() => triggerGameOver(false), 2000); 
+            }
         }
 
         function triggerGameOver(victory) {
             if (gameIsOver) return; gameIsOver = true; audio.pause(); clearTimeout(precisionTimer);
             let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let b = document.getElementById('feedback-btn'); let cov = document.getElementById('feedback-cover');
-            cov.style.display = 'none';
-            m.className = "modal gameover";
+            cov.style.display = 'none'; m.className = "modal gameover";
             
             if (isMultiplayer) {
                 socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
                 let myData = { id: socket.id, score: score, name: playerName, avatar: myAvatar, anthem: mySongUrl };
-                matchEndData[socket.id] = myData;
-                socket.emit('gameOver', myData);
+                matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
                 
-                t.innerText = "⏳ WARTE AUF SPIELER..."; 
-                d.innerText = "Das Match läuft noch für die anderen. Live-Auswertung:"; 
-                document.getElementById('mp-result').style.display = 'block';
-                document.getElementById('mp-result').innerHTML = "Lade Live-Daten...";
+                t.innerText = "⏳ WARTE AUF SPIELER..."; d.innerText = "Das Match läuft noch für die anderen. Live-Auswertung:"; 
+                document.getElementById('mp-result').style.display = 'block'; document.getElementById('mp-result').innerHTML = "Lade Live-Daten...";
                 b.style.display = 'none'; 
-                
                 document.getElementById('feedback-overlay').style.display = 'flex';
                 
-                renderMpLeaderboard();
-                checkMatchEnd();
-                
+                renderMpLeaderboard(); checkMatchEnd();
             } else {
                 t.innerText = victory ? "🏆 DURCHGESPIELT!" : "💀 GAME OVER"; d.innerText = `Dein Score: ${score}`;
                 myStats.played++; if(victory) myStats.wins++; else myStats.losses++; localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
@@ -1107,10 +1082,7 @@
             const res = document.getElementById('mp-result');
             if(!res || !isMultiplayer || isWinnerScreenShown) return;
             
-            let sorted = [...lobbyPlayers].map(p => {
-                if (matchEndData[p.id]) return matchEndData[p.id];
-                return p;
-            }).sort((a,b) => b.score - a.score);
+            let sorted = [...lobbyPlayers].map(p => { return matchEndData[p.id] ? matchEndData[p.id] : p; }).sort((a,b) => b.score - a.score);
             
             let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Platzierung</h3>';
             html += '<div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
@@ -1133,8 +1105,7 @@
                     </div>
                 `;
             });
-            html += '</div>';
-            res.innerHTML = html;
+            html += '</div>'; res.innerHTML = html;
         }
     </script>
 </body>
