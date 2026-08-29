@@ -206,7 +206,7 @@
         .suggestion-item:hover { background: var(--primary); }
 
         /* --- OVERLAYS & MODALS --- */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: rgba(20, 20, 25, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
@@ -252,7 +252,7 @@
     <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
 
     <!-- PROFIL SETUP (Login / Register) -->
-    <div id="profile-overlay" class="overlay">
+    <div id="profile-overlay" class="overlay" style="display: flex;">
         <div class="modal">
             <h2 id="profile-title" style="color: var(--primary);">Cloud Login</h2>
             <p style="margin-top:-5px; font-size:12px;">Your account is securely stored in the cloud.</p>
@@ -278,7 +278,7 @@
     </div>
 
     <!-- PREMIUM PAYWALL OVERLAY -->
-    <div id="premium-overlay" class="overlay">
+    <div id="premium-overlay" class="overlay" style="display: none;">
         <div class="modal warning">
             <h2>👑 VIP ACCESS</h2>
             <p style="color: white; font-weight: 600;">This mode and multiplayer are exclusive for Lifetime VIPs.</p>
@@ -490,7 +490,7 @@
     </div>
 
     <!-- LOADING SCREEN -->
-    <div id="loading-overlay" class="overlay">
+    <div id="loading-overlay" class="overlay" style="display: none;">
         <div style="text-align: center;">
             <div class="loader"></div>
             <h2 id="loading-text" style="color: white; font-size: 20px; letter-spacing: 2px; text-transform: uppercase;">Please Wait...</h2>
@@ -498,7 +498,7 @@
     </div>
 
     <!-- FEEDBACK & END SCREEN -->
-    <div id="feedback-overlay" class="overlay">
+    <div id="feedback-overlay" class="overlay" style="display: none;">
         <div id="feedback-modal" class="modal">
             <h2 id="feedback-title">Title</h2>
             <img id="feedback-cover" src="">
@@ -553,18 +553,37 @@
         function getArtistQuote(name) { return artistQuotes[name] || `"Ready to dominate the game." - ${name}`; }
 
         // ==========================================
-        // SYSTEM & SUPABASE CONFIG
+        // SYSTEM & FALLBACK CONFIGURATION
         // ==========================================
         const SERVER_URL = 'https://mukke886.onrender.com';
-        const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
         
-        socket.on('connect', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🟢 Ready for Multiplayer'; el.style.color = 'var(--success)'; } });
-        
+        let globalVolume = 0.5;
+        try {
+            let storedVol = parseFloat(localStorage.getItem('rapquiz_volume'));
+            if (!isNaN(storedVol)) globalVolume = storedVol;
+        } catch(e) { console.warn('LocalStorage offline'); }
+
+        // Bulletproof Socket Connection
+        let socket = { on: () => {}, emit: () => {} }; 
+        try {
+            if (typeof io !== 'undefined') {
+                socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
+                socket.on('connect', () => { 
+                    let el = document.getElementById('mp-status'); 
+                    if(el) { el.innerText = '🟢 Ready for Multiplayer'; el.style.color = 'var(--success)'; } 
+                });
+            }
+        } catch (e) { console.warn("Socket.io nicht geladen", e); }
+
+        // Bulletproof Supabase Connection
         const supabaseUrl = 'https://tvcnushrhteworueftfy.supabase.co';
         const supabaseKey = 'sb_publishable_VftGljbGfzD1urJFrw5Ygw_9jV4-1bD'; 
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-        let globalVolume = parseFloat(localStorage.getItem('rapquiz_volume')); if (isNaN(globalVolume)) globalVolume = 0.5;
+        let supabase = null;
+        try {
+            if (typeof window.supabase !== 'undefined') {
+                supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+            }
+        } catch(e) { console.warn("Supabase Init Error", e); }
 
         let playerName = ''; 
         let myFavArtist = ''; 
@@ -580,15 +599,17 @@
         // --- YOUTUBE INTEGRATION ---
         let ytPlayer; let ytReady = false; let ytContext = 'menu';
         function onYouTubeIframeAPIReady() {
-            ytPlayer = new YT.Player('yt-player', {
-                height: '200', width: '200',
-                playerVars: { 'autoplay': 1, 'controls': 0, 'showinfo': 0, 'rel': 0, 'playsinline': 1 },
-                events: {
-                    'onReady': () => { ytReady = true; },
-                    'onStateChange': (event) => { if (event.data === YT.PlayerState.ENDED && ytContext === 'menu') { ytPlayer.seekTo(0); ytPlayer.playVideo(); } },
-                    'onError': (event) => { if (event.data === 101 || event.data === 150) { alert("❌ YouTube blocked this official video due to copyright embedding restrictions.\nPlease search for a 'Lyrics' or 'Audio' video instead!"); } }
-                }
-            });
+            try {
+                ytPlayer = new YT.Player('yt-player', {
+                    height: '200', width: '200',
+                    playerVars: { 'autoplay': 1, 'controls': 0, 'showinfo': 0, 'rel': 0, 'playsinline': 1 },
+                    events: {
+                        'onReady': () => { ytReady = true; },
+                        'onStateChange': (event) => { if (event.data === YT.PlayerState.ENDED && ytContext === 'menu') { ytPlayer.seekTo(0); ytPlayer.playVideo(); } },
+                        'onError': (event) => { if (event.data === 101 || event.data === 150) { alert("❌ YouTube blocked this official video due to copyright embedding restrictions.\nPlease search for a 'Lyrics' or 'Audio' video instead!"); } }
+                    }
+                });
+            } catch(e) { console.warn("Youtube API offline"); }
         }
 
         let menuAudio = new Audio(); menuAudio.loop = true; menuAudio.crossOrigin = "anonymous"; menuAudio.volume = globalVolume * 0.4;
@@ -600,12 +621,12 @@
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('active'); }
 
         function changeVolume(val) {
-            globalVolume = parseFloat(val); localStorage.setItem('rapquiz_volume', globalVolume);
+            globalVolume = parseFloat(val); 
+            try { localStorage.setItem('rapquiz_volume', globalVolume); } catch(e){}
             menuAudio.volume = globalVolume * 0.4; audio.volume = globalVolume; sfxAudio.volume = globalVolume;
-            if(ytReady && ytPlayer.setVolume) { let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100; ytPlayer.setVolume(globalVolume * vol); }
+            if(ytReady && ytPlayer && ytPlayer.setVolume) { let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100; ytPlayer.setVolume(globalVolume * vol); }
         }
 
-        // MUSIK AUS/AN LOGIK
         function toggleMenuMusic() {
             if (isMenuMusicPlaying) {
                 pauseMenuMusic();
@@ -624,19 +645,19 @@
             if(!url) return; isMenuMusicPlaying = true; ytContext = 'menu';
             if (url.startsWith('yt:')) {
                 menuAudio.pause(); let vid = url.substring(3);
-                if(ytReady && ytPlayer.loadVideoById) { ytPlayer.setVolume(globalVolume * 40); ytPlayer.loadVideoById(vid); ytPlayer.playVideo(); } else { setTimeout(() => playMenuMusic(url), 500); }
+                if(ytReady && ytPlayer && ytPlayer.loadVideoById) { ytPlayer.setVolume(globalVolume * 40); ytPlayer.loadVideoById(vid); ytPlayer.playVideo(); } else { setTimeout(() => playMenuMusic(url), 500); }
             } else {
-                if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+                if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
                 menuAudio.src = url; menuAudio.volume = globalVolume * 0.4; menuAudio.play().catch(e=>{});
             }
             let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
             btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
         }
         
-        function pauseMenuMusic() { menuAudio.pause(); if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo(); }
+        function pauseMenuMusic() { menuAudio.pause(); if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo(); }
         function resumeMenuMusic() {
             if (!isMenuMusicPlaying) return; ytContext = 'menu';
-            if (mySongUrl.startsWith('yt:')) { if(ytReady && ytPlayer.playVideo) { ytPlayer.setVolume(globalVolume * 40); ytPlayer.playVideo(); } } else { menuAudio.play().catch(e=>{}); }
+            if (mySongUrl.startsWith('yt:')) { if(ytReady && ytPlayer && ytPlayer.playVideo) { ytPlayer.setVolume(globalVolume * 40); ytPlayer.playVideo(); } } else { menuAudio.play().catch(e=>{}); }
         }
 
         function updateLevelDisplay() {
@@ -710,27 +731,47 @@
         }
 
         // ==========================================
-        // AUTHENTICATION & DB SYNC (SUPABASE)
+        // BULLETPROOF INIT (Verhindert Blackscreens!)
         // ==========================================
         window.onload = async () => {
-            let volSlider = document.getElementById('volume-slider'); if(volSlider) volSlider.value = globalVolume;
-            let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
-            selects.forEach(sel => { allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; sel.appendChild(opt); }); });
-            
-            let grid = document.getElementById('artist-grid');
-            allArtists.forEach(a => { 
-                let d = document.createElement('div'); d.className = 'artist-tile locked-card'; 
-                d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:14px; margin-top:3px;">🔒 VIP</span>`;
-                d.onclick = () => { if(isPremium) { startArtistMode(a); } else { document.getElementById('premium-overlay').style.display = 'flex'; } }; 
-                grid.appendChild(d); 
-            });
+            try {
+                let volSlider = document.getElementById('volume-slider'); if(volSlider) volSlider.value = globalVolume;
+                let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
+                selects.forEach(sel => { allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; sel.appendChild(opt); }); });
+                
+                let grid = document.getElementById('artist-grid');
+                allArtists.forEach(a => { 
+                    let d = document.createElement('div'); d.className = 'artist-tile locked-card'; 
+                    d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:14px; margin-top:3px;">🔒 VIP</span>`;
+                    d.onclick = () => { if(isPremium) { startArtistMode(a); } else { document.getElementById('premium-overlay').style.display = 'flex'; } }; 
+                    grid.appendChild(d); 
+                });
 
-            const { data: session } = await supabase.auth.getSession();
-            if (session?.session?.user) {
-                document.getElementById('profile-overlay').style.display = 'none';
-                await loadProfileFromDB(session.session.user.id);
-            } else {
+                // Wenn Supabase wegen eines falschen Keys abstürzt, wird das Menü trotzdem angezeigt!
+                if (!supabase) {
+                    let errEl = document.getElementById('profile-error');
+                    errEl.innerText = "⚠️ Datenbank-Schlüssel (Supabase) ist ungültig. Bitte überprüfe den Code in der index.html (Muss mit 'eyJ' anfangen).";
+                    errEl.style.display = 'block';
+                    document.getElementById('login-btn').disabled = true;
+                    return; 
+                }
+
+                const { data: session, error } = await supabase.auth.getSession();
+                if (error) throw error;
+
+                if (session?.session?.user) {
+                    document.getElementById('profile-overlay').style.display = 'none';
+                    await loadProfileFromDB(session.session.user.id);
+                } else {
+                    document.getElementById('profile-overlay').style.display = 'flex';
+                }
+
+            } catch (err) {
+                console.error("System Start Error:", err);
                 document.getElementById('profile-overlay').style.display = 'flex';
+                let errEl = document.getElementById('profile-error');
+                errEl.innerText = "⚠️ Warnung: Das Spiel konnte nicht mit der Datenbank verbinden. Hast du einen Adblocker an?";
+                errEl.style.display = 'block';
             }
         };
 
@@ -741,7 +782,8 @@
             let pw = document.getElementById('password-input').value.trim(); 
             
             if (!name || !pw) { err.innerText = "Please fill in username and password!"; err.style.display = 'block'; btn.innerText = "Login / Register ➔"; btn.disabled = false; return; }
-            
+            if (!supabase) return;
+
             let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
             let { data, error } = await supabase.auth.signInWithPassword({ email: fakeEmail, password: pw });
 
@@ -774,6 +816,7 @@
         }
 
         async function loadProfileFromDB(userId) {
+            if (!supabase) return;
             let { data: profile, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
             
             if (profile) {
@@ -812,6 +855,7 @@
         }
 
         async function saveProfileToDB() {
+            if (!supabase) return;
             const { data: session } = await supabase.auth.getSession();
             if (session?.session?.user) {
                 await supabase.from('profiles').update({
@@ -825,6 +869,7 @@
         async function updateDbScore(addedScore) {
             myStats.totalScore += addedScore;
             updateLevelDisplay();
+            if (!supabase) return;
             const { data: session } = await supabase.auth.getSession();
             if (session?.session?.user) {
                 await supabase.from('profiles').update({ total_score: myStats.totalScore }).eq('id', session.session.user.id);
@@ -856,9 +901,11 @@
                 
                 if (data.success && !data.purchase.refunded && !data.purchase.chargebacked) {
                     isPremium = true;
-                    const { data: session } = await supabase.auth.getSession();
-                    if (session?.session?.user) {
-                        await supabase.from('profiles').update({ is_premium: true }).eq('id', session.session.user.id);
+                    if(supabase) {
+                        const { data: session } = await supabase.auth.getSession();
+                        if (session?.session?.user) {
+                            await supabase.from('profiles').update({ is_premium: true }).eq('id', session.session.user.id);
+                        }
                     }
                     alert("🎉 SUCCESS! License verified. You are now a Lifetime VIP!");
                     location.reload();
@@ -874,7 +921,7 @@
         }
 
         async function resetProfile() { 
-            await supabase.auth.signOut();
+            if(supabase) await supabase.auth.signOut();
             localStorage.clear(); location.reload(); 
         }
 
@@ -1034,7 +1081,7 @@
 
         function triggerSuddenDeathLocal(tiedIds) {
             let amITied = tiedIds.includes(socket.id);
-            sfxAudio.pause(); if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+            sfxAudio.pause(); if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
             
             tiedIds.forEach(id => delete matchEndData[id]); 
             
@@ -1069,7 +1116,7 @@
             sfxAudio.pause(); pauseMenuMusic();
             if (url && url.startsWith('yt:')) {
                 let vid = url.substring(3);
-                if(ytReady && ytPlayer.loadVideoById) {
+                if(ytReady && ytPlayer && ytPlayer.loadVideoById) {
                     ytContext = 'winner';
                     ytPlayer.setVolume(globalVolume * 100); 
                     ytPlayer.loadVideoById(vid);
@@ -1104,7 +1151,7 @@
             document.getElementById('feedback-btn').style.display = 'none'; 
             
             setTimeout(() => {
-                sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+                sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
                 cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
                 document.getElementById('feedback-title').innerText = "📊 FINAL STANDINGS"; document.getElementById('feedback-desc').innerText = "";
                 renderMpLeaderboard(); 
@@ -1144,9 +1191,7 @@
                             if (playId === currentPlayId) audio.pause(); 
                         }, maxPlayTime * 1000);
                     }
-                }).catch(e=>{
-                    console.log("Audio Play Error:", e);
-                });
+                }).catch(e=>{ console.log("Audio Play Error:", e); });
             }
         }
 
@@ -1175,12 +1220,12 @@
 
         function resetGameStats() {
             songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
-            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
             document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
         }
 
         function backToMenu() { 
-            audio.pause(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+            audio.pause(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
             clearTimeout(precisionTimer); cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; 
             resumeMenuMusic(); 
         }
