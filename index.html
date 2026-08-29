@@ -111,6 +111,12 @@
         .banner-subtitle { margin: 0 0 5px 0; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 2px; }
         .banner-title { margin: 0; color: white; text-transform: uppercase; font-size: 32px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 15px rgba(139,92,246,0.8); }
 
+        /* --- RANGE SLIDER (LAUTSTÄRKE) --- */
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(139,92,246,0.8); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
+        input[type=range]:focus { outline: none; }
+
         /* --- MOBILE MEDIA QUERY --- */
         @media (max-width: 768px) {
             #mobile-menu-btn { display: block; }
@@ -264,7 +270,11 @@
                 <img id="sidebar-avatar" class="sidebar-avatar" src="">
                 <div class="sidebar-user-info">
                     <span id="sidebar-name" class="sidebar-name">Name</span>
-                    <span class="sidebar-status">Bereit</span>
+                    <!-- HIER IST DAS NEUE SIDEBAR LEVEL -->
+                    <span class="sidebar-status" style="display:flex; gap:10px; align-items:center;">
+                        <span>Bereit</span>
+                        <span id="sidebar-level" style="color:var(--primary); font-weight:900; font-size:12px;">Lvl 1</span>
+                    </span>
                 </div>
             </div>
             <div class="nav-menu">
@@ -274,6 +284,13 @@
             </div>
             <div class="sidebar-footer">
                 <button id="music-toggle-btn-sidebar" onclick="toggleMenuMusic()" style="background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 700; width: 80%; margin: 0 auto; display: block;">🔇 Musik Aus</button>
+                
+                <!-- NEUER LAUTSTÄRKEREGLER -->
+                <div style="display:flex; align-items:center; gap:10px; margin-top:15px; padding: 0 15px;">
+                    <span style="font-size:16px;">🔉</span>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.05" oninput="changeVolume(this.value)">
+                    <span style="font-size:16px;">🔊</span>
+                </div>
             </div>
         </nav>
 
@@ -375,9 +392,21 @@
                 <div class="section-title">Mein Club</div>
                 <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
                     <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
-                    <div style="text-align: left;">
+                    <div style="text-align: left; flex: 1;">
                         <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
-                        <p style="margin: 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Hymne: <span id="profile-view-hymn" style="color: white;">Artist</span></p>
+                        <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Hymne: <span id="profile-view-hymn" style="color: white;">Artist</span></p>
+                        
+                        <!-- NEUES LEVEL SYSTEM UI -->
+                        <div style="width: 100%; max-width: 400px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
+                                <span>Level <span id="profile-level-num">1</span></span>
+                                <span><span id="profile-xp-current">0</span> / 4000 XP</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); width: 100%; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div id="profile-xp-bar" style="background: var(--success); width: 0%; height: 100%; transition: width 0.5s ease;"></div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -477,6 +506,10 @@
         socket.on('connect', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🟢 Bereit für Multiplayer'; el.style.color = 'var(--success)'; } });
         socket.on('connect_error', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🔴 Server nicht erreichbar'; el.style.color = 'var(--danger)'; } });
 
+        // Globale Audio Volumes laden (Standard 50%)
+        let globalVolume = parseFloat(localStorage.getItem('rapquiz_volume'));
+        if (isNaN(globalVolume)) globalVolume = 0.5;
+
         let playerName = localStorage.getItem('rapquiz_username'); 
         let savedPw = localStorage.getItem('rapquiz_password');
         let myFavArtist = localStorage.getItem('rapquiz_fav_artist') || ''; 
@@ -484,8 +517,11 @@
         let mySongTitle = localStorage.getItem('rapquiz_menu_song_title') || '';
         let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; 
         let myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
-        let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, draws: 0 };
-        let menuAudio = new Audio(); menuAudio.volume = 0.2; menuAudio.loop = true; menuAudio.crossOrigin = "anonymous";
+        
+        let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, draws: 0, totalScore: 0 };
+        if (myStats.totalScore === undefined) myStats.totalScore = 0; // Update für alte Speicherstände
+
+        let menuAudio = new Audio(); menuAudio.loop = true; menuAudio.crossOrigin = "anonymous"; menuAudio.volume = globalVolume * 0.4;
         let isMenuMusicPlaying = false;
         
         let gameIsOver = false;
@@ -504,6 +540,35 @@
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        // --- LAUTSTÄRKEREGLER LOGIK ---
+        function changeVolume(val) {
+            globalVolume = parseFloat(val);
+            localStorage.setItem('rapquiz_volume', globalVolume);
+            menuAudio.volume = globalVolume * 0.4; // Menü immer etwas leiser
+            audio.volume = globalVolume;
+            sfxAudio.volume = globalVolume;
+        }
+
+        // --- LEVEL SYSTEM LOGIK ---
+        function updateLevelDisplay() {
+            let total = myStats.totalScore || 0;
+            let lvl = Math.floor(total / 4000) + 1;
+            let currentXp = total % 4000;
+            let percent = (currentXp / 4000) * 100;
+
+            let sbLevel = document.getElementById('sidebar-level');
+            if(sbLevel) sbLevel.innerText = 'Lvl ' + lvl;
+
+            let pLvl = document.getElementById('profile-level-num');
+            if(pLvl) pLvl.innerText = lvl;
+            
+            let pXp = document.getElementById('profile-xp-current');
+            if(pXp) pXp.innerText = currentXp;
+
+            let pBar = document.getElementById('profile-xp-bar');
+            if(pBar) pBar.style.width = percent + '%';
         }
 
         function smartShuffle(pool) {
@@ -526,7 +591,12 @@
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
-            if(tabId === 'profile-tab') { document.getElementById('stat-played').innerText = myStats.played; document.getElementById('stat-wins').innerText = myStats.wins; document.getElementById('stat-losses').innerText = myStats.losses; }
+            if(tabId === 'profile-tab') { 
+                document.getElementById('stat-played').innerText = myStats.played; 
+                document.getElementById('stat-wins').innerText = myStats.wins; 
+                document.getElementById('stat-losses').innerText = myStats.losses; 
+                updateLevelDisplay();
+            }
             
             if (window.innerWidth <= 768) {
                 document.getElementById('sidebar').classList.remove('open');
@@ -585,6 +655,9 @@
         }
 
         window.onload = () => {
+            let volSlider = document.getElementById('volume-slider');
+            if(volSlider) volSlider.value = globalVolume;
+
             let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
             selects.forEach(sel => { allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; if(a === myFavArtist) opt.selected = true; sel.appendChild(opt); }); });
             let grid = document.getElementById('artist-grid');
@@ -624,6 +697,7 @@
             }
             
             loadArtistVisuals(myFavArtist);
+            updateLevelDisplay();
             
             document.getElementById('profile-overlay').style.display = 'none'; 
             document.getElementById('app-layout').style.display = 'flex';
@@ -747,7 +821,6 @@
 
         socket.on('opponentGameOver', (data) => {
             matchEndData[data.id] = data; 
-            // Toter Spieler blockiert die Runde nicht mehr:
             playersAnsweredThisRound.add(data.id); playersReadyForNextRound.add(data.id);
             checkAllAnswered(); checkAllReady();
             if (gameIsOver) checkMatchEnd(); 
@@ -775,7 +848,11 @@
                     
                     myStats.played++; 
                     if(amIFirst) myStats.wins++; else myStats.losses++;
+                    
+                    // PLUS XP BEIM MULTIPLAYER ENDE
+                    myStats.totalScore = (myStats.totalScore || 0) + score;
                     localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
+                    updateLevelDisplay();
                     
                     showWinnerScreen(winner);
                 }
@@ -834,7 +911,7 @@
                 <p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>
             `;
             
-            sfxAudio.pause(); sfxAudio.src = winner.anthem || 'ultimate.mp3'; sfxAudio.volume = 1.0; sfxAudio.play().catch(e=>{});
+            sfxAudio.pause(); sfxAudio.src = winner.anthem || 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
             document.getElementById('feedback-btn').style.display = 'none'; 
             
             setTimeout(() => {
@@ -850,9 +927,12 @@
         // ==========================================
         // GAME LOGIC & PARALLEL FETCH
         // ==========================================
-        let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; let audio = new Audio(); audio.volume = 0.5; audio.crossOrigin = "anonymous"; let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous";
+        let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
         
-        let currentPlayId = 0; // BUG-FIX: Stoppt Überlagerung beim Replay/+3s
+        let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
+        let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
+        
+        let currentPlayId = 0; 
         function playAudioSnippet(isReplay = false) { 
             clearTimeout(precisionTimer); 
             let playId = ++currentPlayId;
@@ -882,14 +962,12 @@
                     if(!isResolved) { 
                         isResolved = true; clearTimeout(timeout); 
                         if (r && r.data) {
-                            // STRIKTER FILTER FÜR US/UK KÜNSTLER (Verhindert French/German Remixe komplett)
                             let filtered = r.data.filter(t => t.preview && t.artist.name.toLowerCase() === artist.toLowerCase());
                             songsPool = songsPool.concat(filtered); 
                         } 
                         resolve(); 
                     } 
                 };
-                // API Query zwingt Deezer, den Artist als Hauptkünstler zu behandeln
                 const query = `artist:"${artist}"`;
                 const s = document.createElement('script'); s.src = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=50&output=jsonp&callback=${cb}`; document.head.appendChild(s);
             });
@@ -1019,7 +1097,6 @@
                 res.innerHTML = '<span style="color: var(--success); font-weight: 900;">Alle haben getippt!</span>';
                 btn.style.display = 'block'; btn.innerText = 'Nächste Runde ➔';
                 
-                // Sobald man "Nächste Runde" klickt, ist man bereit
                 btn.onclick = () => {
                     playersReadyForNextRound.add(socket.id);
                     socket.emit('teammateAnswered', { type: 'READY_NEXT', id: socket.id, roomCode: currentRoom });
@@ -1070,7 +1147,6 @@
             
             updateStatsDisplay(); document.getElementById('feedback-overlay').style.display = 'flex';
             
-            // Wenn man hier stirbt, fliegt man sofort aus der Runde
             if (lives <= 0) { 
                 document.getElementById('feedback-btn').style.display = 'none'; 
                 setTimeout(() => triggerGameOver(false), 2000); 
@@ -1084,8 +1160,6 @@
             
             if (isMultiplayer) {
                 socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
-                
-                // BUGFIX: roomCode muss übergeben werden, damit der Server weiß an wen er "gameOver" schickt!
                 let myData = { id: socket.id, score: score, name: playerName, avatar: myAvatar, anthem: mySongUrl, roomCode: currentRoom };
                 matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
                 
@@ -1097,7 +1171,13 @@
                 renderMpLeaderboard(); checkMatchEnd();
             } else {
                 t.innerText = victory ? "🏆 DURCHGESPIELT!" : "💀 GAME OVER"; d.innerText = `Dein Score: ${score}`;
-                myStats.played++; if(victory) myStats.wins++; else myStats.losses++; localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
+                
+                // SINGLEPLAYER XP ADDITION
+                myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
+                myStats.totalScore = (myStats.totalScore || 0) + score;
+                localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
+                updateLevelDisplay();
+
                 if (!victory && score < 500) { sfxAudio.src = "roddy.mp3"; sfxAudio.play().catch(e=>{}); }
                 b.innerText = "Beenden 🏠"; b.style.display = 'block'; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
                 document.getElementById('feedback-overlay').style.display = 'flex';
