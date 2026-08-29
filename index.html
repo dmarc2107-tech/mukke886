@@ -209,7 +209,7 @@
         .modal h2 { font-size: 28px; margin: 0 0 10px 0; font-weight: 900; }
         .modal p { font-size: 14px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.5; }
 
-        #feedback-cover { width: 160px; height: 160px; border-radius: 16px; object-fit: cover; margin: 0 auto 20px auto; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid var(--surface-border); }
+        #feedback-cover { width: 160px; height: 160px; border-radius: 16px; object-fit: cover; margin: 0 auto 20px auto; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid var(--surface-border); transition: all 0.5s ease; }
         .modal.correct { border-color: var(--success); box-shadow: 0 0 40px rgba(16, 185, 129, 0.2); } .modal.correct h2 { color: var(--success); }
         .modal.wrong { border-color: var(--danger); box-shadow: 0 0 40px rgba(239, 68, 68, 0.2); } .modal.wrong h2 { color: var(--danger); }
         .modal.gameover { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); } .modal.gameover h2 { color: var(--warning); }
@@ -405,7 +405,6 @@
                     <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
                 </div>
                 
-                <!-- Abmelden / Account wechseln Button -->
                 <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Abmelden / Account wechseln</button>
             </div>
         </main>
@@ -415,10 +414,7 @@
     <div id="game-screen">
         <div class="game-inner">
 
-            <!-- DYNAMISCHE SCORE LEISTE FÜR 1-4 SPIELER -->
-            <div class="stats-bar" id="game-stats-bar">
-                <!-- Wird per Javascript generiert -->
-            </div>
+            <div class="stats-bar" id="game-stats-bar"></div>
             
             <div class="visualizer"><div class="visualizer-inner">🎵</div></div>
 
@@ -453,7 +449,6 @@
             <img id="feedback-cover" src="">
             <p id="feedback-desc">Beschreibung</p>
             
-            <!-- HIER KOMMT DAS LIVE MULTIPLAYER LEADERBOARD REIN -->
             <div id="mp-result" style="display: none; margin-bottom: 25px;"></div>
             
             <button id="feedback-btn" class="btn-action">Weiter ➔</button>
@@ -494,6 +489,9 @@
         let isMpHost = false;
         let lobbyPlayers = []; 
         let currentRoom = '';
+        
+        let matchEndData = {}; // Speichert die End-Daten aller Spieler für den Showdown
+        let isWinnerScreenShown = false; // Verhindert doppeltes Triggern
 
         // Mobile Sidebar Logik
         function toggleSidebar() {
@@ -523,7 +521,6 @@
             document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
             if(tabId === 'profile-tab') { document.getElementById('stat-played').innerText = myStats.played; document.getElementById('stat-wins').innerText = myStats.wins; document.getElementById('stat-losses').innerText = myStats.losses; }
             
-            // Schließt die Sidebar auf Mobile automatisch nach Tab-Klick
             if (window.innerWidth <= 768) {
                 document.getElementById('sidebar').classList.remove('open');
                 document.getElementById('sidebar-overlay').classList.remove('active');
@@ -707,6 +704,8 @@
                     statusEl.style.color = 'var(--success)';
                 }
             }
+            
+            if (gameIsOver) checkMatchEnd(); 
         });
 
         function renderLobbyPlayers() {
@@ -744,9 +743,100 @@
 
         socket.on('updateAllStats', (players) => { 
             lobbyPlayers = players; 
-            if(!gameIsOver) updateStatsDisplay(); 
-            else renderMpLeaderboard(); 
+            if(!isWinnerScreenShown) updateStatsDisplay(); 
+            if(gameIsOver) renderMpLeaderboard(); 
         });
+
+        // Backend leitet die End-Daten der Gegner weiter
+        socket.on('opponentGameOver', (data) => {
+            matchEndData[data.id] = data; 
+            if (gameIsOver) { 
+                checkMatchEnd(); 
+            }
+        });
+
+        // Überprüft, ob das Multiplayer Match GANZ vorbei ist (alle Spieler sind fertig)
+        function checkMatchEnd() {
+            if (!isMultiplayer || !gameIsOver || isWinnerScreenShown) return;
+            
+            let allDone = lobbyPlayers.length > 0 && lobbyPlayers.every(p => matchEndData[p.id]);
+            
+            if (allDone) {
+                isWinnerScreenShown = true;
+                
+                // Finde Gewinner
+                let sorted = Object.values(matchEndData).sort((a,b) => b.score - a.score);
+                let winner = sorted[0];
+                
+                // Eigene Stats für localStorage aktualisieren
+                let amIFirst = (winner.id === socket.id);
+                myStats.played++; 
+                if(amIFirst) myStats.wins++; else myStats.losses++;
+                localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
+                
+                showWinnerScreen(winner);
+            } else {
+                renderMpLeaderboard();
+            }
+        }
+
+        // --- DER NEUE SIEGER BILDSCHIRM (7 SEKUNDEN HYMNE) ---
+        function showWinnerScreen(winner) {
+            let m = document.getElementById('feedback-modal'); 
+            m.className = "modal correct"; 
+            
+            document.getElementById('feedback-title').innerText = "🏆 GEWINNER 🏆";
+            document.getElementById('feedback-desc').innerText = "Die Hymne des Gewinners läuft...";
+            
+            let cov = document.getElementById('feedback-cover');
+            cov.src = winner.avatar;
+            cov.style.display = 'block';
+            cov.style.borderRadius = '50%';
+            cov.style.width = '160px'; 
+            cov.style.height = '160px';
+            cov.style.border = '4px solid var(--warning)';
+            cov.style.boxShadow = '0 0 40px rgba(245, 158, 11, 0.8)';
+            
+            document.getElementById('mp-result').style.display = 'block';
+            document.getElementById('mp-result').innerHTML = `
+                <h2 style="color:var(--warning); margin:0; font-size:36px; text-transform: uppercase;">${winner.name}</h2>
+                <p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>
+            `;
+            
+            // Spiele Hymne des Gewinners für alle im Raum (Fallback zu ultimate.mp3)
+            sfxAudio.pause();
+            sfxAudio.src = winner.anthem || 'ultimate.mp3';
+            sfxAudio.volume = 1.0;
+            sfxAudio.play().catch(e=>{});
+            
+            document.getElementById('feedback-btn').style.display = 'none'; // Verstecke Beenden-Button während Hymne
+            
+            // Nach 7 Sekunden: Zeige finales Leaderboard und Beenden Button
+            setTimeout(() => {
+                sfxAudio.pause();
+                
+                // Cover Reset auf normal
+                cov.style.display = 'none';
+                cov.style.borderRadius = '16px'; 
+                cov.style.width = '160px';
+                cov.style.height = '160px';
+                cov.style.border = '2px solid var(--surface-border)';
+                cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+                
+                document.getElementById('feedback-title').innerText = "📊 ENDSTAND";
+                document.getElementById('feedback-desc').innerText = "";
+                
+                renderMpLeaderboard(); 
+                
+                let btn = document.getElementById('feedback-btn');
+                btn.style.display = 'block';
+                btn.innerText = "Beenden 🏠";
+                btn.onclick = () => {
+                    document.getElementById('feedback-overlay').style.display = 'none';
+                    backToMenu();
+                };
+            }, 7000);
+        }
 
         // ==========================================
         // GAME LOGIC & PARALLEL FETCH
@@ -769,7 +859,7 @@
         }
 
         function resetGameStats() {
-            songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false;
+            songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {};
             updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
         }
 
@@ -902,34 +992,38 @@
 
         function triggerGameOver(victory) {
             if (gameIsOver) return; gameIsOver = true; audio.pause(); clearTimeout(precisionTimer);
-            let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let b = document.getElementById('feedback-btn'); document.getElementById('feedback-cover').style.display = 'none';
+            let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let b = document.getElementById('feedback-btn'); let cov = document.getElementById('feedback-cover');
+            cov.style.display = 'none';
             m.className = "modal gameover";
             
             if (isMultiplayer) {
-                t.innerText = victory ? "🏁 ZIEL ERREICHT!" : "💀 AUSGESCHIEDEN!"; 
-                d.innerText = "Das Match läuft noch. Live-Auswertung:"; 
-                document.getElementById('mp-result').style.display = 'block';
+                // Sende finale Score und Hymne in die Multiplayer Endauswertung
                 socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
+                let myData = { id: socket.id, score: score, name: playerName, avatar: myAvatar, anthem: mySongUrl };
+                matchEndData[socket.id] = myData;
+                socket.emit('gameOver', myData);
+                
+                t.innerText = "⏳ WARTE AUF SPIELER..."; 
+                d.innerText = "Das Match läuft noch für die anderen. Live-Auswertung:"; 
+                document.getElementById('mp-result').style.display = 'block';
+                document.getElementById('mp-result').innerHTML = "Lade Live-Daten...";
+                b.style.display = 'none'; // Ausblenden bis das Spiel für alle durch ist
+                
+                document.getElementById('feedback-overlay').style.display = 'flex';
+                
                 renderMpLeaderboard();
-                
-                let sorted = [...lobbyPlayers].sort((a,b) => b.score - a.score);
-                let amIFirst = sorted.length > 0 && sorted[0].id === socket.id;
-                
-                myStats.played++; 
-                if(amIFirst && victory) myStats.wins++; else myStats.losses++;
-                localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
-                
-                if(amIFirst) { sfxAudio.src = mySongUrl; sfxAudio.volume = 1.0; sfxAudio.play().catch(e=>{}); }
+                checkMatchEnd();
                 
             } else {
                 t.innerText = victory ? "🏆 DURCHGESPIELT!" : "💀 GAME OVER"; d.innerText = `Dein Score: ${score}`;
                 myStats.played++; if(victory) myStats.wins++; else myStats.losses++; localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
                 if (!victory && score < 500) { sfxAudio.src = "roddy.mp3"; sfxAudio.play().catch(e=>{}); }
+                b.innerText = "Beenden 🏠"; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
+                document.getElementById('feedback-overlay').style.display = 'flex';
             }
-            b.innerText = "Beenden 🏠"; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
-            document.getElementById('feedback-overlay').style.display = 'flex';
         }
 
+        // --- DEUTLICH GRÖSSERE IN-GAME AVATARS ---
         function updateStatsDisplay() { 
             const bar = document.getElementById('game-stats-bar');
             if(!bar) return;
@@ -951,10 +1045,10 @@
                     const isMe = (p.id === socket.id);
                     bar.innerHTML += `
                         <div class="team-score-box" style="opacity: ${p.lives <= 0 ? '0.4' : '1'}; transition: 0.3s; width: ${100/Math.max(1, lobbyPlayers.length)}%;">
-                            <img src="${p.avatar}" style="width: 35px; height: 35px; border-radius: 50%; border: 2px solid ${isMe ? 'var(--primary)' : 'white'}; margin-bottom: 5px; object-fit: cover;">
-                            <span class="team-score-title" style="color: ${isMe ? 'var(--primary)' : 'white'};">${p.name}</span>
-                            <span class="team-score-num" style="font-size: 20px;">${p.score}</span>
-                            <span style="font-size: 10px;">${p.lives > 0 ? "❤️".repeat(p.lives) : "💀"}</span>
+                            <img src="${p.avatar}" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid ${isMe ? 'var(--primary)' : 'white'}; margin-bottom: 8px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+                            <span class="team-score-title" style="color: ${isMe ? 'var(--primary)' : 'white'}; font-size: 14px; font-weight: 900;">${p.name}</span>
+                            <span class="team-score-num" style="font-size: 24px; text-shadow: 0 0 10px rgba(255,255,255,0.2);">${p.score}</span>
+                            <span style="font-size: 14px; margin-top: 5px;">${p.lives > 0 ? "❤️".repeat(p.lives) : "💀"}</span>
                         </div>
                     `;
                 });
@@ -963,9 +1057,14 @@
 
         function renderMpLeaderboard() {
             const res = document.getElementById('mp-result');
-            if(!res || !isMultiplayer) return;
+            if(!res || !isMultiplayer || isWinnerScreenShown) return;
             
-            let sorted = [...lobbyPlayers].sort((a,b) => b.score - a.score);
+            // Nutze die Live-Werte der lobbyPlayers oder matchEndData falls schon fertig
+            let sorted = [...lobbyPlayers].map(p => {
+                if (matchEndData[p.id]) return matchEndData[p.id];
+                return p;
+            }).sort((a,b) => b.score - a.score);
+            
             let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Platzierung</h3>';
             html += '<div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
             
@@ -983,7 +1082,6 @@
                         </div>
                         <div style="text-align: right;">
                             <div style="font-weight: 900; color: white;">${p.score} Pts</div>
-                            <div style="font-size: 10px; color: var(--text-muted);">${p.lives > 0 ? "❤️".repeat(p.lives) : "💀 Tot"}</div>
                         </div>
                     </div>
                 `;
