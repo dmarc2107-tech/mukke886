@@ -227,7 +227,7 @@
     <!-- PROFIL SETUP (Login/Registrieren) -->
     <div id="profile-overlay" class="overlay">
         <div class="modal">
-            <h2 id="profile-title" style="color: var(--primary);">Ultimate Team</h2>
+            <h2 id="profile-title" style="color: var(--primary);">Dein Profil</h2>
             
             <input type="text" id="username-input" class="ea-input" style="text-align: center;" placeholder="Spielername" autocomplete="off">
             <input type="password" id="password-input" class="ea-input" style="text-align: center;" placeholder="Passwort">
@@ -293,7 +293,7 @@
                 <div id="fav-artist-banner" class="banner-container" style="display: none;">
                     <img id="fav-artist-img-1" src="" class="banner-img">
                     <div class="banner-text-box">
-                        <h3 class="banner-subtitle">Dein Ultimate Team Artist</h3>
+                        <h3 class="banner-subtitle">Dein Lieblingsartist</h3>
                         <h2 id="banner-artist-name" class="banner-title">Artist</h2>
                     </div>
                 </div>
@@ -405,6 +405,7 @@
                     <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
                 </div>
                 
+                <!-- Abmelden / Account wechseln Button -->
                 <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Abmelden / Account wechseln</button>
             </div>
         </main>
@@ -414,7 +415,10 @@
     <div id="game-screen">
         <div class="game-inner">
 
-            <div class="stats-bar" id="game-stats-bar"></div>
+            <!-- DYNAMISCHE SCORE LEISTE FÜR 1-4 SPIELER -->
+            <div class="stats-bar" id="game-stats-bar">
+                <!-- Wird per Javascript generiert -->
+            </div>
             
             <div class="visualizer"><div class="visualizer-inner">🎵</div></div>
 
@@ -438,7 +442,7 @@
     <div id="loading-overlay" class="overlay">
         <div style="text-align: center;">
             <div class="loader"></div>
-            <h2 style="color: white; font-size: 20px; letter-spacing: 2px; text-transform: uppercase;">Bitte Warten...</h2>
+            <h2 id="loading-text" style="color: white; font-size: 20px; letter-spacing: 2px; text-transform: uppercase;">Bitte Warten...</h2>
         </div>
     </div>
 
@@ -449,6 +453,7 @@
             <img id="feedback-cover" src="">
             <p id="feedback-desc">Beschreibung</p>
             
+            <!-- HIER KOMMT DAS LIVE MULTIPLAYER LEADERBOARD REIN -->
             <div id="mp-result" style="display: none; margin-bottom: 25px;"></div>
             
             <button id="feedback-btn" class="btn-action">Weiter ➔</button>
@@ -518,6 +523,7 @@
             document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
             if(tabId === 'profile-tab') { document.getElementById('stat-played').innerText = myStats.played; document.getElementById('stat-wins').innerText = myStats.wins; document.getElementById('stat-losses').innerText = myStats.losses; }
             
+            // Schließt die Sidebar auf Mobile automatisch nach Tab-Klick
             if (window.innerWidth <= 768) {
                 document.getElementById('sidebar').classList.remove('open');
                 document.getElementById('sidebar-overlay').classList.remove('active');
@@ -651,8 +657,23 @@
         // ==========================================
         // MULTIPLAYER LOBBY LOGIK (2-4 Spieler)
         // ==========================================
-        function createRoom() { isMpHost = true; socket.emit('createRoom', { name: playerName, avatar: myAvatar }); document.getElementById('mp-status').innerText = 'Verbinde...'; }
-        function joinRoom() { let c = document.getElementById('join-code-input').value; if(c){ isMpHost = false; socket.emit('joinRoom', { code: c, name: playerName, avatar: myAvatar }); document.getElementById('mp-status').innerText = 'Trete bei...'; } }
+        function createRoom() { 
+            isMultiplayer = true; 
+            isMpHost = true; 
+            socket.emit('createRoom', { name: playerName, avatar: myAvatar }); 
+            document.getElementById('mp-status').innerText = 'Verbinde...'; 
+        }
+        
+        function joinRoom() { 
+            let c = document.getElementById('join-code-input').value; 
+            if(c) { 
+                isMultiplayer = true; 
+                isMpHost = false; 
+                socket.emit('joinRoom', { code: c, name: playerName, avatar: myAvatar }); 
+                document.getElementById('mp-status').innerText = 'Trete bei...'; 
+            } 
+        }
+        
         function cancelMultiplayer() { isMultiplayer = false; isMpHost = false; currentRoom = ''; switchTab('play-tab', document.getElementById('nav-play')); }
 
         socket.on('roomCreated', (code) => { 
@@ -707,6 +728,14 @@
             });
         }
         
+        // Empfängt das Lade-Signal vom Host, um den Client synchron auf "Warten" zu setzen
+        socket.on('gameReady', (code) => { 
+            if(!isMpHost) { 
+                document.getElementById('loading-overlay').style.display = 'flex';
+                document.getElementById('loading-text').innerText = "Lade Spieldaten vom Host...";
+            } 
+        });
+
         socket.on('receiveRoundData', (data) => { 
             resetGameStats(); songsPool = data.songs; currentMode = data.mode; isHardcoreMode = data.hardcore; showArtistName = data.showArtist; 
             document.getElementById('hardcore-toggle').checked = isHardcoreMode; document.getElementById('artist-toggle').checked = showArtistName; 
@@ -747,7 +776,11 @@
         function backToMenu() { audio.pause(); sfxAudio.pause(); clearTimeout(precisionTimer); cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; if(isMenuMusicPlaying) menuAudio.play().catch(e=>{}); }
 
         async function startMixedMode(mode) {
-            document.getElementById('loading-overlay').style.display = 'flex'; resetGameStats(); currentMode = mode; let sel = [];
+            if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
+            document.getElementById('loading-overlay').style.display = 'flex'; 
+            document.getElementById('loading-text').innerText = "Lade Datenbank...";
+            resetGameStats(); currentMode = mode; let sel = [];
+            
             if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === 'soundcloud') sel = [...soundcloudArtists].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === '2010s') sel = [...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
@@ -761,7 +794,11 @@
         }
 
         async function startProgressiveMode() {
-            document.getElementById('loading-overlay').style.display = 'flex'; resetGameStats(); currentMode = 'progressive';
+            if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
+            document.getElementById('loading-overlay').style.display = 'flex'; 
+            document.getElementById('loading-text').innerText = "Lade Progressiv-Modus...";
+            resetGameStats(); currentMode = 'progressive';
+            
             await Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchDeezer(a)));
             if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Fehler beim Laden."); return; }
             
@@ -770,7 +807,11 @@
         }
 
         async function startArtistMode(artist) {
-            document.getElementById('loading-overlay').style.display = 'flex'; resetGameStats(); currentMode = 'artist';
+            if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
+            document.getElementById('loading-overlay').style.display = 'flex'; 
+            document.getElementById('loading-text').innerText = `Lade Katalog von ${artist}...`;
+            resetGameStats(); currentMode = 'artist';
+            
             await fetchDeezer(artist);
             if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Nicht genug Songs für diesen Artist."); return; }
             
