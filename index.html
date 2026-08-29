@@ -137,14 +137,15 @@
         }
         .ea-card:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(139, 92, 246, 0.25); }
         
+        /* Das Schloss-Overlay für VIP-Karten */
         .locked-card::after {
             content: "🔒 PREMIUM"; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
             display: flex; align-items: center; justify-content: center;
             font-size: 20px; font-weight: 900; color: var(--warning); text-transform: uppercase; letter-spacing: 2px;
-            opacity: 0; transition: 0.3s;
+            opacity: 0.9; transition: 0.3s;
         }
-        .locked-card:hover::after { opacity: 1; }
+        .locked-card:hover::after { opacity: 1; font-size: 22px; }
 
         .ea-card-icon { font-size: 32px; margin-bottom: 10px; }
         .ea-card-title { font-size: 18px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; color: white; text-shadow: 0 0 5px black;}
@@ -168,7 +169,7 @@
 
         .artist-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
         .artist-tile { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; color: white; backdrop-filter: blur(5px); }
-        .artist-tile:hover { background: var(--primary); border-color: var(--primary); }
+        .artist-tile:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
 
         .ea-input { width: 100%; padding: 18px; background: rgba(0,0,0,0.7); border: 1px solid var(--surface-border); color: white; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; margin-bottom: 15px; text-align: center; transition: 0.3s; backdrop-filter: blur(5px); }
         .ea-input:focus { outline: none; border-color: var(--primary); background: rgba(0,0,0,0.9); }
@@ -217,7 +218,6 @@
         .modal.wrong { border-color: var(--danger); box-shadow: 0 0 40px rgba(239, 68, 68, 0.2); } .modal.wrong h2 { color: var(--danger); }
         .modal.gameover { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); } .modal.gameover h2 { color: var(--warning); }
         
-        /* Sudden Death Style */
         .modal.warning { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.4); } 
         .modal.warning h2 { color: var(--warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
 
@@ -283,7 +283,7 @@
             <p style="color: white; font-weight: 600;">This mode and multiplayer are exclusive for Lifetime VIPs.</p>
             <p style="font-size: 13px; color: #d4d4d8;">Support the servers once and unlock all premium modes permanently!</p>
             
-            <button class="btn-action btn-gold" style="margin-bottom: 15px;" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Unlock on Gumroad ➔</button>
+            <button class="btn-action btn-gold" style="margin-bottom: 15px;" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Unlock on Gumroad (12€) ➔</button>
             
             <p style="margin-top:15px; font-size:12px; cursor:pointer; color:var(--text-muted); text-decoration: underline;" onclick="document.getElementById('premium-overlay').style.display='none'">Back to Menu</p>
         </div>
@@ -308,7 +308,7 @@
             </div>
             <div class="nav-menu">
                 <div id="nav-play" class="nav-item active" onclick="switchTab('play-tab', this)">🎮 Play</div>
-                <div id="nav-mp" class="nav-item" onclick="switchTab('multiplayer-tab', this)">⚔️ Online (2-4) <span style="font-size:10px; color:var(--warning);">VIP</span></div>
+                <div id="nav-mp" class="nav-item" onclick="switchTab('multiplayer-tab', this)">⚔️ Online (2-4) <span class="lock-icon" style="font-size:10px; color:var(--warning);">🔒 VIP</span></div>
                 <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 My Club</div>
             </div>
             <div class="sidebar-footer">
@@ -366,14 +366,14 @@
 
                 <div class="section-title">Premium Categories <span style="font-size:12px; color:var(--warning); vertical-align: middle;">VIP</span></div>
                 <div class="cards-grid">
-                    <div class="ea-card locked-check" onclick="checkPremiumAndStart('2010s')">
+                    <div class="ea-card locked-card" onclick="checkPremiumAndStart('2010s')">
                         <div class="ea-card-icon">📅</div>
-                        <div class="ea-card-title">2010-2020 Rap</div>
+                        <div class="ea-card-title">2010-2020 Rap <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
                         <div class="ea-card-desc">The golden trap era (US/UK only).</div>
                     </div>
-                    <div class="ea-card locked-check" onclick="checkPremiumAndStart('soundcloud')">
+                    <div class="ea-card locked-card" onclick="checkPremiumAndStart('soundcloud')">
                         <div class="ea-card-icon">☁️</div>
-                        <div class="ea-card-title">SoundCloud Era</div>
+                        <div class="ea-card-title">SoundCloud Era <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
                         <div class="ea-card-desc">Peep, X, Juice & Co.</div>
                     </div>
                 </div>
@@ -432,6 +432,13 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- DIRECT BUY BUTTON IN CLUB -->
+                <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Unlock Multiplayer, 2010s Rap, SoundCloud Era, and Artist Mode permanently!</p>
+                    <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
                 </div>
 
                 <!-- GUMROAD VIP CODE REDEEM -->
@@ -597,6 +604,21 @@
             if(ytReady && ytPlayer.setVolume) { let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100; ytPlayer.setVolume(globalVolume * vol); }
         }
 
+        // MUSIK AUS/AN LOGIK (Gefixed)
+        function toggleMenuMusic() {
+            if (isMenuMusicPlaying) {
+                pauseMenuMusic();
+                isMenuMusicPlaying = false;
+                let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
+                btns.forEach(b => { if(b) { b.innerHTML = "🔇 Music Off"; b.style.opacity = "0.7"; } });
+            } else {
+                resumeMenuMusic();
+                isMenuMusicPlaying = true;
+                let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
+                btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
+            }
+        }
+
         function playMenuMusic(url) {
             if(!url) return; isMenuMusicPlaying = true; ytContext = 'menu';
             if (url.startsWith('yt:')) {
@@ -606,8 +628,10 @@
                 if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
                 menuAudio.src = url; menuAudio.volume = globalVolume * 0.4; menuAudio.play().catch(e=>{});
             }
-            [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')].forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
+            let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
+            btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
         }
+        
         function pauseMenuMusic() { menuAudio.pause(); if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo(); }
         function resumeMenuMusic() {
             if (!isMenuMusicPlaying) return; ytContext = 'menu';
@@ -691,9 +715,11 @@
             let volSlider = document.getElementById('volume-slider'); if(volSlider) volSlider.value = globalVolume;
             let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
             selects.forEach(sel => { allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; sel.appendChild(opt); }); });
+            
             let grid = document.getElementById('artist-grid');
             allArtists.forEach(a => { 
-                let d = document.createElement('div'); d.className = 'artist-tile locked-check'; d.innerText = a; 
+                let d = document.createElement('div'); d.className = 'artist-tile locked-card'; 
+                d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:14px; margin-top:3px;">🔒 VIP</span>`;
                 d.onclick = () => { if(isPremium) { startArtistMode(a); } else { document.getElementById('premium-overlay').style.display = 'flex'; } }; 
                 grid.appendChild(d); 
             });
@@ -761,10 +787,13 @@
 
             if (isPremium) {
                 document.getElementById('premium-badge').style.display = 'inline-block';
+                document.getElementById('vip-buy-section').style.display = 'none';
                 document.getElementById('vip-redeem-section').style.display = 'none';
                 
-                document.querySelectorAll('.locked-check').forEach(el => {
-                    el.classList.remove('locked-check');
+                document.querySelectorAll('.locked-card').forEach(el => {
+                    el.classList.remove('locked-card');
+                    let lockIcon = el.querySelector('.lock-icon');
+                    if(lockIcon) lockIcon.style.display = 'none';
                 });
             }
 
@@ -812,12 +841,11 @@
             document.getElementById('vip-code-input').disabled = true;
 
             try {
-                // Request against the official Gumroad API
                 let res = await fetch('https://api.gumroad.com/v2/licenses/verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        product_id: 'ZWtMCbbtsw3aVMslIZK7MQ==', // Your exact Product ID
+                        product_id: 'ZWtMCbbtsw3aVMslIZK7MQ==', 
                         license_key: code,
                         increment_uses_count: true
                     })
@@ -825,7 +853,6 @@
                 
                 let data = await res.json();
                 
-                // If Gumroad says success = true and it hasn't been refunded
                 if (data.success && !data.purchase.refunded && !data.purchase.chargebacked) {
                     isPremium = true;
                     const { data: session } = await supabase.auth.getSession();
@@ -1094,20 +1121,31 @@
         let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
         
         let currentPlayId = 0; 
+        
+        // AUDIO REPLAY LOGIK (Gefixed)
         function playAudioSnippet(isReplay = false) { 
             clearTimeout(precisionTimer); 
             let playId = ++currentPlayId;
             
-            if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
+            if (isReplay) { 
+                audio.pause(); 
+                try { audio.currentTime = 0; } catch(e) {} 
+            }
+            
+            audio.volume = globalVolume; 
             
             let p = audio.play();
             if (p !== undefined) {
                 p.then(() => {
                     if (playId !== currentPlayId) return; 
                     if (maxPlayTime < 30) {
-                        precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000);
+                        precisionTimer = setTimeout(() => { 
+                            if (playId === currentPlayId) audio.pause(); 
+                        }, maxPlayTime * 1000);
                     }
-                }).catch(e=>{});
+                }).catch(e=>{
+                    console.log("Audio Play Error:", e);
+                });
             }
         }
 
