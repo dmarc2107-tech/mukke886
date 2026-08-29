@@ -117,12 +117,6 @@
         .banner-subtitle { margin: 0 0 5px 0; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 2px; }
         .banner-title { margin: 0; color: white; text-transform: uppercase; font-size: 32px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 15px rgba(139,92,246,0.8); }
 
-        /* --- VOLUME SLIDER --- */
-        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(139,92,246,0.8); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
-        input[type=range]:focus { outline: none; }
-
         /* --- CARDS & UI --- */
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 40px; }
         
@@ -155,24 +149,17 @@
         .card-sc { border-color: rgba(255,85,0,0.5); }
         .card-gold { border-color: rgba(245,158,11,0.5); }
 
-        .settings-bar { display: flex; gap: 20px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 12px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; backdrop-filter: blur(10px); flex-wrap: wrap;}
-        .settings-group { display: flex; align-items: center; gap: 10px; }
-        .settings-label { font-size: 12px; font-weight: 700; color: white; text-transform: uppercase; }
-
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #27272a; transition: .4s; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); }
-        .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider.red { background-color: var(--danger); border-color: var(--danger); }
-        input:checked + .slider.green { background-color: var(--success); border-color: var(--success); }
-        input:checked + .slider:before { transform: translateX(20px); }
-
         .artist-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
         .artist-tile { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; color: white; backdrop-filter: blur(5px); }
         .artist-tile:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
 
-        .ea-input { width: 100%; padding: 18px; background: rgba(0,0,0,0.7); border: 1px solid var(--surface-border); color: white; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; margin-bottom: 15px; text-align: center; transition: 0.3s; backdrop-filter: blur(5px); }
+        /* --- UI EINGABEFELDER --- */
+        .ea-input { width: 100%; padding: 18px; background: rgba(0,0,0,0.7); border: 1px solid var(--surface-border); color: white; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; margin-bottom: 15px; transition: 0.3s; backdrop-filter: blur(5px); }
         .ea-input:focus { outline: none; border-color: var(--primary); background: rgba(0,0,0,0.9); }
+        
+        /* FIX FÜR SCHWARZES DROPDOWN MENÜ BEI WINDOWS */
+        select.ea-input { text-align: left; cursor: pointer; }
+        select.ea-input option { background-color: #141419; color: #ffffff; padding: 15px; font-weight: 600; font-family: 'Poppins', sans-serif;}
 
         .btn-action { background: var(--primary); color: white; border: none; padding: 18px; font-size: 16px; font-weight: 800; border-radius: 12px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; box-shadow: 0 5px 15px rgba(139,92,246,0.3); }
         .btn-action:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139,92,246,0.5); }
@@ -206,7 +193,7 @@
         .suggestion-item:hover { background: var(--primary); }
 
         /* --- OVERLAYS & MODALS --- */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: rgba(20, 20, 25, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
@@ -218,10 +205,6 @@
         .modal.wrong { border-color: var(--danger); box-shadow: 0 0 40px rgba(239, 68, 68, 0.2); } .modal.wrong h2 { color: var(--danger); }
         .modal.gameover { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); } .modal.gameover h2 { color: var(--warning); }
         
-        /* Sudden Death Style */
-        .modal.warning { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.4); } 
-        .modal.warning h2 { color: var(--warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
-
         .loader { border: 4px solid rgba(255,255,255,0.05); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
         
         @media (max-width: 768px) {
@@ -243,36 +226,33 @@
 </head>
 <body>
 
-    <!-- Hidden YouTube Player -->
-    <div id="yt-player" style="position: absolute; top: -9999px; left: -9999px; width: 200px; height: 200px; opacity: 0; pointer-events: none;"></div>
-
+    <div id="yt-player" style="position: absolute; top: -9999px; left: -9999px; width: 20px; height: 20px; opacity: 0; pointer-events: none;"></div>
     <img id="app-background" src="" alt="">
     <div class="scanlines"></div>
-
     <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
 
-    <!-- PROFIL SETUP (Login / Register) -->
+    <!-- PROFIL SETUP OVERLAY (Neues sauberes Design!) -->
     <div id="profile-overlay" class="overlay" style="display: flex;">
-        <div class="modal">
-            <h2 id="profile-title" style="color: var(--primary);">Cloud Login</h2>
-            <p style="margin-top:-5px; font-size:12px;">Your account is securely stored in the cloud.</p>
+        <div class="modal" style="border-top: 5px solid var(--primary);">
+            <h2 id="profile-title" style="color: white; margin-bottom: 5px;">WELCOME TO<br><span style="color: var(--primary);">RAPMUSIK GUESSR</span></h2>
+            <p style="font-size:13px; color: var(--text-muted); margin-bottom: 25px;">Create your profile or login to your cloud account.</p>
             
-            <input type="text" id="username-input" class="ea-input" style="text-align: center;" placeholder="Username" autocomplete="off">
-            <input type="password" id="password-input" class="ea-input" style="text-align: center;" placeholder="Password">
+            <input type="text" id="username-input" class="ea-input" style="text-align: left;" placeholder="👤 Username" autocomplete="off">
+            <input type="password" id="password-input" class="ea-input" style="text-align: left;" placeholder="🔑 Password">
             
-            <div id="artist-select-container" style="text-align: left;">
-                <p style="margin-bottom: 5px; font-size: 12px; color: var(--primary); font-weight: 800; text-transform: uppercase;">1. Choose your Artist (Avatar & Background)</p>
-                <select id="fav-artist-select" class="ea-input" style="color: white; cursor: pointer;"></select>
+            <div id="artist-select-container" style="text-align: left; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--surface-border);">
+                <p style="margin: 0 0 10px 0; font-size: 12px; color: white; font-weight: 800; text-transform: uppercase;">1. Choose your Avatar / Artist</p>
+                <select id="fav-artist-select" class="ea-input" style="margin-bottom: 20px; padding: 15px;"></select>
 
-                <p style="margin-bottom: 5px; margin-top: 10px; font-size: 12px; color: var(--primary); font-weight: 800; text-transform: uppercase;">2. Search Anthem OR Paste YouTube Link</p>
-                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1; text-align: left;" placeholder="e.g. Sicko Mode OR https://youtube.com/...">
-                    <button class="btn-action" style="width: auto; padding: 0 20px;" onclick="searchMenuSong('setup')">🔍</button>
+                <p style="margin: 0 0 10px 0; font-size: 12px; color: white; font-weight: 800; text-transform: uppercase;">2. Search your Anthem (or YouTube Link)</p>
+                <div style="display: flex; gap: 10px; margin-bottom: 0;">
+                    <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1; padding: 15px;" placeholder="e.g. Sicko Mode...">
+                    <button class="btn-action" style="width: auto; padding: 0 20px; margin: 0; font-size: 18px;" onclick="searchMenuSong('setup')">🔍</button>
                 </div>
-                <select id="menu-song-select" class="ea-input" style="display: none; color: var(--success); font-size: 14px; cursor: pointer;"></select>
+                <select id="menu-song-select" class="ea-input" style="display: none; color: var(--success); font-size: 14px; cursor: pointer; margin-top: 15px; padding: 15px;"></select>
             </div>
             
-            <button id="login-btn" class="btn-action" onclick="handleProfileLogin()" style="margin-top: 15px;">Login / Register ➔</button>
+            <button id="login-btn" class="btn-action" onclick="handleProfileLogin()">Login / Register ➔</button>
             <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
         </div>
     </div>
@@ -283,9 +263,7 @@
             <h2>👑 VIP ACCESS</h2>
             <p style="color: white; font-weight: 600;">This mode and multiplayer are exclusive for Lifetime VIPs.</p>
             <p style="font-size: 13px; color: #d4d4d8;">Support the servers once and unlock all premium modes permanently!</p>
-            
             <button class="btn-action btn-gold" style="margin-bottom: 15px;" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Unlock on Gumroad (12€) ➔</button>
-            
             <p style="margin-top:15px; font-size:12px; cursor:pointer; color:var(--text-muted); text-decoration: underline;" onclick="document.getElementById('premium-overlay').style.display='none'">Back to Menu</p>
         </div>
     </div>
@@ -314,30 +292,12 @@
             </div>
             <div class="sidebar-footer">
                 <button id="music-toggle-btn-sidebar" onclick="toggleMenuMusic()" style="background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 700; width: 80%; margin: 0 auto; display: block;">🔇 Music Off</button>
-                <div style="display:flex; align-items:center; gap:10px; margin-top:15px; padding: 0 15px;">
-                    <span style="font-size:16px;">🔉</span>
-                    <input type="range" id="volume-slider" min="0" max="1" step="0.05" oninput="changeVolume(this.value)">
-                    <span style="font-size:16px;">🔊</span>
-                </div>
             </div>
         </nav>
 
         <main id="main-content">
-            <!-- PLAY TAB -->
             <div id="play-tab" class="tab-content active">
-                <div class="settings-bar">
-                    <div class="settings-group">
-                        <span class="settings-label">Hardcore (Typing)</span>
-                        <label class="switch"><input type="checkbox" id="hardcore-toggle" onchange="toggleHardcoreMode()"><span class="slider red"></span></label>
-                    </div>
-                    <div class="settings-group">
-                        <span class="settings-label">Show Artist</span>
-                        <label class="switch"><input type="checkbox" id="artist-toggle" onchange="toggleArtistName()" checked><span class="slider green"></span></label>
-                    </div>
-                </div>
-
                 <div class="section-title">Your Club</div>
-                
                 <div id="fav-artist-banner" class="banner-container" style="display: none;">
                     <img id="fav-artist-img-1" src="" class="banner-img">
                     <div class="banner-text-box">
@@ -387,18 +347,18 @@
             <div id="multiplayer-tab" class="tab-content">
                 <div class="section-title">Online Multiplayer (2-4 Players)</div>
                 <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-                    <div class="ea-card" style="border-color: var(--success); cursor: default; justify-content: flex-start;">
+                    <div class="ea-card" style="border-color: var(--success); justify-content: flex-start;">
                         <h3 style="margin-top: 0; color: var(--success); font-weight: 800; letter-spacing: 1px;">HOST MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Create a lobby for 2 to 4 players. Host chooses mode to start.</p>
+                        <p style="font-size: 13px; color: var(--text-muted);">Create a lobby for 2 to 4 players.</p>
                         <button class="btn-action" style="background: var(--success); margin-bottom: 20px;" onclick="createRoom()">Generate Code</button>
                         <div style="text-align: center;">
                             <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Your Room Code:</span>
                             <h2 id="room-code-display" style="margin: 0; font-size: 40px; letter-spacing: 8px; color: white;">----</h2>
                         </div>
                     </div>
-                    <div class="ea-card" style="cursor: default; justify-content: flex-start;">
+                    <div class="ea-card" style="justify-content: flex-start;">
                         <h3 style="margin-top: 0; color: white; font-weight: 800; letter-spacing: 1px;">JOIN MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Enter your friend's 4-digit code to join the lobby.</p>
+                        <p style="font-size: 13px; color: var(--text-muted);">Enter your friend's 4-digit code.</p>
                         <input type="number" id="join-code-input" class="ea-input" style="letter-spacing: 5px; font-size: 24px; text-align: center;" placeholder="CODE">
                         <button class="btn-action" onclick="joinRoom()">Join</button>
                     </div>
@@ -422,7 +382,6 @@
                         <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
                         <p id="profile-view-quote" style="margin: 0 0 10px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
                         <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Anthem: <span id="profile-view-hymn" style="color: white;">Artist</span></p>
-                        
                         <div style="width: 100%; max-width: 400px;">
                             <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
                                 <span>Level <span id="profile-level-num">1</span></span>
@@ -435,17 +394,13 @@
                     </div>
                 </div>
 
-                <!-- DIRECT BUY BUTTON IN CLUB -->
                 <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
-                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Unlock Multiplayer, 2010s Rap, SoundCloud Era, and Artist Mode permanently!</p>
                     <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
                 </div>
 
-                <!-- GUMROAD VIP CODE REDEEM -->
                 <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 Redeem Gumroad License</h3>
-                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Bought the Lifetime Pass? Enter your Gumroad license key from your email here.</p>
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="e.g. A7X9-B2M4-99PL-Q1ZS">
                         <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Verify</button>
@@ -454,7 +409,7 @@
 
                 <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Change Artist (Avatar & Background)</h3>
-                    <select id="edit-fav-artist-select" class="ea-input" onchange="updateFavArtist()"></select>
+                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 20px;" onchange="updateFavArtist()"></select>
 
                     <h3 style="margin-top: 20px; font-size: 14px; text-transform: uppercase;">2. Change Anthem & Menu Music</h3>
                     <div style="display:flex; gap:10px; margin-bottom:10px;">
@@ -469,7 +424,7 @@
         </main>
     </div>
 
-    <!-- IN-GAME SCREEN -->
+    <!-- GAME SCREEN -->
     <div id="game-screen">
         <div class="game-inner">
             <div class="stats-bar" id="game-stats-bar"></div>
@@ -481,23 +436,13 @@
                 <button onclick="skipSong()" style="border-color: var(--danger); color: var(--danger);">⏭️ Skip (-250)</button>
             </div>
             <div id="options" class="options-container"></div>
-            <div id="text-input-container" style="display: none;">
-                <input type="text" id="guess-input" class="ea-input" placeholder="Enter song title..." autocomplete="off" oninput="updateSuggestions()">
-                <div id="suggestions-box"></div>
-                <button class="btn-action" onclick="checkTextInput()">Confirm</button>
-            </div>
         </div>
     </div>
 
-    <!-- LOADING SCREEN -->
+    <!-- LOADING & FEEDBACK OVERLAYS -->
     <div id="loading-overlay" class="overlay" style="display: none;">
-        <div style="text-align: center;">
-            <div class="loader"></div>
-            <h2 id="loading-text" style="color: white; font-size: 20px; letter-spacing: 2px; text-transform: uppercase;">Please Wait...</h2>
-        </div>
+        <div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Please Wait...</h2></div>
     </div>
-
-    <!-- FEEDBACK & END SCREEN -->
     <div id="feedback-overlay" class="overlay" style="display: none;">
         <div id="feedback-modal" class="modal">
             <h2 id="feedback-title">Title</h2>
@@ -553,17 +498,11 @@
         function getArtistQuote(name) { return artistQuotes[name] || `"Ready to dominate the game." - ${name}`; }
 
         // ==========================================
-        // SYSTEM & FALLBACK CONFIGURATION
+        // SYSTEM INIT 
         // ==========================================
         const SERVER_URL = 'https://mukke886.onrender.com';
-        
         let globalVolume = 0.5;
-        try {
-            let storedVol = parseFloat(localStorage.getItem('rapquiz_volume'));
-            if (!isNaN(storedVol)) globalVolume = storedVol;
-        } catch(e) { console.warn('LocalStorage offline'); }
 
-        // Bulletproof Socket Connection
         let socket = { on: () => {}, emit: () => {} }; 
         try {
             if (typeof io !== 'undefined') {
@@ -573,9 +512,8 @@
                     if(el) { el.innerText = '🟢 Ready for Multiplayer'; el.style.color = 'var(--success)'; } 
                 });
             }
-        } catch (e) { console.warn("Socket.io nicht geladen", e); }
+        } catch (e) { }
 
-        // Bulletproof Supabase Connection
         const supabaseUrl = 'https://tvcnushrhteworueftfy.supabase.co';
         const supabaseKey = 'sb_publishable_VftGljbGfzD1urJFrw5Ygw_9jV4-1bD'; 
         let supabase = null;
@@ -583,21 +521,11 @@
             if (typeof window.supabase !== 'undefined') {
                 supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
             }
-        } catch(e) { console.warn("Supabase Init Error", e); }
+        } catch(e) {}
 
-        let playerName = ''; 
-        let myFavArtist = ''; 
-        let mySongUrl = ''; 
-        let mySongTitle = '';
-        let myAvatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; 
-        let myBgUrl = '';
-        let myQuote = '';
-        let isPremium = false;
-        
-        let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
-
-        // --- YOUTUBE INTEGRATION ---
+        let playerName = ''; let myFavArtist = ''; let mySongUrl = ''; let myAvatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; let myBgUrl = ''; let myQuote = ''; let isPremium = false; let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
         let ytPlayer; let ytReady = false; let ytContext = 'menu';
+        
         function onYouTubeIframeAPIReady() {
             try {
                 ytPlayer = new YT.Player('yt-player', {
@@ -605,11 +533,10 @@
                     playerVars: { 'autoplay': 1, 'controls': 0, 'showinfo': 0, 'rel': 0, 'playsinline': 1 },
                     events: {
                         'onReady': () => { ytReady = true; },
-                        'onStateChange': (event) => { if (event.data === YT.PlayerState.ENDED && ytContext === 'menu') { ytPlayer.seekTo(0); ytPlayer.playVideo(); } },
-                        'onError': (event) => { if (event.data === 101 || event.data === 150) { alert("❌ YouTube blocked this official video due to copyright embedding restrictions.\nPlease search for a 'Lyrics' or 'Audio' video instead!"); } }
+                        'onStateChange': (event) => { if (event.data === YT.PlayerState.ENDED && ytContext === 'menu') { ytPlayer.seekTo(0); ytPlayer.playVideo(); } }
                     }
                 });
-            } catch(e) { console.warn("Youtube API offline"); }
+            } catch(e) {}
         }
 
         let menuAudio = new Audio(); menuAudio.loop = true; menuAudio.crossOrigin = "anonymous"; menuAudio.volume = globalVolume * 0.4;
@@ -620,22 +547,13 @@
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('active'); }
 
-        function changeVolume(val) {
-            globalVolume = parseFloat(val); 
-            try { localStorage.setItem('rapquiz_volume', globalVolume); } catch(e){}
-            menuAudio.volume = globalVolume * 0.4; audio.volume = globalVolume; sfxAudio.volume = globalVolume;
-            if(ytReady && ytPlayer && ytPlayer.setVolume) { let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100; ytPlayer.setVolume(globalVolume * vol); }
-        }
-
         function toggleMenuMusic() {
             if (isMenuMusicPlaying) {
-                pauseMenuMusic();
-                isMenuMusicPlaying = false;
+                pauseMenuMusic(); isMenuMusicPlaying = false;
                 let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
                 btns.forEach(b => { if(b) { b.innerHTML = "🔇 Music Off"; b.style.opacity = "0.7"; } });
             } else {
-                resumeMenuMusic();
-                isMenuMusicPlaying = true;
+                resumeMenuMusic(); isMenuMusicPlaying = true;
                 let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
                 btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
             }
@@ -681,10 +599,9 @@
                 document.getElementById('premium-overlay').style.display = 'flex';
                 return;
             }
-
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
-            if(tabId === 'profile-tab') { document.getElementById('stat-played').innerText = myStats.played; document.getElementById('stat-wins').innerText = myStats.wins; document.getElementById('stat-losses').innerText = myStats.losses; updateLevelDisplay(); }
+            if(tabId === 'profile-tab') { updateLevelDisplay(); }
             if (window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active'); }
         }
 
@@ -731,11 +648,10 @@
         }
 
         // ==========================================
-        // BULLETPROOF INIT (Verhindert Blackscreens!)
+        // AUTO-LOGIN
         // ==========================================
         window.onload = async () => {
             try {
-                let volSlider = document.getElementById('volume-slider'); if(volSlider) volSlider.value = globalVolume;
                 let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
                 selects.forEach(sel => { allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; sel.appendChild(opt); }); });
                 
@@ -747,14 +663,7 @@
                     grid.appendChild(d); 
                 });
 
-                // Wenn Supabase wegen eines falschen Keys abstürzt, wird das Menü trotzdem angezeigt!
-                if (!supabase) {
-                    let errEl = document.getElementById('profile-error');
-                    errEl.innerText = "⚠️ Datenbank-Schlüssel (Supabase) ist ungültig. Bitte überprüfe den Code in der index.html (Muss mit 'eyJ' anfangen).";
-                    errEl.style.display = 'block';
-                    document.getElementById('login-btn').disabled = true;
-                    return; 
-                }
+                if (!supabase) return;
 
                 const { data: session, error } = await supabase.auth.getSession();
                 if (error) throw error;
@@ -768,10 +677,6 @@
 
             } catch (err) {
                 console.error("System Start Error:", err);
-                document.getElementById('profile-overlay').style.display = 'flex';
-                let errEl = document.getElementById('profile-error');
-                errEl.innerText = "⚠️ Warnung: Das Spiel konnte nicht mit der Datenbank verbinden. Hast du einen Adblocker an?";
-                errEl.style.display = 'block';
             }
         };
 
@@ -803,7 +708,6 @@
                 
                 myFavArtist = document.getElementById('fav-artist-select').value; 
                 mySongUrl = songDropdown.value; 
-                mySongTitle = songDropdown.options[songDropdown.selectedIndex].text;
                 myQuote = getArtistQuote(myFavArtist);
                 playerName = name;
                 
@@ -931,16 +835,6 @@
             document.getElementById('profile-view-quote').innerText = myQuote; 
             loadArtistVisuals(myFavArtist); 
         }
-        
-        function updateFavSong() {
-            let sel = document.getElementById('edit-menu-song-select');
-            if(sel.value) {
-                mySongUrl = sel.value; mySongTitle = sel.options[sel.selectedIndex].text;
-                document.getElementById('profile-view-hymn').innerText = mySongTitle; 
-                saveProfileToDB();
-                playMenuMusic(mySongUrl);
-            }
-        }
 
         // ==========================================
         // MULTIPLAYER LOBBY LOGIC (2-4 Players)
@@ -1017,7 +911,6 @@
 
         socket.on('receiveRoundData', (data) => { 
             resetGameStats(); songsPool = data.songs; currentMode = data.mode; isHardcoreMode = data.hardcore; showArtistName = data.showArtist; 
-            document.getElementById('hardcore-toggle').checked = isHardcoreMode; document.getElementById('artist-toggle').checked = showArtistName; 
             isMultiplayer = true; document.getElementById('loading-overlay').style.display = 'none'; launchGame(); 
         });
 
@@ -1170,7 +1063,6 @@
         
         let currentPlayId = 0; 
         
-        // AUDIO REPLAY LOGIK
         function playAudioSnippet(isReplay = false) { 
             clearTimeout(precisionTimer); 
             let playId = ++currentPlayId;
@@ -1195,8 +1087,50 @@
             }
         }
 
-        function toggleHardcoreMode() { isHardcoreMode = document.getElementById('hardcore-toggle').checked; }
-        function toggleArtistName() { showArtistName = document.getElementById('artist-toggle').checked; }
+        function startMixedMode(mode) {
+            if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
+            document.getElementById('loading-overlay').style.display = 'flex'; 
+            document.getElementById('loading-text').innerText = "Loading database...";
+            resetGameStats(); currentMode = mode; let sel = [];
+            
+            if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars].sort(()=>0.5-Math.random()).slice(0,8);
+            if (mode === 'soundcloud') sel = [...soundcloudArtists].sort(()=>0.5-Math.random()).slice(0,8);
+            if (mode === '2010s') sel = [...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
+            if (mode === 'megahits') sel = [...megaStars, ...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
+            
+            Promise.all(sel.map(a => fetchDeezer(a))).then(() => {
+                if (mode === 'megahits') songsPool = songsPool.filter(s => s.rank > 600000);
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Not enough songs found. Please try again!"); return; }
+                songsPool = smartShuffle(songsPool); 
+                if (isMultiplayer && isMpHost) syncHostData(); launchGame();
+            });
+        }
+
+        function startProgressiveMode() {
+            if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
+            document.getElementById('loading-overlay').style.display = 'flex'; 
+            document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
+            resetGameStats(); currentMode = 'progressive';
+            
+            Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchDeezer(a))).then(() => {
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading."); return; }
+                songsPool = smartShuffle(songsPool); 
+                if (isMultiplayer && isMpHost) syncHostData(); launchGame();
+            });
+        }
+
+        function startArtistMode(artist) {
+            if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
+            document.getElementById('loading-overlay').style.display = 'flex'; 
+            document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
+            resetGameStats(); currentMode = 'artist';
+            
+            fetchDeezer(artist).then(() => {
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Not enough songs for this artist."); return; }
+                songsPool = smartShuffle(songsPool); 
+                if (isMultiplayer && isMpHost) syncHostData(); launchGame();
+            });
+        }
 
         function fetchDeezer(artist) {
             return new Promise(resolve => {
@@ -1221,57 +1155,8 @@
         function resetGameStats() {
             songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
             updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-            document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
-        }
-
-        function backToMenu() { 
-            audio.pause(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-            clearTimeout(precisionTimer); cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; 
-            resumeMenuMusic(); 
-        }
-
-        async function startMixedMode(mode) {
-            if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = "Loading database...";
-            resetGameStats(); currentMode = mode; let sel = [];
-            
-            if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars].sort(()=>0.5-Math.random()).slice(0,8);
-            if (mode === 'soundcloud') sel = [...soundcloudArtists].sort(()=>0.5-Math.random()).slice(0,8);
-            if (mode === '2010s') sel = [...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
-            if (mode === 'megahits') sel = [...megaStars, ...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
-            await Promise.all(sel.map(a => fetchDeezer(a)));
-            if (mode === 'megahits') songsPool = songsPool.filter(s => s.rank > 600000);
-            if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Not enough songs found. Please try again!"); return; }
-            
-            songsPool = smartShuffle(songsPool); 
-            if (isMultiplayer && isMpHost) syncHostData(); launchGame();
-        }
-
-        async function startProgressiveMode() {
-            if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
-            resetGameStats(); currentMode = 'progressive';
-            
-            await Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchDeezer(a)));
-            if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading."); return; }
-            
-            songsPool = smartShuffle(songsPool); 
-            if (isMultiplayer && isMpHost) syncHostData(); launchGame();
-        }
-
-        async function startArtistMode(artist) {
-            if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
-            resetGameStats(); currentMode = 'artist';
-            
-            await fetchDeezer(artist);
-            if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Not enough songs for this artist."); return; }
-            
-            songsPool = smartShuffle(songsPool); 
-            if (isMultiplayer && isMpHost) syncHostData(); launchGame();
+            let box = document.getElementById('suggestions-box'); if(box) box.style.display = 'none'; 
+            let res = document.getElementById('mp-result'); if(res) res.style.display = 'none';
         }
 
         function syncHostData() {
