@@ -591,6 +591,7 @@
             allArtists.forEach(a => { let d = document.createElement('div'); d.className = 'artist-tile'; d.innerText = a; d.onclick = () => startArtistMode(a); grid.appendChild(d); });
             if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
 
+            // Auto-Login Logik
             if (!playerName || !savedPw || !mySongUrl) { 
                 document.getElementById('profile-overlay').style.display = 'flex'; 
             } else { 
@@ -762,14 +763,12 @@
                 let tiedPlayers = sorted.filter(p => p.score === topScore);
 
                 if (tiedPlayers.length > 1) {
-                    // --- SUDDEN DEATH TRIGGER ---
                     if (isMpHost) {
                         let tiedIds = tiedPlayers.map(p => p.id);
                         socket.emit('teammateAnswered', { type: 'SUDDEN_DEATH', ids: tiedIds, roomCode: currentRoom });
                         triggerSuddenDeathLocal(tiedIds);
                     }
                 } else {
-                    // --- NORMALER GEWINNER ---
                     isWinnerScreenShown = true;
                     let winner = sorted[0];
                     let amIFirst = (winner.id === socket.id);
@@ -788,9 +787,9 @@
         // --- SUDDEN DEATH LOKALE LOGIK ---
         function triggerSuddenDeathLocal(tiedIds) {
             let amITied = tiedIds.includes(socket.id);
-            sfxAudio.pause(); // Stoppe eventuelle End-Sounds
+            sfxAudio.pause(); 
             
-            tiedIds.forEach(id => delete matchEndData[id]); // Clean up für neue Sterbedaten
+            tiedIds.forEach(id => delete matchEndData[id]); 
             
             let m = document.getElementById('feedback-modal'); m.className = "modal warning"; 
             document.getElementById('feedback-title').innerText = "💀 SUDDEN DEATH 💀";
@@ -884,12 +883,13 @@
                         isResolved = true; clearTimeout(timeout); 
                         if (r && r.data) {
                             // STRIKTER FILTER FÜR US/UK KÜNSTLER (Verhindert French/German Remixe komplett)
-                            let filtered = r.data.filter(t => t.preview && t.artist.name.toLowerCase().includes(artist.toLowerCase()));
+                            let filtered = r.data.filter(t => t.preview && t.artist.name.toLowerCase() === artist.toLowerCase());
                             songsPool = songsPool.concat(filtered); 
                         } 
                         resolve(); 
                     } 
                 };
+                // API Query zwingt Deezer, den Artist als Hauptkünstler zu behandeln
                 const query = `artist:"${artist}"`;
                 const s = document.createElement('script'); s.src = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=50&output=jsonp&callback=${cb}`; document.head.appendChild(s);
             });
@@ -1084,7 +1084,9 @@
             
             if (isMultiplayer) {
                 socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
-                let myData = { id: socket.id, score: score, name: playerName, avatar: myAvatar, anthem: mySongUrl };
+                
+                // BUGFIX: roomCode muss übergeben werden, damit der Server weiß an wen er "gameOver" schickt!
+                let myData = { id: socket.id, score: score, name: playerName, avatar: myAvatar, anthem: mySongUrl, roomCode: currentRoom };
                 matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
                 
                 t.innerText = "⏳ WARTE AUF SPIELER..."; d.innerText = "Das Match läuft noch für die anderen. Live-Auswertung:"; 
