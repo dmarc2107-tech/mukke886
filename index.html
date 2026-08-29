@@ -218,6 +218,7 @@
         .modal.wrong { border-color: var(--danger); box-shadow: 0 0 40px rgba(239, 68, 68, 0.2); } .modal.wrong h2 { color: var(--danger); }
         .modal.gameover { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); } .modal.gameover h2 { color: var(--warning); }
         
+        /* Sudden Death Style */
         .modal.warning { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.4); } 
         .modal.warning h2 { color: var(--warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
 
@@ -604,7 +605,7 @@
             if(ytReady && ytPlayer.setVolume) { let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100; ytPlayer.setVolume(globalVolume * vol); }
         }
 
-        // MUSIK AUS/AN LOGIK (Gefixed)
+        // MUSIK AUS/AN LOGIK
         function toggleMenuMusic() {
             if (isMenuMusicPlaying) {
                 pauseMenuMusic();
@@ -1122,7 +1123,7 @@
         
         let currentPlayId = 0; 
         
-        // AUDIO REPLAY LOGIK (Gefixed)
+        // AUDIO REPLAY LOGIK
         function playAudioSnippet(isReplay = false) { 
             clearTimeout(precisionTimer); 
             let playId = ++currentPlayId;
