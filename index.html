@@ -213,6 +213,10 @@
         .modal.correct { border-color: var(--success); box-shadow: 0 0 40px rgba(16, 185, 129, 0.2); } .modal.correct h2 { color: var(--success); }
         .modal.wrong { border-color: var(--danger); box-shadow: 0 0 40px rgba(239, 68, 68, 0.2); } .modal.wrong h2 { color: var(--danger); }
         .modal.gameover { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); } .modal.gameover h2 { color: var(--warning); }
+        
+        /* Sudden Death Style */
+        .modal.warning { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.4); } 
+        .modal.warning h2 { color: var(--warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
 
         .loader { border: 4px solid rgba(255,255,255,0.05); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
     </style>
@@ -597,6 +601,7 @@
 
         function handleProfileLogin(isAutoLogin = false) {
             let err = document.getElementById('profile-error');
+            
             if (!isAutoLogin) {
                 let name = document.getElementById('username-input').value.trim(); 
                 let pw = document.getElementById('password-input').value.trim(); 
@@ -730,6 +735,8 @@
                 playersAnsweredThisRound.add(data.id); checkAllAnswered();
             } else if (data.type === 'READY_NEXT') {
                 playersReadyForNextRound.add(data.id); checkAllReady();
+            } else if (data.type === 'SUDDEN_DEATH') {
+                triggerSuddenDeathLocal(data.ids);
             }
         });
 
@@ -750,20 +757,69 @@
             let allDone = lobbyPlayers.length > 0 && lobbyPlayers.every(p => matchEndData[p.id]);
             
             if (allDone) {
-                isWinnerScreenShown = true;
                 let sorted = Object.values(matchEndData).sort((a,b) => b.score - a.score);
-                let winner = sorted[0];
-                let amIFirst = (winner.id === socket.id);
-                
-                myStats.played++; 
-                if(amIFirst) myStats.wins++; else myStats.losses++;
-                localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
-                
-                showWinnerScreen(winner);
-            } else { renderMpLeaderboard(); }
+                let topScore = sorted[0].score;
+                let tiedPlayers = sorted.filter(p => p.score === topScore);
+
+                if (tiedPlayers.length > 1) {
+                    // --- SUDDEN DEATH TRIGGER ---
+                    if (isMpHost) {
+                        let tiedIds = tiedPlayers.map(p => p.id);
+                        socket.emit('teammateAnswered', { type: 'SUDDEN_DEATH', ids: tiedIds, roomCode: currentRoom });
+                        triggerSuddenDeathLocal(tiedIds);
+                    }
+                } else {
+                    // --- NORMALER GEWINNER ---
+                    isWinnerScreenShown = true;
+                    let winner = sorted[0];
+                    let amIFirst = (winner.id === socket.id);
+                    
+                    myStats.played++; 
+                    if(amIFirst) myStats.wins++; else myStats.losses++;
+                    localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
+                    
+                    showWinnerScreen(winner);
+                }
+            } else { 
+                renderMpLeaderboard(); 
+            }
         }
 
-        // --- DER NEUE SIEGER BILDSCHIRM (7 SEKUNDEN HYMNE) ---
+        // --- SUDDEN DEATH LOKALE LOGIK ---
+        function triggerSuddenDeathLocal(tiedIds) {
+            let amITied = tiedIds.includes(socket.id);
+            sfxAudio.pause(); // Stoppe eventuelle End-Sounds
+            
+            tiedIds.forEach(id => delete matchEndData[id]); // Clean up für neue Sterbedaten
+            
+            let m = document.getElementById('feedback-modal'); m.className = "modal warning"; 
+            document.getElementById('feedback-title').innerText = "💀 SUDDEN DEATH 💀";
+            document.getElementById('feedback-cover').style.display = 'none';
+            document.getElementById('mp-result').style.display = 'none';
+            document.getElementById('feedback-btn').style.display = 'none';
+            
+            if (amITied) {
+                lives = 1; gameIsOver = false; isWinnerScreenShown = false;
+                document.getElementById('feedback-desc').innerText = "Gleichstand! Ihr bekommt 1 Leben. Wer jetzt falsch liegt, verliert!";
+                
+                playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
+                expectedAnswers = tiedIds.length;
+                
+                if (isMpHost) {
+                    setTimeout(() => {
+                        socket.emit('nextRound', { roomCode: currentRoom });
+                        nextRound();
+                    }, 4000);
+                }
+            } else {
+                document.getElementById('feedback-desc').innerText = "Gleichstand! Die Finalisten kämpfen im Sudden Death um den Sieg...";
+            }
+            
+            document.getElementById('feedback-overlay').style.display = 'flex';
+            updateStatsDisplay();
+        }
+
+        // --- DER SIEGER BILDSCHIRM (7 SEKUNDEN HYMNE) ---
         function showWinnerScreen(winner) {
             let m = document.getElementById('feedback-modal'); m.className = "modal correct"; 
             document.getElementById('feedback-title').innerText = "🏆 GEWINNER 🏆";
@@ -797,7 +853,7 @@
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; let audio = new Audio(); audio.volume = 0.5; audio.crossOrigin = "anonymous"; let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous";
         
-        let currentPlayId = 0; // Verhinderung des Zeit-Bugs beim Klicken
+        let currentPlayId = 0; // BUG-FIX: Stoppt Überlagerung beim Replay/+3s
         function playAudioSnippet(isReplay = false) { 
             clearTimeout(precisionTimer); 
             let playId = ++currentPlayId;
@@ -834,7 +890,6 @@
                         resolve(); 
                     } 
                 };
-                // API Query zwingt Deezer, den Artist als Hauptkünstler zu behandeln
                 const query = `artist:"${artist}"`;
                 const s = document.createElement('script'); s.src = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=50&output=jsonp&callback=${cb}`; document.head.appendChild(s);
             });
@@ -920,7 +975,6 @@
         function nextRound() {
             document.getElementById('feedback-overlay').style.display = 'none'; audio.pause(); clearTimeout(precisionTimer); document.getElementById('suggestions-box').style.display = 'none';
             
-            // Sync Reset für die neue Runde
             playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
             if(isMultiplayer) expectedAnswers = Math.max(1, lobbyPlayers.filter(p => p.lives > 0).length);
             
@@ -948,8 +1002,7 @@
                     b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
                 });
             }
-            audio.src = currentSong.preview; 
-            playAudioSnippet(false);
+            audio.src = currentSong.preview; playAudioSnippet(false);
         }
 
         function replaySnippet() { playAudioSnippet(true); }
@@ -964,8 +1017,9 @@
 
             if (playersAnsweredThisRound.size >= expectedAnswers) {
                 res.innerHTML = '<span style="color: var(--success); font-weight: 900;">Alle haben getippt!</span>';
-                btn.style.display = 'block';
-                btn.innerText = 'Nächste Runde ➔';
+                btn.style.display = 'block'; btn.innerText = 'Nächste Runde ➔';
+                
+                // Sobald man "Nächste Runde" klickt, ist man bereit
                 btn.onclick = () => {
                     playersReadyForNextRound.add(socket.id);
                     socket.emit('teammateAnswered', { type: 'READY_NEXT', id: socket.id, roomCode: currentRoom });
@@ -1015,6 +1069,8 @@
             }
             
             updateStatsDisplay(); document.getElementById('feedback-overlay').style.display = 'flex';
+            
+            // Wenn man hier stirbt, fliegt man sofort aus der Runde
             if (lives <= 0) { 
                 document.getElementById('feedback-btn').style.display = 'none'; 
                 setTimeout(() => triggerGameOver(false), 2000); 
