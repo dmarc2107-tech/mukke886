@@ -322,7 +322,7 @@
                     <div class="ea-card" onclick="startMixedMode('2010s')">
                         <div class="ea-card-icon">📅</div>
                         <div class="ea-card-title">2010-2020 Rap</div>
-                        <div class="ea-card-desc">Die goldene Trap-Ära.</div>
+                        <div class="ea-card-desc">Die goldene Trap-Ära (Nur US/UK).</div>
                     </div>
                     <div class="ea-card card-sc" onclick="startMixedMode('soundcloud')">
                         <div class="ea-card-icon">☁️</div>
@@ -490,10 +490,12 @@
         let lobbyPlayers = []; 
         let currentRoom = '';
         
-        let matchEndData = {}; // Speichert die End-Daten aller Spieler für den Showdown
-        let isWinnerScreenShown = false; // Verhindert doppeltes Triggern
+        // Sync & End Variablen
+        let matchEndData = {}; 
+        let isWinnerScreenShown = false; 
+        let playersAnsweredThisRound = new Set();
+        let expectedAnswers = 1;
 
-        // Mobile Sidebar Logik
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('sidebar-overlay').classList.toggle('active');
@@ -584,7 +586,6 @@
             allArtists.forEach(a => { let d = document.createElement('div'); d.className = 'artist-tile'; d.innerText = a; d.onclick = () => startArtistMode(a); grid.appendChild(d); });
             if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
 
-            // Auto-Login Logik
             if (!playerName || !savedPw || !mySongUrl) { 
                 document.getElementById('profile-overlay').style.display = 'flex'; 
             } else { 
@@ -704,7 +705,6 @@
                     statusEl.style.color = 'var(--success)';
                 }
             }
-            
             if (gameIsOver) checkMatchEnd(); 
         });
 
@@ -727,7 +727,6 @@
             });
         }
         
-        // Empfängt das Lade-Signal vom Host, um den Client synchron auf "Warten" zu setzen
         socket.on('gameReady', (code) => { 
             if(!isMpHost) { 
                 document.getElementById('loading-overlay').style.display = 'flex';
@@ -747,40 +746,36 @@
             if(gameIsOver) renderMpLeaderboard(); 
         });
 
-        // Backend leitet die End-Daten der Gegner weiter
-        socket.on('opponentGameOver', (data) => {
-            matchEndData[data.id] = data; 
-            if (gameIsOver) { 
-                checkMatchEnd(); 
+        socket.on('teammateAnswered', (data) => {
+            if (data.type === 'ROUND_ANSWERED') {
+                playersAnsweredThisRound.add(data.id);
+                checkAllAnswered();
             }
         });
 
-        // Überprüft, ob das Multiplayer Match GANZ vorbei ist (alle Spieler sind fertig)
+        socket.on('opponentGameOver', (data) => {
+            matchEndData[data.id] = data; 
+            if (gameIsOver) checkMatchEnd(); 
+        });
+
         function checkMatchEnd() {
             if (!isMultiplayer || !gameIsOver || isWinnerScreenShown) return;
-            
             let allDone = lobbyPlayers.length > 0 && lobbyPlayers.every(p => matchEndData[p.id]);
             
             if (allDone) {
                 isWinnerScreenShown = true;
-                
-                // Finde Gewinner
                 let sorted = Object.values(matchEndData).sort((a,b) => b.score - a.score);
                 let winner = sorted[0];
-                
-                // Eigene Stats für localStorage aktualisieren
                 let amIFirst = (winner.id === socket.id);
                 myStats.played++; 
                 if(amIFirst) myStats.wins++; else myStats.losses++;
                 localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
-                
                 showWinnerScreen(winner);
             } else {
                 renderMpLeaderboard();
             }
         }
 
-        // --- DER NEUE SIEGER BILDSCHIRM (7 SEKUNDEN HYMNE) ---
         function showWinnerScreen(winner) {
             let m = document.getElementById('feedback-modal'); 
             m.className = "modal correct"; 
@@ -803,38 +798,17 @@
                 <p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>
             `;
             
-            // Spiele Hymne des Gewinners für alle im Raum (Fallback zu ultimate.mp3)
-            sfxAudio.pause();
-            sfxAudio.src = winner.anthem || 'ultimate.mp3';
-            sfxAudio.volume = 1.0;
-            sfxAudio.play().catch(e=>{});
+            sfxAudio.pause(); sfxAudio.src = winner.anthem || 'ultimate.mp3'; sfxAudio.volume = 1.0; sfxAudio.play().catch(e=>{});
+            document.getElementById('feedback-btn').style.display = 'none'; 
             
-            document.getElementById('feedback-btn').style.display = 'none'; // Verstecke Beenden-Button während Hymne
-            
-            // Nach 7 Sekunden: Zeige finales Leaderboard und Beenden Button
             setTimeout(() => {
                 sfxAudio.pause();
-                
-                // Cover Reset auf normal
-                cov.style.display = 'none';
-                cov.style.borderRadius = '16px'; 
-                cov.style.width = '160px';
-                cov.style.height = '160px';
-                cov.style.border = '2px solid var(--surface-border)';
-                cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
-                
-                document.getElementById('feedback-title').innerText = "📊 ENDSTAND";
-                document.getElementById('feedback-desc').innerText = "";
+                cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+                document.getElementById('feedback-title').innerText = "📊 ENDSTAND"; document.getElementById('feedback-desc').innerText = "";
                 
                 renderMpLeaderboard(); 
-                
-                let btn = document.getElementById('feedback-btn');
-                btn.style.display = 'block';
-                btn.innerText = "Beenden 🏠";
-                btn.onclick = () => {
-                    document.getElementById('feedback-overlay').style.display = 'none';
-                    backToMenu();
-                };
+                let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Beenden 🏠";
+                btn.onclick = () => { document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
             }, 7000);
         }
 
@@ -843,8 +817,13 @@
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; let audio = new Audio(); audio.volume = 0.5; let sfxAudio = new Audio(); 
         
-        audio.onplaying = () => { clearTimeout(precisionTimer); if (maxPlayTime < 30) { precisionTimer = setTimeout(() => { audio.pause(); }, maxPlayTime * 1000); } };
-        function playAudioSnippet() { audio.currentTime = 0; clearTimeout(precisionTimer); audio.play().catch(e=>{}); }
+        function playAudioSnippet() { 
+            audio.currentTime = 0; clearTimeout(precisionTimer); 
+            audio.play().then(() => {
+                if (maxPlayTime < 30) precisionTimer = setTimeout(() => { audio.pause(); }, maxPlayTime * 1000);
+            }).catch(e=>{}); 
+        }
+
         function toggleHardcoreMode() { isHardcoreMode = document.getElementById('hardcore-toggle').checked; }
         function toggleArtistName() { showArtistName = document.getElementById('artist-toggle').checked; }
 
@@ -854,12 +833,14 @@
                 let isResolved = false;
                 const timeout = setTimeout(() => { if(!isResolved) { isResolved = true; resolve(); } }, 3000); 
                 window[cb] = function(r) { if(!isResolved) { isResolved = true; clearTimeout(timeout); if (r && r.data) songsPool = songsPool.concat(r.data.filter(t => t.preview)); resolve(); } };
-                const s = document.createElement('script'); s.src = `https://api.deezer.com/search?q=${encodeURIComponent(artist)}&limit=50&output=jsonp&callback=${cb}`; document.head.appendChild(s);
+                // Strikte Artist-Suche zur Vermeidung falscher Featurings (besonders im 2010s Mode)
+                const query = `artist:"${artist}"`;
+                const s = document.createElement('script'); s.src = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=50&output=jsonp&callback=${cb}`; document.head.appendChild(s);
             });
         }
 
         function resetGameStats() {
-            songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {};
+            songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear();
             updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
         }
 
@@ -937,6 +918,9 @@
 
         function nextRound() {
             document.getElementById('feedback-overlay').style.display = 'none'; audio.pause(); clearTimeout(precisionTimer); document.getElementById('suggestions-box').style.display = 'none';
+            playersAnsweredThisRound.clear();
+            if(isMultiplayer) expectedAnswers = Math.max(1, lobbyPlayers.filter(p => p.lives > 0).length);
+            
             let unp = songsPool.filter(s => !playedSongIds.has(s.id));
             if (unp.length === 0) { triggerGameOver(true); return; }
             currentSong = unp[0]; playedSongIds.add(currentSong.id);
@@ -969,9 +953,26 @@
         function skipSong() { processAnswer(false, true); }
         function checkTextInput() { let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); let c = currentSong.title.toLowerCase().split('(')[0].split(' feat')[0].replace(/[^a-z0-9]/g, ''); processAnswer(v === c || (v.length >= 4 && c.includes(v))); }
 
+        function checkAllAnswered() {
+            if (!isMultiplayer) return;
+            let btn = document.getElementById('feedback-btn');
+            let res = document.getElementById('mp-result');
+            
+            if (playersAnsweredThisRound.size >= expectedAnswers) {
+                res.innerText = 'Alle haben getippt!';
+                res.style.color = 'var(--success)';
+                btn.style.display = 'block';
+                btn.innerText = 'Nächste Runde ➔';
+            } else {
+                res.innerText = `Warte auf Mitspieler... (${playersAnsweredThisRound.size}/${expectedAnswers})`;
+                res.style.color = 'var(--warning)';
+                btn.style.display = 'none';
+            }
+        }
+
         function processAnswer(wasCorrect, isSkip = false) {
             let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover');
-            document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
+            document.getElementById('suggestions-box').style.display = 'none'; 
             document.getElementById('feedback-btn').onclick = nextRound;
             
             let pts = maxPlayTime <= 1 ? 100 : (maxPlayTime <= 4 ? 75 : 50);
@@ -983,9 +984,20 @@
                 cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
                 if (isSkip) { score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Punkte\n${currentSong.title} - ${currentSong.artist.name}`; } 
                 else { lives--; m.className = "modal wrong"; t.innerText = "❌ FALSCH!"; d.innerText = `Ein Leben verloren!\n${currentSong.title} - ${currentSong.artist.name}`; }
-                if (lives <= 0) setTimeout(() => triggerGameOver(false), 2000);
+                if (lives <= 0) { setTimeout(() => triggerGameOver(false), 2000); return; } // Tot? Direkter Exit aus der Runde
             }
-            if (isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
+            
+            if (isMultiplayer) {
+                socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
+                document.getElementById('mp-result').style.display = 'block';
+                playersAnsweredThisRound.add(socket.id);
+                socket.emit('teammateAnswered', { type: 'ROUND_ANSWERED', id: socket.id, roomCode: currentRoom });
+                checkAllAnswered();
+            } else {
+                document.getElementById('mp-result').style.display = 'none';
+                document.getElementById('feedback-btn').style.display = 'block';
+            }
+            
             updateStatsDisplay();
             document.getElementById('feedback-overlay').style.display = 'flex';
         }
@@ -997,7 +1009,6 @@
             m.className = "modal gameover";
             
             if (isMultiplayer) {
-                // Sende finale Score und Hymne in die Multiplayer Endauswertung
                 socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
                 let myData = { id: socket.id, score: score, name: playerName, avatar: myAvatar, anthem: mySongUrl };
                 matchEndData[socket.id] = myData;
@@ -1007,7 +1018,7 @@
                 d.innerText = "Das Match läuft noch für die anderen. Live-Auswertung:"; 
                 document.getElementById('mp-result').style.display = 'block';
                 document.getElementById('mp-result').innerHTML = "Lade Live-Daten...";
-                b.style.display = 'none'; // Ausblenden bis das Spiel für alle durch ist
+                b.style.display = 'none'; 
                 
                 document.getElementById('feedback-overlay').style.display = 'flex';
                 
@@ -1018,12 +1029,11 @@
                 t.innerText = victory ? "🏆 DURCHGESPIELT!" : "💀 GAME OVER"; d.innerText = `Dein Score: ${score}`;
                 myStats.played++; if(victory) myStats.wins++; else myStats.losses++; localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
                 if (!victory && score < 500) { sfxAudio.src = "roddy.mp3"; sfxAudio.play().catch(e=>{}); }
-                b.innerText = "Beenden 🏠"; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
+                b.innerText = "Beenden 🏠"; b.style.display = 'block'; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
                 document.getElementById('feedback-overlay').style.display = 'flex';
             }
         }
 
-        // --- DEUTLICH GRÖSSERE IN-GAME AVATARS ---
         function updateStatsDisplay() { 
             const bar = document.getElementById('game-stats-bar');
             if(!bar) return;
@@ -1059,7 +1069,6 @@
             const res = document.getElementById('mp-result');
             if(!res || !isMultiplayer || isWinnerScreenShown) return;
             
-            // Nutze die Live-Werte der lobbyPlayers oder matchEndData falls schon fertig
             let sorted = [...lobbyPlayers].map(p => {
                 if (matchEndData[p.id]) return matchEndData[p.id];
                 return p;
