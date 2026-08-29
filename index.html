@@ -8,7 +8,7 @@
     <!-- Supabase SDK for Cloud Database -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Socket.io for 2-4 Player Multiplayer -->
+    <!-- Socket.io for Multiplayer -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <!-- YouTube Iframe API -->
     <script src="https://www.youtube.com/iframe_api"></script>
@@ -28,7 +28,6 @@
             --text-muted: #a1a1aa;
         }
 
-        /* FIX: user-select: none entfernt, um Dropdown-Bugs auf Handys zu vermeiden */
         body, html { 
             font-family: 'Poppins', sans-serif; 
             background-color: var(--bg-color); 
@@ -36,7 +35,6 @@
             margin: 0; padding: 0; overflow: hidden; width: 100vw; height: 100vh;
         }
 
-        /* Verhindert Text-Markieren nur da, wo es Sinn macht */
         .ea-card, .btn-action, .nav-item, h1, h2, h3, .sidebar-logo { user-select: none; -webkit-user-select: none; }
         input, select { user-select: auto !important; -webkit-user-select: auto !important; }
 
@@ -136,7 +134,6 @@
         }
         .ea-card:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(139, 92, 246, 0.25); }
         
-        /* Das Schloss-Overlay für VIP-Karten */
         .locked-card::after {
             content: "🔒 PREMIUM"; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
@@ -158,11 +155,9 @@
         .artist-tile { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; color: white; backdrop-filter: blur(5px); }
         .artist-tile:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
 
-        /* --- UI EINGABEFELDER --- */
         .ea-input { width: 100%; padding: 18px; background: rgba(0,0,0,0.7); border: 1px solid var(--surface-border); color: white; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; margin-bottom: 15px; transition: 0.3s; }
         .ea-input:focus { outline: none; border-color: var(--primary); background: rgba(0,0,0,0.9); }
         
-        /* FIX FÜR SCHWARZES DROPDOWN MENÜ BEI WINDOWS */
         select.ea-input { text-align: left; cursor: pointer; }
         select.ea-input option { background-color: #141419; color: #ffffff; padding: 15px; font-weight: 600; font-family: 'Poppins', sans-serif;}
 
@@ -503,7 +498,7 @@
         function getArtistQuote(name) { return artistQuotes[name] || `"Ready to dominate the game." - ${name}`; }
 
         // ==========================================
-        // SYSTEM INIT 
+        // SYSTEM INIT & CLOUD DB (SUPABASE + GUMROAD)
         // ==========================================
         const SERVER_URL = 'https://mukke886.onrender.com';
         let globalVolume = 0.5;
@@ -549,6 +544,55 @@
         
         let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = '';
         let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
+
+        // --- SOFORTIGES LADEN DER DROPDOWNS BEIM START ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
+            selects.forEach(sel => { 
+                allArtists.forEach(a => { 
+                    let opt = document.createElement('option'); opt.value = a; opt.innerText = a; sel.appendChild(opt); 
+                }); 
+            });
+            
+            let grid = document.getElementById('artist-grid');
+            allArtists.forEach(a => { 
+                let d = document.createElement('div'); d.className = 'artist-tile locked-card'; 
+                d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:14px; margin-top:3px;">🔒 VIP</span>`;
+                d.onclick = () => { if(isPremium) { startArtistMode(a); } else { document.getElementById('premium-overlay').style.display = 'flex'; } }; 
+                grid.appendChild(d); 
+            });
+
+            try {
+                if (supabase) {
+                    const { data: session } = await supabase.auth.getSession();
+                    if (session?.session?.user) {
+                        document.getElementById('profile-overlay').style.display = 'none';
+                        await loadProfileFromDB(session.session.user.id);
+                        return;
+                    }
+                }
+            } catch(e) {}
+
+            // Fallback auf LocalStorage falls kein Supabase-Login aktiv
+            playerName = localStorage.getItem('rapquiz_username'); 
+            let savedPw = localStorage.getItem('rapquiz_password');
+            mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || '';
+            isPremium = localStorage.getItem('rapquiz_vip') === 'true';
+
+            if (!playerName || !savedPw || !mySongUrl) { 
+                document.getElementById('profile-overlay').style.display = 'flex'; 
+            } else { 
+                document.getElementById('profile-title').innerHTML = 'WELCOME BACK!<br><span style="color: var(--primary);">RAPMUSIK GUESSR</span>'; 
+                document.getElementById('username-input').value = playerName; 
+                document.getElementById('username-input').disabled = true; 
+                document.getElementById('artist-select-container').style.display = 'none'; 
+                document.getElementById('profile-overlay').style.display = 'flex'; 
+            }
+        });
+
+        // ==========================================
+        // UI HELPERS & LOGIN (Mit Supabase Support)
+        // ==========================================
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('active'); }
 
@@ -641,6 +685,9 @@
             let q = document.getElementById(inputId).value.trim(); if(!q) return; let sel = document.getElementById(selectId);
             let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
             if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = `<option value="yt:${vid}">YouTube Track (Full Length)</option>`; sel.style.display = 'block'; return; }
+            
+            sel.innerHTML = '<option value="">Searching...</option>'; sel.style.display = 'block';
+
             const cb = 'deezer_song_' + Date.now();
             window[cb] = function(res) {
                 sel.innerHTML = '';
@@ -652,39 +699,6 @@
             const s = document.createElement('script'); s.src = `https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=10&output=jsonp&callback=${cb}`; document.head.appendChild(s);
         }
 
-        // ==========================================
-        // AUTO-LOGIN
-        // ==========================================
-        window.onload = async () => {
-            try {
-                let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
-                selects.forEach(sel => { allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; sel.appendChild(opt); }); });
-                
-                let grid = document.getElementById('artist-grid');
-                allArtists.forEach(a => { 
-                    let d = document.createElement('div'); d.className = 'artist-tile locked-card'; 
-                    d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:14px; margin-top:3px;">🔒 VIP</span>`;
-                    d.onclick = () => { if(isPremium) { startArtistMode(a); } else { document.getElementById('premium-overlay').style.display = 'flex'; } }; 
-                    grid.appendChild(d); 
-                });
-
-                if (!supabase) return;
-
-                const { data: session, error } = await supabase.auth.getSession();
-                if (error) throw error;
-
-                if (session?.session?.user) {
-                    document.getElementById('profile-overlay').style.display = 'none';
-                    await loadProfileFromDB(session.session.user.id);
-                } else {
-                    document.getElementById('profile-overlay').style.display = 'flex';
-                }
-
-            } catch (err) {
-                console.error("System Start Error:", err);
-            }
-        };
-
         async function handleProfileLogin() {
             let btn = document.getElementById('login-btn'); btn.innerText = "Loading..."; btn.disabled = true;
             let err = document.getElementById('profile-error'); err.style.display = 'none';
@@ -692,59 +706,82 @@
             let pw = document.getElementById('password-input').value.trim(); 
             
             if (!name || !pw) { err.innerText = "Please fill in username and password!"; err.style.display = 'block'; btn.innerText = "Login / Register ➔"; btn.disabled = false; return; }
-            if (!supabase) return;
 
-            let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
-            let { data, error } = await supabase.auth.signInWithPassword({ email: fakeEmail, password: pw });
+            if (supabase) {
+                let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
+                let { data, error } = await supabase.auth.signInWithPassword({ email: fakeEmail, password: pw });
 
-            if (error) {
-                let songDropdown = document.getElementById('menu-song-select');
-                // FIX: Deutlichere Fehlermeldung, wenn Schritt 2 vergessen wurde
-                if(songDropdown.style.display === 'none' || !songDropdown.value) { 
-                    err.innerText = "Please complete Step 2 (Search your Anthem) before logging in!"; 
-                    err.style.display = 'block'; 
-                    btn.innerText = "Login / Register ➔"; btn.disabled = false; return; 
+                if (error) {
+                    let songDropdown = document.getElementById('menu-song-select');
+                    if(songDropdown.style.display === 'none' || !songDropdown.value) { 
+                        err.innerText = "Please complete Step 2 (Search your Anthem) first!"; err.style.display = 'block'; 
+                        btn.innerText = "Login / Register ➔"; btn.disabled = false; return; 
+                    }
+
+                    let { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email: fakeEmail, password: pw });
+                    if (signUpError) {
+                        err.innerText = "Error: Password too weak or server offline."; err.style.display = 'block'; 
+                        btn.innerText = "Login / Register ➔"; btn.disabled = false; return;
+                    }
+                    data = signUpData;
+                    
+                    myFavArtist = document.getElementById('fav-artist-select').value; 
+                    mySongUrl = songDropdown.value; 
+                    myQuote = getArtistQuote(myFavArtist);
+                    playerName = name;
+                    
+                    setTimeout(() => saveProfileToDB(), 2000); 
                 }
 
-                let { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email: fakeEmail, password: pw });
-                if (signUpError) {
-                    err.innerText = "Error: Password too weak or server offline."; err.style.display = 'block'; 
-                    btn.innerText = "Login / Register ➔"; btn.disabled = false; return;
+                if (data?.user) {
+                    await loadProfileFromDB(data.user.id);
+                    return;
                 }
-                data = signUpData;
-                
+            }
+
+            // Fallback Local Login
+            let savedPw = localStorage.getItem('rapquiz_password');
+            if (savedPw && pw !== savedPw) { err.innerText = "Wrong Password!"; err.style.display = 'block'; btn.innerText = "Login / Register ➔"; btn.disabled = false; return; }
+
+            let songDropdown = document.getElementById('menu-song-select');
+            if(!savedPw && (songDropdown.style.display === 'none' || !songDropdown.value)) {
+                err.innerText = "Please complete Step 2 (Search your Anthem) first!"; err.style.display = 'block'; 
+                btn.innerText = "Login / Register ➔"; btn.disabled = false; return;
+            }
+
+            if(!savedPw) {
                 myFavArtist = document.getElementById('fav-artist-select').value; 
                 mySongUrl = songDropdown.value; 
                 myQuote = getArtistQuote(myFavArtist);
                 playerName = name;
-                
-                setTimeout(() => saveProfileToDB(), 2000); 
+                localStorage.setItem('rapquiz_username', name); localStorage.setItem('rapquiz_password', pw); 
+                localStorage.setItem('rapquiz_fav_artist', myFavArtist); localStorage.setItem('rapquiz_menu_song_url', mySongUrl);
+                localStorage.setItem('rapquiz_quote', myQuote);
             }
 
-            if (data?.user) {
-                await loadProfileFromDB(data.user.id);
-            }
+            finalizeLoginUI();
         }
 
         async function loadProfileFromDB(userId) {
             if (!supabase) return;
-            let { data: profile, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
-            
+            let { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single();
             if (profile) {
                 playerName = profile.username;
-                myFavArtist = profile.anthem_url ? "Artist" : ""; 
+                myFavArtist = "Artist"; 
                 mySongUrl = profile.anthem_url;
                 myAvatar = profile.avatar_url;
                 myQuote = profile.quote || "Ready to dominate!";
                 isPremium = profile.is_premium || false;
                 myStats.totalScore = profile.total_score || 0;
             }
+            finalizeLoginUI();
+        }
 
+        function finalizeLoginUI() {
             if (isPremium) {
                 document.getElementById('premium-badge').style.display = 'inline-block';
                 document.getElementById('vip-buy-section').style.display = 'none';
                 document.getElementById('vip-redeem-section').style.display = 'none';
-                
                 document.querySelectorAll('.locked-card').forEach(el => {
                     el.classList.remove('locked-card');
                     let lockIcon = el.querySelector('.lock-icon');
@@ -757,11 +794,13 @@
             document.getElementById('sidebar-name').innerText = playerName; 
             document.getElementById('profile-view-name').innerText = playerName; 
             document.getElementById('profile-view-quote').innerText = myQuote; 
+            document.getElementById('profile-view-hymn').innerText = myFavArtist || "Anthem";
             
             updateLevelDisplay();
             if (window.innerWidth > 768) document.getElementById('music-toggle-btn').style.display = 'block';
             
             updateAllAvatars();
+            if(myBgUrl) document.getElementById('app-background').src = myBgUrl;
             playMenuMusic(mySongUrl);
         }
 
@@ -769,11 +808,7 @@
             if (!supabase) return;
             const { data: session } = await supabase.auth.getSession();
             if (session?.session?.user) {
-                await supabase.from('profiles').update({
-                    avatar_url: myAvatar,
-                    quote: myQuote,
-                    anthem_url: mySongUrl
-                }).eq('id', session.session.user.id);
+                await supabase.from('profiles').update({ avatar_url: myAvatar, quote: myQuote, anthem_url: mySongUrl }).eq('id', session.session.user.id);
             }
         }
 
@@ -787,7 +822,6 @@
             }
         }
 
-        // --- GUMROAD API: LICENSE VERIFICATION ---
         async function redeemVIPCode() {
             let code = document.getElementById('vip-code-input').value.trim();
             if(!code) return alert("Please enter your Gumroad code!");
@@ -801,32 +835,25 @@
                 let res = await fetch('https://api.gumroad.com/v2/licenses/verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        product_id: 'ZWtMCbbtsw3aVMslIZK7MQ==', 
-                        license_key: code,
-                        increment_uses_count: true
-                    })
+                    body: JSON.stringify({ product_id: 'ZWtMCbbtsw3aVMslIZK7MQ==', license_key: code, increment_uses_count: true })
                 });
-                
                 let data = await res.json();
                 
                 if (data.success && !data.purchase.refunded && !data.purchase.chargebacked) {
                     isPremium = true;
+                    localStorage.setItem('rapquiz_vip', 'true');
                     if(supabase) {
                         const { data: session } = await supabase.auth.getSession();
-                        if (session?.session?.user) {
-                            await supabase.from('profiles').update({ is_premium: true }).eq('id', session.session.user.id);
-                        }
+                        if (session?.session?.user) await supabase.from('profiles').update({ is_premium: true }).eq('id', session.session.user.id);
                     }
                     alert("🎉 SUCCESS! License verified. You are now a Lifetime VIP!");
                     location.reload();
                 } else {
-                    alert("❌ Invalid or refunded code. Please check the code from your email.");
+                    alert("❌ Invalid or refunded code. Please check your email.");
                 }
             } catch (e) {
-                alert("❌ API Error. Please check your internet connection or try again later.");
+                alert("❌ API Error. Check your internet connection.");
             }
-
             document.getElementById('vip-code-input').disabled = false;
             btn.innerText = originalText;
         }
@@ -875,12 +902,12 @@
                 let statusEl = document.getElementById('mp-status');
                 if(isMpHost) {
                     if(players.length >= 2) {
-                        statusEl.innerHTML = `🟢 Ready! You can now choose a mode<br>in the left menu to start.`; statusEl.style.color = 'var(--success)';
+                        statusEl.innerHTML = `🟢 Ready! Choose a mode to start.`; statusEl.style.color = 'var(--success)';
                     } else {
                         statusEl.innerText = `Waiting for players... (${players.length}/4)`; statusEl.style.color = 'var(--warning)';
                     }
                 } else {
-                    statusEl.innerText = `🟢 In lobby (${players.length}/4). Waiting for host to start...`; statusEl.style.color = 'var(--success)';
+                    statusEl.innerText = `🟢 In lobby (${players.length}/4). Waiting for host...`; statusEl.style.color = 'var(--success)';
                 }
             }
             if (gameIsOver) checkMatchEnd(); 
@@ -896,160 +923,61 @@
                 let parts = p.avatar.split('|Q|');
                 let pAv = parts[0];
                 let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
-                
                 container.innerHTML += `
                     <div style="background: rgba(20,20,25,0.8); padding: 10px 15px; border-radius: 12px; border: 1px solid ${isMe ? 'var(--primary)' : 'var(--surface-border)'}; display: flex; align-items: center; gap: 15px; width: 100%; max-width: 320px; text-align: left;">
                         <img src="${pAv}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid ${isMe ? 'var(--primary)' : 'white'}; flex-shrink: 0;">
                         <div style="display: flex; flex-direction: column; overflow: hidden;">
                             <span style="font-weight: 800; font-size: 15px; color: white;">${p.name} ${isMe ? '(You)' : ''}</span>
-                            <span style="font-size: 11px; color: var(--text-muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title='${pQt.replace(/'/g, "&apos;")}'>${pQt}</span>
+                            <span style="font-size: 11px; color: var(--text-muted); font-style: italic;">${pQt}</span>
                         </div>
                     </div>
                 `;
             });
         }
         
-        socket.on('gameReady', (code) => { 
-            if(!isMpHost) { 
-                document.getElementById('loading-overlay').style.display = 'flex';
-                document.getElementById('loading-text').innerText = "Loading game data from host...";
-            } 
-        });
-
-        socket.on('receiveRoundData', (data) => { 
-            resetGameStats(); songsPool = data.songs; currentMode = data.mode; isHardcoreMode = data.hardcore; showArtistName = data.showArtist; 
-            isMultiplayer = true; document.getElementById('loading-overlay').style.display = 'none'; launchGame(); 
-        });
-
-        socket.on('updateAllStats', (players) => { 
-            lobbyPlayers = players; 
-            if(!isWinnerScreenShown) updateStatsDisplay(); 
-            if(gameIsOver) renderMpLeaderboard(); 
-        });
-
+        socket.on('gameReady', (code) => { if(!isMpHost) { document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading game data from host..."; } });
+        socket.on('receiveRoundData', (data) => { resetGameStats(); songsPool = data.songs; currentMode = data.mode; isHardcoreMode = data.hardcore; showArtistName = data.showArtist; isMultiplayer = true; document.getElementById('loading-overlay').style.display = 'none'; launchGame(); });
+        socket.on('updateAllStats', (players) => { lobbyPlayers = players; if(!isWinnerScreenShown) updateStatsDisplay(); if(gameIsOver) renderMpLeaderboard(); });
         socket.on('teammateAnswered', (data) => {
-            if (data.type === 'ROUND_ANSWERED') {
-                playersAnsweredThisRound.add(data.id); checkAllAnswered();
-            } else if (data.type === 'READY_NEXT') {
-                playersReadyForNextRound.add(data.id); checkAllReady();
-            } else if (data.type === 'SUDDEN_DEATH') {
-                triggerSuddenDeathLocal(data.ids);
-            }
+            if (data.type === 'ROUND_ANSWERED') { playersAnsweredThisRound.add(data.id); checkAllAnswered(); }
+            else if (data.type === 'READY_NEXT') { playersReadyForNextRound.add(data.id); checkAllReady(); }
         });
-
-        socket.on('triggerNextRound', () => {
-            if (!isMpHost && lives > 0 && !gameIsOver) nextRound();
-        });
-
-        socket.on('opponentGameOver', (data) => {
-            matchEndData[data.id] = data; 
-            playersAnsweredThisRound.add(data.id); playersReadyForNextRound.add(data.id);
-            checkAllAnswered(); checkAllReady();
-            if (gameIsOver) checkMatchEnd(); 
-        });
+        socket.on('triggerNextRound', () => { if (!isMpHost && lives > 0 && !gameIsOver) nextRound(); });
+        socket.on('opponentGameOver', (data) => { matchEndData[data.id] = data; playersAnsweredThisRound.add(data.id); playersReadyForNextRound.add(data.id); checkAllAnswered(); checkAllReady(); if (gameIsOver) checkMatchEnd(); });
 
         function checkMatchEnd() {
             if (!isMultiplayer || !gameIsOver || isWinnerScreenShown) return;
             let allDone = lobbyPlayers.length > 0 && lobbyPlayers.every(p => matchEndData[p.id]);
-            
             if (allDone) {
+                isWinnerScreenShown = true;
                 let sorted = Object.values(matchEndData).sort((a,b) => b.score - a.score);
-                let topScore = sorted[0].score;
-                let tiedPlayers = sorted.filter(p => p.score === topScore);
-
-                if (tiedPlayers.length > 1) {
-                    if (isMpHost) {
-                        let tiedIds = tiedPlayers.map(p => p.id);
-                        socket.emit('teammateAnswered', { type: 'SUDDEN_DEATH', ids: tiedIds, roomCode: currentRoom });
-                        triggerSuddenDeathLocal(tiedIds);
-                    }
-                } else {
-                    isWinnerScreenShown = true;
-                    let winner = sorted[0];
-                    let amIFirst = (winner.id === socket.id);
-                    
-                    myStats.played++; 
-                    if(amIFirst) myStats.wins++; else myStats.losses++;
-                    
-                    updateDbScore(score);
-                    showWinnerScreen(winner);
-                }
-            } else { 
-                renderMpLeaderboard(); 
-            }
-        }
-
-        function triggerSuddenDeathLocal(tiedIds) {
-            let amITied = tiedIds.includes(socket.id);
-            sfxAudio.pause(); if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-            
-            tiedIds.forEach(id => delete matchEndData[id]); 
-            
-            let m = document.getElementById('feedback-modal'); m.className = "modal warning"; 
-            document.getElementById('feedback-title').innerText = "💀 SUDDEN DEATH 💀";
-            document.getElementById('feedback-cover').style.display = 'none';
-            document.getElementById('mp-result').style.display = 'none';
-            document.getElementById('feedback-btn').style.display = 'none';
-            
-            if (amITied) {
-                lives = 1; gameIsOver = false; isWinnerScreenShown = false;
-                document.getElementById('feedback-desc').innerText = "Tie! You get 1 life. Whoever misses next, loses!";
-                
-                playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
-                expectedAnswers = tiedIds.length;
-                
-                if (isMpHost) {
-                    setTimeout(() => {
-                        socket.emit('nextRound', { roomCode: currentRoom });
-                        nextRound();
-                    }, 4000);
-                }
-            } else {
-                document.getElementById('feedback-desc').innerText = "Tie! Finalists are fighting in Sudden Death...";
-            }
-            
-            document.getElementById('feedback-overlay').style.display = 'flex';
-            updateStatsDisplay();
+                let winner = sorted[0];
+                let amIFirst = (winner.id === socket.id);
+                myStats.played++; if(amIFirst) myStats.wins++; else myStats.losses++;
+                updateDbScore(score);
+                showWinnerScreen(winner);
+            } else { renderMpLeaderboard(); }
         }
 
         function playWinnerAnthem(url) {
             sfxAudio.pause(); pauseMenuMusic();
             if (url && url.startsWith('yt:')) {
                 let vid = url.substring(3);
-                if(ytReady && ytPlayer && ytPlayer.loadVideoById) {
-                    ytContext = 'winner';
-                    ytPlayer.setVolume(globalVolume * 100); 
-                    ytPlayer.loadVideoById(vid);
-                    ytPlayer.playVideo();
-                }
-            } else {
-                sfxAudio.src = url || 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
-            }
+                if(ytReady && ytPlayer && ytPlayer.loadVideoById) { ytContext = 'winner'; ytPlayer.setVolume(globalVolume * 100); ytPlayer.loadVideoById(vid); ytPlayer.playVideo(); }
+            } else { sfxAudio.src = url || 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{}); }
         }
 
         function showWinnerScreen(winner) {
-            let parts = winner.avatar.split('|Q|');
-            let wAv = parts[0];
-            let wQt = parts.length > 1 ? parts[1] : '';
-
+            let parts = winner.avatar.split('|Q|'); let wAv = parts[0]; let wQt = parts.length > 1 ? parts[1] : '';
             let m = document.getElementById('feedback-modal'); m.className = "modal correct"; 
             document.getElementById('feedback-title').innerText = "🏆 WINNER 🏆";
             document.getElementById('feedback-desc').innerText = "Playing winner's anthem...";
-            
-            let cov = document.getElementById('feedback-cover');
-            cov.src = wAv; cov.style.display = 'block'; cov.style.borderRadius = '50%';
+            let cov = document.getElementById('feedback-cover'); cov.src = wAv; cov.style.display = 'block'; cov.style.borderRadius = '50%';
             cov.style.width = '160px'; cov.style.height = '160px'; cov.style.border = '4px solid var(--warning)'; cov.style.boxShadow = '0 0 40px rgba(245, 158, 11, 0.8)';
-            
             document.getElementById('mp-result').style.display = 'block';
-            document.getElementById('mp-result').innerHTML = `
-                <h2 style="color:var(--warning); margin:0; font-size:36px; text-transform: uppercase;">${winner.name}</h2>
-                <p style="color:var(--text-muted); font-style:italic; font-size:14px; margin: 5px 0;">${wQt}</p>
-                <p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>
-            `;
-            
+            document.getElementById('mp-result').innerHTML = `<h2 style="color:var(--warning); margin:0; font-size:36px; text-transform: uppercase;">${winner.name}</h2><p style="color:var(--text-muted); font-style:italic; font-size:14px;">${wQt}</p><p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>`;
             playWinnerAnthem(winner.anthem);
             document.getElementById('feedback-btn').style.display = 'none'; 
-            
             setTimeout(() => {
                 sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
                 cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
@@ -1064,42 +992,27 @@
         // GAME LOGIC & PARALLEL FETCH
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
-        
         let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
         let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
-        
         let currentPlayId = 0; 
         
         function playAudioSnippet(isReplay = false) { 
-            clearTimeout(precisionTimer); 
-            let playId = ++currentPlayId;
-            
-            if (isReplay) { 
-                audio.pause(); 
-                try { audio.currentTime = 0; } catch(e) {} 
-            }
-            
+            clearTimeout(precisionTimer); let playId = ++currentPlayId;
+            if (isReplay) { audio.pause(); try { audio.currentTime = 0; } catch(e) {} }
             audio.volume = globalVolume; 
-            
             let p = audio.play();
             if (p !== undefined) {
                 p.then(() => {
                     if (playId !== currentPlayId) return; 
-                    if (maxPlayTime < 30) {
-                        precisionTimer = setTimeout(() => { 
-                            if (playId === currentPlayId) audio.pause(); 
-                        }, maxPlayTime * 1000);
-                    }
-                }).catch(e=>{ console.log("Audio Play Error:", e); });
+                    if (maxPlayTime < 30) { precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000); }
+                }).catch(e=>{});
             }
         }
 
         function startMixedMode(mode) {
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = "Loading database...";
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading database...";
             resetGameStats(); currentMode = mode; let sel = [];
-            
             if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === 'soundcloud') sel = [...soundcloudArtists].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === '2010s') sel = [...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
@@ -1107,7 +1020,7 @@
             
             Promise.all(sel.map(a => fetchDeezer(a))).then(() => {
                 if (mode === 'megahits') songsPool = songsPool.filter(s => s.rank > 600000);
-                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Not enough songs found. Please try again!"); return; }
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Not enough songs found!"); return; }
                 songsPool = smartShuffle(songsPool); 
                 if (isMultiplayer && isMpHost) syncHostData(); launchGame();
             });
@@ -1115,10 +1028,8 @@
 
         function startProgressiveMode() {
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
             resetGameStats(); currentMode = 'progressive';
-            
             Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchDeezer(a))).then(() => {
                 if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading."); return; }
                 songsPool = smartShuffle(songsPool); 
@@ -1128,12 +1039,10 @@
 
         function startArtistMode(artist) {
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
             resetGameStats(); currentMode = 'artist';
-            
             fetchDeezer(artist).then(() => {
-                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Not enough songs for this artist."); return; }
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Not enough songs."); return; }
                 songsPool = smartShuffle(songsPool); 
                 if (isMultiplayer && isMpHost) syncHostData(); launchGame();
             });
@@ -1172,8 +1081,7 @@
         }
 
         function launchGame() {
-            pauseMenuMusic(); 
-            document.getElementById('loading-overlay').style.display = 'none';
+            pauseMenuMusic(); document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
             if(isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
             nextRound();
@@ -1195,7 +1103,6 @@
 
         function nextRound() {
             document.getElementById('feedback-overlay').style.display = 'none'; audio.pause(); clearTimeout(precisionTimer); document.getElementById('suggestions-box').style.display = 'none';
-            
             playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
             if(isMultiplayer) expectedAnswers = Math.max(1, lobbyPlayers.filter(p => p.lives > 0).length);
             
@@ -1203,26 +1110,17 @@
             if (unp.length === 0) { triggerGameOver(true); return; }
             currentSong = unp[0]; playedSongIds.add(currentSong.id);
 
-            if (currentMode === 'progressive') {
-                let times = [0.1, 1, 2, 5, 10]; maxPlayTime = times[Math.min(playedSongIds.size - 1, 4)];
-                document.getElementById('add-time-btn').innerText = `+3s (${maxPlayTime}s)`;
-            } else { maxPlayTime = 1; document.getElementById('add-time-btn').innerText = `+3s (1s)`; }
-
-            if (isHardcoreMode) {
-                document.getElementById('options').style.display = 'none'; document.getElementById('text-input-container').style.display = 'block';
-                let input = document.getElementById('guess-input'); input.value = ''; input.focus();
-            } else {
-                document.getElementById('text-input-container').style.display = 'none'; document.getElementById('options').style.display = 'flex';
-                let wrong = songsPool.filter(s => s.id !== currentSong.id).sort(()=>0.5-Math.random());
-                let opts = [currentSong]; let seenTitles = new Set([currentSong.title]);
-                for (let s of wrong) { if (!seenTitles.has(s.title)) { seenTitles.add(s.title); opts.push(s); } if (opts.length === 4) break; }
-                opts.sort(()=>0.5-Math.random());
-                let div = document.getElementById('options'); div.innerHTML = '';
-                opts.forEach(o => {
-                    let b = document.createElement('button'); b.className = 'option-btn'; b.innerText = showArtistName ? `${o.title} - ${o.artist.name}` : o.title;
-                    b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
-                });
-            }
+            maxPlayTime = 1; document.getElementById('add-time-btn').innerText = `+3s (1s)`;
+            document.getElementById('text-input-container').style.display = 'none'; document.getElementById('options').style.display = 'flex';
+            let wrong = songsPool.filter(s => s.id !== currentSong.id).sort(()=>0.5-Math.random());
+            let opts = [currentSong]; let seenTitles = new Set([currentSong.title]);
+            for (let s of wrong) { if (!seenTitles.has(s.title)) { seenTitles.add(s.title); opts.push(s); } if (opts.length === 4) break; }
+            opts.sort(()=>0.5-Math.random());
+            let div = document.getElementById('options'); div.innerHTML = '';
+            opts.forEach(o => {
+                let b = document.createElement('button'); b.className = 'option-btn'; b.innerText = `${o.title} - ${o.artist.name}`;
+                b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
+            });
             audio.src = currentSong.preview; playAudioSnippet(false);
         }
 
@@ -1234,15 +1132,13 @@
         function checkAllAnswered() {
             if (!isMultiplayer) return;
             let btn = document.getElementById('feedback-btn'); let res = document.getElementById('mp-result');
-
             if (playersAnsweredThisRound.size >= expectedAnswers) {
                 res.innerHTML = '<span style="color: var(--success); font-weight: 900;">All players guessed!</span>';
                 btn.style.display = 'block'; btn.innerText = 'Next Round ➔';
-                
                 btn.onclick = () => {
                     playersReadyForNextRound.add(socket.id);
                     socket.emit('teammateAnswered', { type: 'READY_NEXT', id: socket.id, roomCode: currentRoom });
-                    btn.style.display = 'none'; res.innerHTML = '<span style="color: var(--warning); font-weight: 800;">Waiting for other players...</span>';
+                    btn.style.display = 'none'; res.innerHTML = '<span style="color: var(--warning); font-weight: 800;">Waiting...</span>';
                     checkAllReady();
                 };
             } else {
@@ -1253,27 +1149,24 @@
 
         function checkAllReady() {
             if (!isMultiplayer) return;
-            if (playersReadyForNextRound.size >= expectedAnswers) {
-                if (isMpHost) {
-                    socket.emit('nextRound', { roomCode: currentRoom });
-                    if (lives > 0 && !gameIsOver) nextRound();
-                }
+            if (playersReadyForNextRound.size >= expectedAnswers && isMpHost) {
+                socket.emit('nextRound', { roomCode: currentRoom });
+                if (lives > 0 && !gameIsOver) nextRound();
             }
         }
 
         function processAnswer(wasCorrect, isSkip = false) {
             let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover');
             document.getElementById('suggestions-box').style.display = 'none'; 
-            
-            let pts = maxPlayTime <= 1 ? 100 : (maxPlayTime <= 4 ? 75 : 50);
+            let pts = 100;
 
             if (wasCorrect) {
                 score += pts; maxPlayTime = 30; playAudioSnippet(true); cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
                 m.className = "modal correct"; t.innerText = "🔥 CORRECT!"; d.innerText = `+${pts} Points!\n${currentSong.title} - ${currentSong.artist.name}`;
             } else {
                 cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
-                if (isSkip) { score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Points\n${currentSong.title} - ${currentSong.artist.name}`; } 
-                else { lives--; m.className = "modal wrong"; t.innerText = "❌ WRONG!"; d.innerText = `Lost a life!\n${currentSong.title} - ${currentSong.artist.name}`; }
+                if (isSkip) { score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Points`; } 
+                else { lives--; m.className = "modal wrong"; t.innerText = "❌ WRONG!"; d.innerText = `Lost a life!`; }
             }
             
             if (isMultiplayer) {
@@ -1288,11 +1181,7 @@
             }
             
             updateStatsDisplay(); document.getElementById('feedback-overlay').style.display = 'flex';
-            
-            if (lives <= 0) { 
-                document.getElementById('feedback-btn').style.display = 'none'; 
-                setTimeout(() => triggerGameOver(false), 2000); 
-            }
+            if (lives <= 0) { document.getElementById('feedback-btn').style.display = 'none'; setTimeout(() => triggerGameOver(false), 2000); }
         }
 
         function triggerGameOver(victory) {
@@ -1304,20 +1193,14 @@
                 socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
                 let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
                 matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
-                
-                t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
+                t.innerText = "⏳ WAITING..."; d.innerText = "Match is running for others."; 
                 document.getElementById('mp-result').style.display = 'block'; document.getElementById('mp-result').innerHTML = "Loading live data...";
-                b.style.display = 'none'; 
-                document.getElementById('feedback-overlay').style.display = 'flex';
-                
+                b.style.display = 'none'; document.getElementById('feedback-overlay').style.display = 'flex';
                 renderMpLeaderboard(); checkMatchEnd();
             } else {
                 t.innerText = victory ? "🏆 COMPLETED!" : "💀 GAME OVER"; d.innerText = `Your Score: ${score}`;
-                
                 myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
                 updateDbScore(score);
-
-                if (!victory && score < 500) { sfxAudio.src = "roddy.mp3"; sfxAudio.play().catch(e=>{}); }
                 b.innerText = "Exit 🏠"; b.style.display = 'block'; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
                 document.getElementById('feedback-overlay').style.display = 'flex';
             }
@@ -1326,35 +1209,14 @@
         function updateStatsDisplay() { 
             const bar = document.getElementById('game-stats-bar');
             if(!bar) return;
-            
             if(!isMultiplayer) {
-                bar.innerHTML = `
-                    <div class="team-score-box">
-                        <span class="team-score-title" style="color: white;">Your Score</span>
-                        <span class="team-score-num" style="color: var(--primary);">${score}</span>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Lives</div>
-                        <span style="font-size: 20px; letter-spacing: 2px;">${"❤️".repeat(lives) + "🖤".repeat(3-lives)}</span>
-                    </div>
-                `;
+                bar.innerHTML = `<div class="team-score-box"><span class="team-score-title" style="color: white;">Your Score</span><span class="team-score-num" style="color: var(--primary);">${score}</span></div><div style="text-align: center;"><div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Lives</div><span style="font-size: 20px; letter-spacing: 2px;">${"❤️".repeat(lives) + "🖤".repeat(3-lives)}</span></div>`;
             } else {
                 bar.innerHTML = '';
                 lobbyPlayers.forEach(p => {
-                    const isMe = (p.id === socket.id);
-                    let parts = p.avatar.split('|Q|');
-                    let pAv = parts[0];
-                    let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
-
-                    bar.innerHTML += `
-                        <div class="team-score-box" style="opacity: ${p.lives <= 0 ? '0.4' : '1'}; transition: 0.3s; width: ${100/Math.max(1, lobbyPlayers.length)}%;">
-                            <img src="${pAv}" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid ${isMe ? 'var(--primary)' : 'white'}; margin-bottom: 8px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
-                            <span class="team-score-title" style="color: ${isMe ? 'var(--primary)' : 'white'}; font-size: 14px; font-weight: 900;">${p.name}</span>
-                            <span style="font-size: 9px; color: var(--text-muted); font-style: italic; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${pQt.replace(/"/g, '&quot;')}">${pQt}</span>
-                            <span class="team-score-num" style="font-size: 24px; text-shadow: 0 0 10px rgba(255,255,255,0.2);">${p.score}</span>
-                            <span style="font-size: 14px; margin-top: 5px;">${p.lives > 0 ? "❤️".repeat(p.lives) : "💀"}</span>
-                        </div>
-                    `;
+                    let isMe = (p.id === socket.id);
+                    let parts = p.avatar.split('|Q|'); let pAv = parts[0]; let pQt = parts.length > 1 ? parts[1] : '';
+                    bar.innerHTML += `<div class="team-score-box" style="opacity: ${p.lives <= 0 ? '0.4' : '1'};"><img src="${pAv}" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid ${isMe ? 'var(--primary)' : 'white'}; object-fit: cover;"><span style="color:white; font-weight:800; font-size:12px;">${p.name}</span><span style="font-size:20px; font-weight:900;">${p.score}</span></div>`;
                 });
             }
         }
@@ -1362,32 +1224,12 @@
         function renderMpLeaderboard() {
             const res = document.getElementById('mp-result');
             if(!res || !isMultiplayer || isWinnerScreenShown) return;
-            
             let sorted = [...lobbyPlayers].map(p => { return matchEndData[p.id] ? matchEndData[p.id] : p; }).sort((a,b) => b.score - a.score);
-            
-            let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Standings</h3>';
-            html += '<div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
-            
+            let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Standings</h3><div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
             sorted.forEach((p, index) => {
-                let rankColor = index === 0 ? 'var(--warning)' : (index === 1 ? '#d4d4d8' : '#b45309');
-                if(index > 2) rankColor = 'var(--text-muted)';
-                let isMe = p.id === socket.id;
-                
-                let parts = p.avatar.split('|Q|');
-                let pAv = parts[0];
-                
-                html += `
-                    <div style="display: flex; align-items: center; justify-content: space-between; background: ${isMe ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)'}; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${rankColor};">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-weight: 900; font-size: 16px; color: ${rankColor};">#${index + 1}</span>
-                            <img src="${pAv}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover;">
-                            <span style="font-weight: 700; color: white;">${p.name}</span>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-weight: 900; color: white;">${p.score} Pts</div>
-                        </div>
-                    </div>
-                `;
+                let rankColor = index === 0 ? 'var(--warning)' : '#ffffff'; let isMe = p.id === socket.id;
+                let parts = p.avatar.split('|Q|'); let pAv = parts[0];
+                html += `<div style="display: flex; align-items: center; justify-content: space-between; background: ${isMe ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)'}; padding: 10px 15px; border-radius: 8px;"><div style="display: flex; align-items: center; gap: 10px;"><span style="font-weight: 900; color: ${rankColor};">#${index + 1}</span><img src="${pAv}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover;"><span style="font-weight: 700; color: white;">${p.name}</span></div><div style="font-weight: 900; color: white;">${p.score} Pts</div></div>`;
             });
             html += '</div>'; res.innerHTML = html;
         }
