@@ -1,10 +1,8 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const cors = require('cors');
 
 const app = express();
-app.use(cors()); 
 
 app.get('/', (req, res) => {
     res.send('✅ Der Rap Quiz Multiplayer-Server (2v2 Ready) läuft einwandfrei!');
