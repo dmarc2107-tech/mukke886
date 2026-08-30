@@ -540,7 +540,7 @@
         </main>
     </div>
 
-    <!-- GAME SCREEN -->
+    <!-- STANDARD GAME SCREEN -->
     <div id="game-screen">
         <div class="game-inner">
             <div class="stats-bar" id="game-stats-bar"></div>
@@ -1038,15 +1038,18 @@
         }
 
         // ==========================================
-        // HIGHER / LOWER LOGIK (ANTI-DUPLIKAT FIX)
+        // HIGHER / LOWER LOGIK (ANTI-DUPLIKAT & AUDIO FIX)
         // ==========================================
-        let hlPool = []; let hlCurrentA = null; let hlCurrentB = null; let hlStreak = 0;
+        let hlPool = []; let hlCurrentA = null; let hlCurrentB = null; let hlStreak = 0; let hlRecentArtists = [];
 
         async function startHigherLowerMode() {
             document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Stream Data...";
-            resetGameStats(); currentMode = 'higherlower'; hlStreak = 0;
-            let sel = [...megaStars, ...artists2010s, ...soundcloudArtists, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0, 12);
+            resetGameStats(); currentMode = 'higherlower'; hlStreak = 0; hlRecentArtists = [];
+            
+            // 15 statt 12 Artists für mehr Puffer
+            let sel = [...megaStars, ...artists2010s, ...soundcloudArtists, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0, 15);
             await Promise.all(sel.map(a => fetchArtistSongs(a)));
+            
             if (songsPool.length < 5) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); return; }
             
             hlPool = smartShuffle(songsPool).map(s => ({ ...s, streams: getTrackEstimatedStreams(s.title, s.artist.name) }));
@@ -1054,30 +1057,55 @@
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('hl-screen').style.display = 'flex';
             
             hlCurrentA = hlPool.pop(); 
-            let nextIndex = hlPool.findIndex(s => s.artist.name !== hlCurrentA.artist.name);
+            hlRecentArtists.push(hlCurrentA.artist.name);
+
+            let nextIndex = hlPool.findIndex(s => !hlRecentArtists.includes(s.artist.name));
             if(nextIndex !== -1) { hlCurrentB = hlPool.splice(nextIndex, 1)[0]; } else { hlCurrentB = hlPool.pop(); }
+            hlRecentArtists.push(hlCurrentB.artist.name);
             
             renderHLRound();
         }
 
         function renderHLRound() {
             document.getElementById('hl-streak-num').innerText = hlStreak;
+            
+            // CARD A
             document.getElementById('hl-img-a').src = hlCurrentA.album.cover_medium; document.getElementById('hl-title-a').innerText = hlCurrentA.title; document.getElementById('hl-artist-a').innerText = hlCurrentA.artist.name; document.getElementById('hl-streams-a').innerText = hlCurrentA.streams.toLocaleString('en-US');
+            
+            // CARD B
             document.getElementById('hl-img-b').src = hlCurrentB.album.cover_medium; document.getElementById('hl-title-b').innerText = hlCurrentB.title; document.getElementById('hl-artist-b').innerText = hlCurrentB.artist.name;
+            
             document.getElementById('hl-action-box').style.display = 'flex'; document.getElementById('hl-result-box').style.display = 'none'; document.getElementById('hl-streams-b').innerText = hlCurrentB.streams.toLocaleString('en-US');
+
+            // AUDIO PLAYBACK FÜR SONG B (Rechte Seite)
+            audio.pause();
+            clearTimeout(precisionTimer);
+            if (hlCurrentB.preview) {
+                audio.src = hlCurrentB.preview;
+                audio.volume = globalVolume;
+                audio.loop = true;
+                audio.play().catch(e=>{});
+            }
         }
 
         function processHLChoice(choice) {
             document.getElementById('hl-action-box').style.display = 'none'; document.getElementById('hl-result-box').style.display = 'flex';
+            
             let isHigher = hlCurrentB.streams >= hlCurrentA.streams; let wasCorrect = (choice === 'higher' && isHigher) || (choice === 'lower' && !isHigher);
+            
             if (wasCorrect) {
                 hlStreak++; score += 150; myStats.correctGuesses++;
                 setTimeout(() => { 
                     hlCurrentA = hlCurrentB; 
                     if (hlPool.length === 0) { triggerGameOver(true); } 
                     else { 
-                        let nextIndex = hlPool.findIndex(s => s.artist.name !== hlCurrentA.artist.name);
+                        // ANTI-DUPLIKAT (Memory: Letzte 8 Artists)
+                        let nextIndex = hlPool.findIndex(s => !hlRecentArtists.includes(s.artist.name));
                         if(nextIndex !== -1) { hlCurrentB = hlPool.splice(nextIndex, 1)[0]; } else { hlCurrentB = hlPool.pop(); }
+                        
+                        hlRecentArtists.push(hlCurrentB.artist.name);
+                        if (hlRecentArtists.length > 8) hlRecentArtists.shift(); // Nur die letzten 8 merken
+                        
                         renderHLRound(); 
                     } 
                 }, 2000);
@@ -1096,7 +1124,7 @@
         function playAudioSnippet(isReplay = false) { 
             clearTimeout(precisionTimer); let playId = ++currentPlayId;
             if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
-            audio.volume = globalVolume; let p = audio.play();
+            audio.volume = globalVolume; audio.loop = false; let p = audio.play();
             if (p !== undefined) { p.then(() => { if (playId !== currentPlayId) return; if (maxPlayTime < 30) { precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000); } }).catch(e=>{}); }
         }
 
@@ -1153,7 +1181,7 @@
 
         function resetGameStats() {
             songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
-            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); 
+            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); audio.loop = false;
             let box = document.getElementById('suggestions-box'); if(box) box.style.display = 'none'; 
             let res = document.getElementById('mp-result'); if(res) res.style.display = 'none';
         }
@@ -1261,7 +1289,7 @@
                     b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
                 });
             }
-            audio.src = currentSong.preview; playAudioSnippet(false);
+            playAudioSnippet(false);
         }
 
         function replaySnippet() { playAudioSnippet(true); }
