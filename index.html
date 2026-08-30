@@ -317,6 +317,8 @@
                 <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 My Club</div>
             </div>
             <div class="sidebar-footer">
+                <button id="music-toggle-btn-sidebar" onclick="toggleMenuMusic()" style="background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 700; width: 80%; margin: 0 auto; display: block;">🔇 Music Off</button>
+                
                 <div style="display:flex; align-items:center; gap:10px; margin-top:15px; padding: 0 15px;">
                     <span style="font-size:16px;">🔉</span>
                     <input type="range" id="volume-slider" min="0" max="1" step="0.05" oninput="changeVolume(this.value)">
@@ -1202,6 +1204,7 @@
         }
 
         function launchGame() {
+            pauseMenuMusic(); // DER FIX: Schaltet die Hymne aus, wenn das Spiel startet!
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
             if(isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
