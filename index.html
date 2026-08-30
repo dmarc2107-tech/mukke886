@@ -187,7 +187,7 @@
 
         /* --- OVERLAYS & MODALS --- */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal { background: rgba(15, 15, 18, 0.95); padding: 35px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 480px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal { background: rgba(15, 15, 18, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 480px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
         .modal h2 { font-size: 26px; margin: 0 0 10px 0; font-weight: 900; }
@@ -228,78 +228,62 @@
     <div class="scanlines"></div>
     <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
 
-    <!-- PROFIL SETUP OVERLAY -->
+    <!-- PROFIL SETUP OVERLAY (Clean & Modern UI) -->
     <div id="profile-overlay" class="overlay" style="display: flex;">
         <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
-            <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 30px;">RAPMUSIK GUESSR</h2>
-            <p style="font-size:13px; color: var(--text-muted); margin-bottom: 20px;">Login or create your cloud profile.</p>
+            <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">WELCOME</h2>
+            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login or create your cloud profile.</p>
             
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                 <input type="text" id="username-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="👤 Username" autocomplete="off">
                 <input type="password" id="password-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="🔑 Password">
             </div>
             
-            <div id="artist-select-container" style="text-align: left; background: rgba(255,255,255,0.03); padding: 18px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08);">
-                <label style="display: block; font-size: 11px; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px;">1. Favorite Artist (Avatar)</label>
-                <select id="fav-artist-select" class="ea-input" style="margin-bottom: 15px;" onchange="onArtistDropdownChanged('setup')">
-                    <option value="XXXTentacion">XXXTentacion</option>
-                    <option value="Travis Scott">Travis Scott</option>
-                    <option value="Drake">Drake</option>
-                    <option value="Kendrick Lamar">Kendrick Lamar</option>
-                    <option value="Juice WRLD">Juice WRLD</option>
-                    <option value="Playboi Carti">Playboi Carti</option>
-                    <option value="Kanye West">Kanye West</option>
-                    <option value="Eminem">Eminem</option>
-                    <option value="2Pac">2Pac</option>
-                    <option value="Future">Future</option>
-                    <option value="Young Thug">Young Thug</option>
-                    <option value="Central Cee">Central Cee</option>
-                    <option value="Lil Peep">Lil Peep</option>
-                    <option value="Ski Mask the Slump God">Ski Mask the Slump God</option>
-                    <option value="Trippie Redd">Trippie Redd</option>
-                    <option value="Lil Uzi Vert">Lil Uzi Vert</option>
-                </select>
+            <div id="artist-select-container" style="text-align: left; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);">
+                <label style="display: block; font-size: 11px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px;">Favorite Artist (Avatar)</label>
+                <!-- Wird per JavaScript vollautomatisch mit allen 50+ Artists gefüllt! -->
+                <select id="fav-artist-select" class="ea-input" style="margin-bottom: 20px; padding: 15px;"></select>
 
-                <label style="display: block; font-size: 11px; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px;">2. Your Anthem (Search song or paste YouTube link)</label>
-                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                    <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1;" placeholder="e.g. Moonlight OR https://youtube.com/..." onkeydown="if(event.key==='Enter'){searchMenuSong('setup'); event.preventDefault();}">
-                    <button id="song-search-btn-setup" class="btn-action" style="width: 55px; padding: 0; margin: 0; font-size: 18px; display: flex; align-items: center; justify-content: center;" onclick="searchMenuSong('setup')">🔍</button>
+                <label style="display: block; font-size: 11px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px;">Your Anthem (Live Search or YT Link)</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 0;">
+                    <!-- oninput triggert die Live-Suche während dem Tippen! -->
+                    <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1; padding: 15px;" placeholder="e.g. Sicko Mode..." oninput="handleAnthemInput('setup')">
+                    <button id="song-search-btn-setup" class="btn-action" style="width: 60px; padding: 0; margin: 0; font-size: 20px; display: flex; align-items: center; justify-content: center;" onclick="searchMenuSong('setup')">🔍</button>
                 </div>
-                
-                <label style="display: block; font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Selected Anthem Track:</label>
-                <select id="menu-song-select" class="ea-input" style="margin-bottom: 0; color: var(--success); font-size: 13px;"></select>
+                <!-- Hier erscheinen sofort die Resultate -->
+                <select id="menu-song-select" class="ea-input" style="display: none; color: var(--success); font-size: 14px; cursor: pointer; margin-top: 15px; padding: 15px;"></select>
             </div>
             
             <button id="login-btn" class="btn-action" onclick="handleProfileLogin()">Login / Register ➔</button>
-            <p id="profile-error" style="color: var(--danger); display: none; font-size: 13px; margin-top: 12px; font-weight: bold;"></p>
+            <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
         </div>
     </div>
 
     <!-- PREMIUM PAYWALL OVERLAY -->
     <div id="premium-overlay" class="overlay" style="display: none;">
         <div class="modal paywall-modal">
-            <div style="font-size: 45px; margin-bottom: 8px;">👑</div>
-            <h2 style="color: #fbbf24; font-weight: 900; letter-spacing: 2px; font-size: 30px; margin-bottom: 5px;">LIFETIME VIP</h2>
-            <p style="color: #d4d4d8; font-size: 13px; margin-bottom: 20px;">Support the servers once and unlock everything forever.</p>
+            <div style="font-size: 50px; margin-bottom: 10px;">👑</div>
+            <h2 style="color: #fbbf24; font-weight: 900; letter-spacing: 2px; font-size: 32px; margin-bottom: 5px;">LIFETIME VIP</h2>
+            <p style="color: #d4d4d8; font-size: 14px; margin-bottom: 25px;">Support the servers once and unlock everything forever.</p>
             
-            <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(251, 191, 36, 0.2);">
+            <div style="background: rgba(255,255,255,0.05); padding: 25px 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid rgba(251, 191, 36, 0.2);">
                 <div class="paywall-feature">
                     <div class="paywall-check">✓</div>
-                    <span style="color: white; font-weight: 600; font-size: 14px;">Online Multiplayer (2-4 Players)</span>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Online Multiplayer (2-4 Players)</span>
                 </div>
                 <div class="paywall-feature">
                     <div class="paywall-check">✓</div>
-                    <span style="color: white; font-weight: 600; font-size: 14px;">Premium Eras (2010s, SoundCloud)</span>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Premium Eras (2010s, SoundCloud)</span>
                 </div>
                 <div class="paywall-feature" style="margin-bottom: 0;">
                     <div class="paywall-check">✓</div>
-                    <span style="color: white; font-weight: 600; font-size: 14px;">Full Artist Catalog Mode</span>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Full Artist Catalog Mode</span>
                 </div>
             </div>
 
-            <button class="btn-action btn-gold" style="font-size: 17px; padding: 18px; margin-bottom: 12px;" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Unlock on Gumroad (12€) ➔</button>
+            <button class="btn-action btn-gold" style="font-size: 18px; padding: 20px; margin-bottom: 15px;" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Unlock on Gumroad (12€) ➔</button>
             
-            <p style="margin-top: 12px; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('premium-overlay').style.display='none'">Maybe later</p>
+            <p style="margin-top: 15px; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('premium-overlay').style.display='none'">Maybe later</p>
         </div>
     </div>
 
@@ -444,31 +428,16 @@
 
                 <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Change Artist (Avatar & Background)</h3>
-                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 20px;" onchange="onArtistDropdownChanged('edit')">
-                        <option value="XXXTentacion">XXXTentacion</option>
-                        <option value="Travis Scott">Travis Scott</option>
-                        <option value="Drake">Drake</option>
-                        <option value="Kendrick Lamar">Kendrick Lamar</option>
-                        <option value="Juice WRLD">Juice WRLD</option>
-                        <option value="Playboi Carti">Playboi Carti</option>
-                        <option value="Kanye West">Kanye West</option>
-                        <option value="Eminem">Eminem</option>
-                        <option value="2Pac">2Pac</option>
-                        <option value="Future">Future</option>
-                        <option value="Young Thug">Young Thug</option>
-                        <option value="Central Cee">Central Cee</option>
-                        <option value="Lil Peep">Lil Peep</option>
-                        <option value="Ski Mask the Slump God">Ski Mask the Slump God</option>
-                        <option value="Trippie Redd">Trippie Redd</option>
-                        <option value="Lil Uzi Vert">Lil Uzi Vert</option>
-                    </select>
+                    <!-- Wird per JS befüllt -->
+                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 20px;" onchange="updateFavArtist()"></select>
 
                     <h3 style="margin-top: 20px; font-size: 14px; text-transform: uppercase;">2. Change Anthem & Menu Music</h3>
                     <div style="display:flex; gap:8px; margin-bottom:10px;">
-                        <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="Search song OR paste YouTube Link..." onkeydown="if(event.key==='Enter'){searchMenuSong('edit'); event.preventDefault();}">
+                        <!-- oninput für Live Search -->
+                        <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="Search song OR paste YouTube Link..." oninput="handleAnthemInput('edit')">
                         <button id="song-search-btn-edit" class="btn-action" style="width:55px; padding:0;" onclick="searchMenuSong('edit')">🔍</button>
                     </div>
-                    <select id="edit-menu-song-select" class="ea-input" style="color: var(--success);" onchange="updateFavSong()"></select>
+                    <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
                 </div>
                 
                 <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Log Out / Switch Account</button>
@@ -684,106 +653,83 @@
         }
 
         // ==========================================
-        // ROBUSTE ANTHEM & SONG-SUCHE (ITUNES + DEEZER DUAL)
+        // ANTHEM LIVE SEARCH (TIPPEN = SUCHEN)
         // ==========================================
-        async function searchMenuSong(mode) {
-            let inputId = mode === 'setup' ? 'song-search-input' : 'edit-song-search-input';
+        let searchTimeout = null;
+        
+        function handleAnthemInput(mode) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchMenuSong(mode);
+            }, 500); // Wartet 0.5 Sekunden nach dem letzten Tastendruck, bevor er sucht
+        }
+
+        function searchMenuSong(mode) {
+            let inputId = mode === 'setup' ? 'song-search-input' : 'edit-song-search-input'; 
             let selectId = mode === 'setup' ? 'menu-song-select' : 'edit-menu-song-select';
-            let btnId = mode === 'setup' ? 'song-search-btn-setup' : 'song-search-btn-edit';
             
-            let q = document.getElementById(inputId).value.trim();
-            if (!q) return;
-            
-            let btn = document.getElementById(btnId);
-            if (btn) btn.innerText = "⏳";
-            
+            let q = document.getElementById(inputId).value.trim(); 
             let sel = document.getElementById(selectId);
             
-            // 1. YouTube Link Check
-            let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-            if (ytMatch) {
-                let vid = ytMatch[1];
-                sel.innerHTML = `<option value="yt:${vid}">▶️ YouTube: Track (${vid})</option>`;
-                sel.style.display = 'block';
-                if (btn) btn.innerText = "🔍";
+            if(!q) {
+                sel.style.display = 'none';
                 return;
             }
 
-            // 2. iTunes API Check (Direct CORS, blitzschnell)
-            try {
-                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=10`);
-                let data = await res.json();
-                if (data && data.results && data.results.length > 0) {
-                    let valid = data.results.filter(t => t.previewUrl);
-                    if (valid.length > 0) {
-                        sel.innerHTML = '';
-                        valid.forEach(t => {
-                            let opt = document.createElement('option');
-                            opt.value = t.previewUrl;
-                            opt.innerText = `${t.artistName} - ${t.trackName} (Preview)`;
-                            sel.appendChild(opt);
-                        });
-                        sel.style.display = 'block';
-                        if (btn) btn.innerText = "🔍";
-                        return;
-                    }
-                }
-            } catch(e) {
-                console.warn("iTunes search error, falling back to Deezer", e);
+            // YouTube Link direkt abfangen
+            let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+            if (ytMatch) { 
+                let vid = ytMatch[1]; 
+                sel.innerHTML = `<option value="yt:${vid}">▶️ YouTube Video (${vid})</option>`; 
+                sel.style.display = 'block'; 
+                return; 
             }
-
-            // 3. Deezer JSONP Fallback
-            const cb = 'deezer_song_' + Date.now();
+            
+            // Die alte, robuste Deezer JSONP Suche, die von keinem Browser blockiert wird
+            const cb = 'deezer_song_' + Date.now() + Math.floor(Math.random() * 10000);
             window[cb] = function(res) {
                 sel.innerHTML = '';
                 if(res && res.data && res.data.length > 0) {
-                    res.data.filter(t => t.preview).slice(0, 10).forEach(t => {
-                        let opt = document.createElement('option');
-                        opt.value = t.preview;
-                        opt.innerText = `${t.artist.name} - ${t.title} (Deezer Preview)`;
-                        sel.appendChild(opt);
+                    res.data.filter(t => t.preview).slice(0, 10).forEach(t => { 
+                        let opt = document.createElement('option'); 
+                        opt.value = t.preview; 
+                        opt.innerText = `${t.artist.name} - ${t.title} (Preview)`; 
+                        sel.appendChild(opt); 
                     });
                     sel.style.display = 'block';
-                } else {
-                    sel.innerHTML = '<option value="">❌ No songs found</option>';
-                    sel.style.display = 'block';
+                } else { 
+                    sel.innerHTML = '<option value="">❌ No songs found</option>'; 
+                    sel.style.display = 'block'; 
                 }
-                if (btn) btn.innerText = "🔍";
             };
-            const s = document.createElement('script');
-            s.src = `https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=10&output=jsonp&callback=${cb}`;
+            const s = document.createElement('script'); 
+            s.src = `https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=10&output=jsonp&callback=${cb}`; 
             document.head.appendChild(s);
         }
 
-        // Lädt automatisch Top-Songs eines Artists vor
-        function onArtistDropdownChanged(mode) {
-            let selectId = mode === 'setup' ? 'fav-artist-select' : 'edit-fav-artist-select';
-            let inputId = mode === 'setup' ? 'song-search-input' : 'edit-song-search-input';
-            let artist = document.getElementById(selectId).value;
-            
-            document.getElementById(inputId).value = artist;
-            searchMenuSong(mode);
-            
-            if (mode === 'edit') {
-                updateFavArtist();
-            }
-        }
-
         // ==========================================
-        // AUTO-LOGIN & REGISTRIERUNG
+        // AUTO-LOGIN & SYSTEM START
         // ==========================================
         window.onload = async () => {
             try {
+                // Füllt die Artist-Dropdowns mit allen 50+ Artists
+                let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
+                selects.forEach(sel => { 
+                    sel.innerHTML = ''; 
+                    allArtists.forEach(a => { 
+                        let opt = document.createElement('option'); opt.value = a; opt.innerText = a; sel.appendChild(opt); 
+                    }); 
+                });
+                
+                // Füllt die Artist-Kacheln für den VIP-Modus
                 let grid = document.getElementById('artist-grid');
+                grid.innerHTML = '';
                 allArtists.forEach(a => { 
                     let d = document.createElement('div'); d.className = 'artist-tile locked-card'; 
                     d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:14px; margin-top:3px;">🔒 VIP</span>`;
                     d.onclick = () => { if(isPremium) { startArtistMode(a); } else { document.getElementById('premium-overlay').style.display = 'flex'; } }; 
                     grid.appendChild(d); 
                 });
-
-                // Initial songs für den ersten Default-Artist vorladen
-                onArtistDropdownChanged('setup');
 
                 if (!supabase) return;
 
@@ -808,13 +754,7 @@
             let name = document.getElementById('username-input').value.trim(); 
             let pw = document.getElementById('password-input').value.trim(); 
             
-            if (!name || !pw) { 
-                err.innerText = "Please fill in username and password!"; 
-                err.style.display = 'block'; 
-                btn.innerText = "Login / Register ➔"; 
-                btn.disabled = false; 
-                return; 
-            }
+            if (!name || !pw) { err.innerText = "Please fill in username and password!"; err.style.display = 'block'; btn.innerText = "Login / Register ➔"; btn.disabled = false; return; }
             if (!supabase) return;
 
             let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
@@ -822,14 +762,10 @@
 
             if (error) {
                 let songDropdown = document.getElementById('menu-song-select');
-                
                 let { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email: fakeEmail, password: pw });
                 if (signUpError) {
-                    err.innerText = "Error: Password too weak or server offline."; 
-                    err.style.display = 'block'; 
-                    btn.innerText = "Login / Register ➔"; 
-                    btn.disabled = false; 
-                    return;
+                    err.innerText = "Error: Password too weak or server offline."; err.style.display = 'block'; 
+                    btn.innerText = "Login / Register ➔"; btn.disabled = false; return;
                 }
                 data = signUpData;
                 
@@ -1291,6 +1227,7 @@
         function resetGameStats() {
             songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
             updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+            let box = document.getElementById('suggestions-box'); if(box) box.style.display = 'none'; 
             let res = document.getElementById('mp-result'); if(res) res.style.display = 'none';
         }
 
@@ -1307,8 +1244,22 @@
             nextRound();
         }
 
+        function updateSuggestions() {
+            let val = document.getElementById('guess-input').value.toLowerCase(); let box = document.getElementById('suggestions-box'); box.innerHTML = '';
+            if (val.length < 2) { box.style.display = 'none'; return; }
+            let matches = songsPool.filter(s => s.title.toLowerCase().includes(val) || s.artist.name.toLowerCase().includes(val));
+            let uM = []; let seen = new Set();
+            for(let m of matches) { let id = m.title+m.artist.name; if(!seen.has(id)){ seen.add(id); uM.push(m); } }
+            if (uM.length === 0) { box.style.display = 'none'; return; }
+            uM.slice(0, 5).forEach(m => {
+                let div = document.createElement('div'); div.className = 'suggestion-item'; div.innerText = showArtistName ? `${m.title} - ${m.artist.name}` : m.title;
+                div.onclick = () => { document.getElementById('guess-input').value = m.title; box.style.display = 'none'; checkTextInput(); }; box.appendChild(div);
+            });
+            box.style.display = 'block';
+        }
+
         function nextRound() {
-            document.getElementById('feedback-overlay').style.display = 'none'; audio.pause(); clearTimeout(precisionTimer);
+            document.getElementById('feedback-overlay').style.display = 'none'; audio.pause(); clearTimeout(precisionTimer); document.getElementById('suggestions-box').style.display = 'none';
             
             playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
             if(isMultiplayer) expectedAnswers = Math.max(1, lobbyPlayers.filter(p => p.lives > 0).length);
@@ -1322,24 +1273,62 @@
                 document.getElementById('add-time-btn').innerText = `+3s (${maxPlayTime}s)`;
             } else { maxPlayTime = 1; document.getElementById('add-time-btn').innerText = `+3s (1s)`; }
 
-            let wrong = songsPool.filter(s => s.id !== currentSong.id).sort(()=>0.5-Math.random());
-            let opts = [currentSong]; let seenTitles = new Set([currentSong.title]);
-            for (let s of wrong) { if (!seenTitles.has(s.title)) { seenTitles.add(s.title); opts.push(s); } if (opts.length === 4) break; }
-            opts.sort(()=>0.5-Math.random());
-            let div = document.getElementById('options'); div.innerHTML = '';
-            opts.forEach(o => {
-                let b = document.createElement('button'); b.className = 'option-btn'; b.innerText = showArtistName ? `${o.title} - ${o.artist.name}` : o.title;
-                b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
-            });
+            if (isHardcoreMode) {
+                document.getElementById('options').style.display = 'none'; document.getElementById('text-input-container').style.display = 'block';
+                let input = document.getElementById('guess-input'); input.value = ''; input.focus();
+            } else {
+                document.getElementById('text-input-container').style.display = 'none'; document.getElementById('options').style.display = 'flex';
+                let wrong = songsPool.filter(s => s.id !== currentSong.id).sort(()=>0.5-Math.random());
+                let opts = [currentSong]; let seenTitles = new Set([currentSong.title]);
+                for (let s of wrong) { if (!seenTitles.has(s.title)) { seenTitles.add(s.title); opts.push(s); } if (opts.length === 4) break; }
+                opts.sort(()=>0.5-Math.random());
+                let div = document.getElementById('options'); div.innerHTML = '';
+                opts.forEach(o => {
+                    let b = document.createElement('button'); b.className = 'option-btn'; b.innerText = showArtistName ? `${o.title} - ${o.artist.name}` : o.title;
+                    b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
+                });
+            }
             audio.src = currentSong.preview; playAudioSnippet(false);
         }
 
         function replaySnippet() { playAudioSnippet(true); }
         function addTime() { if (maxPlayTime < 10) { maxPlayTime += 3; if(maxPlayTime>10)maxPlayTime=10; document.getElementById('add-time-btn').innerText = `+3s (${maxPlayTime.toFixed(1)}s)`; playAudioSnippet(true); } }
         function skipSong() { processAnswer(false, true); }
+        function checkTextInput() { let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); let c = currentSong.title.toLowerCase().split('(')[0].split(' feat')[0].replace(/[^a-z0-9]/g, ''); processAnswer(v === c || (v.length >= 4 && c.includes(v))); }
+
+        function checkAllAnswered() {
+            if (!isMultiplayer) return;
+            let btn = document.getElementById('feedback-btn'); let res = document.getElementById('mp-result');
+
+            if (playersAnsweredThisRound.size >= expectedAnswers) {
+                res.innerHTML = '<span style="color: var(--success); font-weight: 900;">All players guessed!</span>';
+                btn.style.display = 'block'; btn.innerText = 'Next Round ➔';
+                
+                btn.onclick = () => {
+                    playersReadyForNextRound.add(socket.id);
+                    socket.emit('teammateAnswered', { type: 'READY_NEXT', id: socket.id, roomCode: currentRoom });
+                    btn.style.display = 'none'; res.innerHTML = '<span style="color: var(--warning); font-weight: 800;">Waiting for other players...</span>';
+                    checkAllReady();
+                };
+            } else {
+                res.innerHTML = `<span style="color: var(--warning); font-weight: 800;">Waiting for players... (${playersAnsweredThisRound.size}/${expectedAnswers})</span>`;
+                btn.style.display = 'none';
+            }
+        }
+
+        function checkAllReady() {
+            if (!isMultiplayer) return;
+            if (playersReadyForNextRound.size >= expectedAnswers) {
+                if (isMpHost) {
+                    socket.emit('nextRound', { roomCode: currentRoom });
+                    if (lives > 0 && !gameIsOver) nextRound();
+                }
+            }
+        }
 
         function processAnswer(wasCorrect, isSkip = false) {
             let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover');
+            document.getElementById('suggestions-box').style.display = 'none'; 
             
             let pts = maxPlayTime <= 1 ? 100 : (maxPlayTime <= 4 ? 75 : 50);
 
@@ -1357,6 +1346,7 @@
                 document.getElementById('mp-result').style.display = 'block';
                 playersAnsweredThisRound.add(socket.id);
                 socket.emit('teammateAnswered', { type: 'ROUND_ANSWERED', id: socket.id, roomCode: currentRoom });
+                checkAllAnswered();
             } else {
                 document.getElementById('mp-result').style.display = 'none';
                 let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Next Round ➔"; btn.onclick = nextRound;
@@ -1388,8 +1378,11 @@
                 renderMpLeaderboard(); checkMatchEnd();
             } else {
                 t.innerText = victory ? "🏆 COMPLETED!" : "💀 GAME OVER"; d.innerText = `Your Score: ${score}`;
+                
                 myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
                 updateDbScore(score);
+
+                if (!victory && score < 500) { sfxAudio.src = "roddy.mp3"; sfxAudio.play().catch(e=>{}); }
                 b.innerText = "Exit 🏠"; b.style.display = 'block'; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
                 document.getElementById('feedback-overlay').style.display = 'flex';
             }
@@ -1398,21 +1391,33 @@
         function updateStatsDisplay() { 
             const bar = document.getElementById('game-stats-bar');
             if(!bar) return;
+            
             if(!isMultiplayer) {
                 bar.innerHTML = `
-                    <div class="team-score-box"><span class="team-score-title" style="color: white;">Your Score</span><span class="team-score-num" style="color: var(--primary);">${score}</span></div>
-                    <div style="text-align: center;"><div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Lives</div><span style="font-size: 20px; letter-spacing: 2px;">${"❤️".repeat(lives) + "🖤".repeat(3-lives)}</span></div>
+                    <div class="team-score-box">
+                        <span class="team-score-title" style="color: white;">Your Score</span>
+                        <span class="team-score-num" style="color: var(--primary);">${score}</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Lives</div>
+                        <span style="font-size: 20px; letter-spacing: 2px;">${"❤️".repeat(lives) + "🖤".repeat(3-lives)}</span>
+                    </div>
                 `;
             } else {
                 bar.innerHTML = '';
                 lobbyPlayers.forEach(p => {
                     const isMe = (p.id === socket.id);
-                    let parts = p.avatar.split('|Q|'); let pAv = parts[0]; let pQt = parts.length > 1 ? parts[1] : '"Ready!"';
+                    let parts = p.avatar.split('|Q|');
+                    let pAv = parts[0];
+                    let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
+
                     bar.innerHTML += `
-                        <div class="team-score-box" style="opacity: ${p.lives <= 0 ? '0.4' : '1'}; width: ${100/Math.max(1, lobbyPlayers.length)}%;">
-                            <img src="${pAv}" style="width: 50px; height: 50px; border-radius: 50%; border: 3px solid ${isMe ? 'var(--primary)' : 'white'}; object-fit: cover;">
-                            <span style="color: ${isMe ? 'var(--primary)' : 'white'}; font-size: 12px; font-weight: 900;">${p.name}</span>
-                            <span class="team-score-num">${p.score}</span>
+                        <div class="team-score-box" style="opacity: ${p.lives <= 0 ? '0.4' : '1'}; transition: 0.3s; width: ${100/Math.max(1, lobbyPlayers.length)}%;">
+                            <img src="${pAv}" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid ${isMe ? 'var(--primary)' : 'white'}; margin-bottom: 8px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+                            <span class="team-score-title" style="color: ${isMe ? 'var(--primary)' : 'white'}; font-size: 14px; font-weight: 900;">${p.name}</span>
+                            <span style="font-size: 9px; color: var(--text-muted); font-style: italic; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${pQt.replace(/"/g, '&quot;')}">${pQt}</span>
+                            <span class="team-score-num" style="font-size: 24px; text-shadow: 0 0 10px rgba(255,255,255,0.2);">${p.score}</span>
+                            <span style="font-size: 14px; margin-top: 5px;">${p.lives > 0 ? "❤️".repeat(p.lives) : "💀"}</span>
                         </div>
                     `;
                 });
@@ -1422,13 +1427,32 @@
         function renderMpLeaderboard() {
             const res = document.getElementById('mp-result');
             if(!res || !isMultiplayer || isWinnerScreenShown) return;
+            
             let sorted = [...lobbyPlayers].map(p => { return matchEndData[p.id] ? matchEndData[p.id] : p; }).sort((a,b) => b.score - a.score);
+            
             let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Standings</h3>';
             html += '<div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
+            
             sorted.forEach((p, index) => {
-                let rankColor = index === 0 ? 'var(--warning)' : '#d4d4d8';
+                let rankColor = index === 0 ? 'var(--warning)' : (index === 1 ? '#d4d4d8' : '#b45309');
+                if(index > 2) rankColor = 'var(--text-muted)';
+                let isMe = p.id === socket.id;
+                
                 let parts = p.avatar.split('|Q|');
-                html += `<div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;"><span>#${index + 1} ${p.name}</span><b>${p.score} Pts</b></div>`;
+                let pAv = parts[0];
+                
+                html += `
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: ${isMe ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)'}; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${rankColor};">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-weight: 900; font-size: 16px; color: ${rankColor};">#${index + 1}</span>
+                            <img src="${pAv}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover;">
+                            <span style="font-weight: 700; color: white;">${p.name}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 900; color: white;">${p.score} Pts</div>
+                        </div>
+                    </div>
+                `;
             });
             html += '</div>'; res.innerHTML = html;
         }
