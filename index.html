@@ -238,10 +238,6 @@
             .cards-grid { grid-template-columns: 1fr; }
             h1 { font-size: 32px; }
             .section-title { font-size: 22px; }
-            .banner-container { flex-direction: column; text-align: center; padding: 20px; gap: 15px;}
-            .banner-text-box { text-align: center; }
-            .banner-img { width: 120px; height: 120px; }
-            .banner-title { font-size: 24px; }
         }
     </style>
 </head>
@@ -254,7 +250,7 @@
 
     <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
 
-    <!-- PROFIL SETUP OVERLAY (Super Clean UI) -->
+    <!-- PROFIL SETUP OVERLAY -->
     <div id="profile-overlay" class="overlay">
         <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
             <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
@@ -321,8 +317,6 @@
                 <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 My Club</div>
             </div>
             <div class="sidebar-footer">
-                <button id="music-toggle-btn-sidebar" onclick="toggleMenuMusic()" style="background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 700; width: 80%; margin: 0 auto; display: block;">🔇 Music Off</button>
-                
                 <div style="display:flex; align-items:center; gap:10px; margin-top:15px; padding: 0 15px;">
                     <span style="font-size:16px;">🔉</span>
                     <input type="range" id="volume-slider" min="0" max="1" step="0.05" oninput="changeVolume(this.value)">
@@ -427,7 +421,7 @@
                     <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
                     <div style="text-align: left; flex: 1;">
                         <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
-                        <p id="profile-view-quote" style="margin: 0 0 10px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
+                        <p id="profile-view-quote" style="margin: 0 0 15px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
                         
                         <!-- DIE HYMNE WIRD HIER ANGEZEIGT -->
                         <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Anthem: <span id="profile-view-hymn" style="color: white;">None</span></p>
@@ -474,9 +468,8 @@
 
                 <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Change Artist (Avatar & Background)</h3>
-                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 25px;" onchange="updateFavArtist()"></select>
+                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 20px;" onchange="updateFavArtist()"></select>
 
-                    <!-- HYMNE LIVE-SUCHE (UNBLOCKBAR VIA ITUNES) -->
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">2. Change Anthem & Menu Music</h3>
                     <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px; margin-bottom: 10px;">Type a song name (results appear automatically) OR paste a YouTube link.</p>
                     <div style="display:flex; gap:8px; margin-bottom:10px;">
@@ -778,7 +771,6 @@
                 return; 
             }
             
-            // iTUNES API (Unblockbar)
             try {
                 let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=10`);
                 let data = await res.json();
@@ -801,9 +793,7 @@
                 }
                 sel.innerHTML = '<option value="">❌ No songs found</option>';
                 sel.style.display = 'block';
-            } catch(e) {
-                console.warn("iTunes Search Error:", e);
-            }
+            } catch(e) {}
         }
 
         function updateFavSong() {
@@ -1058,6 +1048,23 @@
             }
         }
 
+        // --- ZUVERLÄSSIGER NOT-AUSSTIEG BEIM VERLASSEN ---
+        function backToMenu() { 
+            try {
+                audio.pause(); sfxAudio.pause(); 
+                clearTimeout(precisionTimer); 
+                gameIsOver = true; 
+                cancelMultiplayer(); 
+                document.getElementById('game-screen').style.display = 'none'; 
+                document.getElementById('feedback-overlay').style.display = 'none'; 
+                document.getElementById('app-layout').style.display = 'flex'; 
+                resumeMenuMusic();
+            } catch(e) {
+                console.error("Notausstieg Error:", e);
+                location.reload(); 
+            }
+        }
+
         function triggerSuddenDeathLocal(tiedIds) {
             let amITied = tiedIds.includes(socket.id);
             sfxAudio.pause(); 
@@ -1091,55 +1098,46 @@
             updateStatsDisplay();
         }
 
-        // --- WINNER ANTHEM LOGIK ---
-        function playWinnerAnthem(url) {
-            sfxAudio.pause(); pauseMenuMusic();
-            if (url && url.startsWith('yt:')) {
-                let vid = url.substring(3);
-                if(ytReady && ytPlayer && ytPlayer.loadVideoById) {
-                    ytContext = 'winner';
-                    ytPlayer.setVolume(globalVolume * 100); 
-                    ytPlayer.loadVideoById(vid);
-                    ytPlayer.playVideo();
-                }
-            } else if (url) {
-                sfxAudio.src = url; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
-            } else {
-                sfxAudio.src = 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
-            }
+        function playWinnerAnthem() {
+            sfxAudio.pause(); 
+            sfxAudio.src = 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
         }
 
         function showWinnerScreen(winner) {
-            let parts = winner.avatar.split('|Q|');
-            let wAv = parts[0];
-            let wQt = parts.length > 1 ? parts[1] : '';
+            try {
+                let parts = winner.avatar.split('|Q|');
+                let wAv = parts[0];
+                let wQt = parts.length > 1 ? parts[1] : '';
 
-            let m = document.getElementById('feedback-modal'); m.className = "modal correct"; 
-            document.getElementById('feedback-title').innerText = "🏆 WINNER 🏆";
-            document.getElementById('feedback-desc').innerText = "Playing winner's anthem...";
-            
-            let cov = document.getElementById('feedback-cover');
-            cov.src = wAv; cov.style.display = 'block'; cov.style.borderRadius = '50%';
-            cov.style.width = '160px'; cov.style.height = '160px'; cov.style.border = '4px solid var(--warning)'; cov.style.boxShadow = '0 0 40px rgba(245, 158, 11, 0.8)';
-            
-            document.getElementById('mp-result').style.display = 'block';
-            document.getElementById('mp-result').innerHTML = `
-                <h2 style="color:var(--warning); margin:0; font-size:36px; text-transform: uppercase;">${winner.name}</h2>
-                <p style="color:var(--text-muted); font-style:italic; font-size:14px; margin: 5px 0;">${wQt}</p>
-                <p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>
-            `;
-            
-            playWinnerAnthem(winner.anthem);
-            document.getElementById('feedback-btn').style.display = 'none'; 
-            
-            setTimeout(() => {
-                sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-                cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
-                document.getElementById('feedback-title').innerText = "📊 FINAL STANDINGS"; document.getElementById('feedback-desc').innerText = "";
-                renderMpLeaderboard(); 
-                let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Exit 🏠";
-                btn.onclick = () => { document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
-            }, 7000);
+                let m = document.getElementById('feedback-modal'); m.className = "modal correct"; 
+                document.getElementById('feedback-title').innerText = "🏆 WINNER 🏆";
+                document.getElementById('feedback-desc').innerText = "Playing ultimate theme...";
+                
+                let cov = document.getElementById('feedback-cover');
+                cov.src = wAv; cov.style.display = 'block'; cov.style.borderRadius = '50%';
+                cov.style.width = '160px'; cov.style.height = '160px'; cov.style.border = '4px solid var(--warning)'; cov.style.boxShadow = '0 0 40px rgba(245, 158, 11, 0.8)';
+                
+                document.getElementById('mp-result').style.display = 'block';
+                document.getElementById('mp-result').innerHTML = `
+                    <h2 style="color:var(--warning); margin:0; font-size:36px; text-transform: uppercase;">${winner.name}</h2>
+                    <p style="color:var(--text-muted); font-style:italic; font-size:14px; margin: 5px 0;">${wQt}</p>
+                    <p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>
+                `;
+                
+                playWinnerAnthem();
+                document.getElementById('feedback-btn').style.display = 'none'; 
+                
+                setTimeout(() => {
+                    sfxAudio.pause(); 
+                    cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+                    document.getElementById('feedback-title').innerText = "📊 FINAL STANDINGS"; document.getElementById('feedback-desc').innerText = "";
+                    renderMpLeaderboard(); 
+                    let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Exit 🏠";
+                    btn.onclick = () => { backToMenu(); };
+                }, 7000);
+            } catch(e) {
+                backToMenu();
+            }
         }
 
         // ==========================================
@@ -1193,8 +1191,9 @@
 
         function resetGameStats() {
             songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
-            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-            document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
+            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); 
+            let box = document.getElementById('suggestions-box'); if(box) box.style.display = 'none'; 
+            let res = document.getElementById('mp-result'); if(res) res.style.display = 'none';
         }
 
         function syncHostData() {
@@ -1363,6 +1362,8 @@
         }
 
         function processAnswer(wasCorrect, isSkip = false) {
+            if (document.getElementById('feedback-overlay').style.display === 'flex' || gameIsOver) return;
+
             let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover');
             document.getElementById('suggestions-box').style.display = 'none'; 
             
@@ -1373,8 +1374,12 @@
                 m.className = "modal correct"; t.innerText = "🔥 CORRECT!"; d.innerText = `+${pts} Points!\n${currentSong.title} - ${currentSong.artist.name}`;
             } else {
                 cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
-                if (isSkip) { score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Points\n${currentSong.title} - ${currentSong.artist.name}`; } 
-                else { lives--; m.className = "modal wrong"; t.innerText = "❌ WRONG!"; d.innerText = `Lost a life!\n${currentSong.title} - ${currentSong.artist.name}`; }
+                if (isSkip) { 
+                    score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Points\n${currentSong.title} - ${currentSong.artist.name}`; 
+                } else { 
+                    lives = Math.max(0, lives - 1); 
+                    m.className = "modal wrong"; t.innerText = "❌ WRONG!"; d.innerText = `Lost a life!\n${currentSong.title} - ${currentSong.artist.name}`; 
+                }
             }
             
             if (isMultiplayer) {
@@ -1397,32 +1402,37 @@
         }
 
         function triggerGameOver(victory) {
-            if (gameIsOver) return; gameIsOver = true; audio.pause(); clearTimeout(precisionTimer);
-            let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let b = document.getElementById('feedback-btn'); let cov = document.getElementById('feedback-cover');
-            cov.style.display = 'none'; m.className = "modal gameover";
-            
-            if (isMultiplayer) {
-                socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
-                let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
-                matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
+            try {
+                if (gameIsOver) return; gameIsOver = true; audio.pause(); clearTimeout(precisionTimer);
+                let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let b = document.getElementById('feedback-btn'); let cov = document.getElementById('feedback-cover');
+                cov.style.display = 'none'; m.className = "modal gameover";
                 
-                t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
-                document.getElementById('mp-result').style.display = 'block'; document.getElementById('mp-result').innerHTML = "Loading live data...";
-                b.style.display = 'none'; 
-                document.getElementById('feedback-overlay').style.display = 'flex';
-                
-                renderMpLeaderboard(); checkMatchEnd();
-            } else {
-                t.innerText = victory ? "🏆 COMPLETED!" : "💀 GAME OVER"; d.innerText = `Your Score: ${score}`;
-                
-                myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
-                myStats.totalScore = (myStats.totalScore || 0) + score;
-                localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
-                updateLevelDisplay();
+                if (isMultiplayer) {
+                    socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
+                    let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
+                    matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
+                    
+                    t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
+                    document.getElementById('mp-result').style.display = 'block'; document.getElementById('mp-result').innerHTML = "Loading live data...";
+                    b.style.display = 'none'; 
+                    document.getElementById('feedback-overlay').style.display = 'flex';
+                    
+                    renderMpLeaderboard(); checkMatchEnd();
+                } else {
+                    t.innerText = victory ? "🏆 COMPLETED!" : "💀 GAME OVER"; d.innerText = `Your Score: ${score}`;
+                    
+                    myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
+                    myStats.totalScore = (myStats.totalScore || 0) + score;
+                    localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
+                    updateLevelDisplay();
 
-                if (!victory && score < 500) { sfxAudio.src = "roddy.mp3"; sfxAudio.play().catch(e=>{}); }
-                b.innerText = "Exit 🏠"; b.style.display = 'block'; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
-                document.getElementById('feedback-overlay').style.display = 'flex';
+                    b.innerText = "Exit 🏠"; b.style.display = 'block'; 
+                    b.onclick = () => { backToMenu(); };
+                    document.getElementById('feedback-overlay').style.display = 'flex';
+                }
+            } catch(e) {
+                console.error("Game Over Error:", e);
+                backToMenu();
             }
         }
 
@@ -1430,35 +1440,39 @@
             const bar = document.getElementById('game-stats-bar');
             if(!bar) return;
             
-            if(!isMultiplayer) {
-                bar.innerHTML = `
-                    <div class="team-score-box">
-                        <span class="team-score-title" style="color: white;">Your Score</span>
-                        <span class="team-score-num" style="color: var(--primary);">${score}</span>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Lives</div>
-                        <span style="font-size: 20px; letter-spacing: 2px;">${"❤️".repeat(lives) + "🖤".repeat(3-lives)}</span>
-                    </div>
-                `;
-            } else {
-                bar.innerHTML = '';
-                lobbyPlayers.forEach(p => {
-                    const isMe = (p.id === socket.id);
-                    let parts = p.avatar.split('|Q|');
-                    let pAv = parts[0];
-                    let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
-
-                    bar.innerHTML += `
-                        <div class="team-score-box" style="opacity: ${p.lives <= 0 ? '0.4' : '1'}; transition: 0.3s; width: ${100/Math.max(1, lobbyPlayers.length)}%;">
-                            <img src="${pAv}" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid ${isMe ? 'var(--primary)' : 'white'}; margin-bottom: 8px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
-                            <span class="team-score-title" style="color: ${isMe ? 'var(--primary)' : 'white'}; font-size: 14px; font-weight: 900;">${p.name}</span>
-                            <span style="font-size: 9px; color: var(--text-muted); font-style: italic; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${pQt.replace(/"/g, '&quot;')}">${pQt}</span>
-                            <span class="team-score-num" style="font-size: 24px; text-shadow: 0 0 10px rgba(255,255,255,0.2);">${p.score}</span>
-                            <span style="font-size: 14px; margin-top: 5px;">${p.lives > 0 ? "❤️".repeat(p.lives) : "💀"}</span>
+            try {
+                if(!isMultiplayer) {
+                    bar.innerHTML = `
+                        <div class="team-score-box">
+                            <span class="team-score-title" style="color: white;">Your Score</span>
+                            <span class="team-score-num" style="color: var(--primary);">${score}</span>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Lives</div>
+                            <span style="font-size: 20px; letter-spacing: 2px;">${"❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3-lives))}</span>
                         </div>
                     `;
-                });
+                } else {
+                    bar.innerHTML = '';
+                    lobbyPlayers.forEach(p => {
+                        const isMe = (p.id === socket.id);
+                        let parts = p.avatar.split('|Q|');
+                        let pAv = parts[0];
+                        let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
+
+                        bar.innerHTML += `
+                            <div class="team-score-box" style="opacity: ${p.lives <= 0 ? '0.4' : '1'}; transition: 0.3s; width: ${100/Math.max(1, lobbyPlayers.length)}%;">
+                                <img src="${pAv}" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid ${isMe ? 'var(--primary)' : 'white'}; margin-bottom: 8px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+                                <span class="team-score-title" style="color: ${isMe ? 'var(--primary)' : 'white'}; font-size: 14px; font-weight: 900;">${p.name}</span>
+                                <span style="font-size: 9px; color: var(--text-muted); font-style: italic; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${pQt.replace(/"/g, '&quot;')}">${pQt}</span>
+                                <span class="team-score-num" style="font-size: 24px; text-shadow: 0 0 10px rgba(255,255,255,0.2);">${p.score}</span>
+                                <span style="font-size: 14px; margin-top: 5px;">${p.lives > 0 ? "❤️".repeat(Math.max(0, p.lives)) : "💀"}</span>
+                            </div>
+                        `;
+                    });
+                }
+            } catch(e) {
+                console.error("Stats Display Error:", e);
             }
         }
 
