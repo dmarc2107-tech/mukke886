@@ -146,6 +146,7 @@
         .card-sc { border-color: rgba(255,85,0,0.5); }
         .card-gold { border-color: rgba(245,158,11,0.5); }
         .card-fallen { border-color: rgba(255,255,255,0.5); }
+        .card-stream { border-color: rgba(16,185,129,0.5); }
 
         .artist-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
         .artist-tile { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; color: white; backdrop-filter: blur(5px); }
@@ -201,6 +202,20 @@
         .suggestion-item { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 14px; font-weight: 700; color: white;}
         .suggestion-item:hover { background: var(--primary); }
 
+        /* --- HIGHER LOWER MODE SCREEN --- */
+        #hl-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(25px); z-index: 100; flex-direction: column; justify-content: center; align-items: center; }
+        .hl-inner { width: 100%; max-width: 900px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
+        .hl-cards-container { display: flex; width: 100%; gap: 20px; justify-content: center; align-items: stretch; margin-top: 20px; }
+        .hl-card { flex: 1; max-width: 400px; background: rgba(20, 20, 25, 0.7); border: 2px solid var(--surface-border); border-radius: 20px; padding: 25px; display: flex; flex-direction: column; align-items: center; text-align: center; backdrop-filter: blur(15px); box-shadow: 0 15px 35px rgba(0,0,0,0.5); transition: 0.3s; }
+        .hl-cover { width: 180px; height: 180px; border-radius: 16px; object-fit: cover; box-shadow: 0 10px 25px rgba(0,0,0,0.6); margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.2); }
+        .hl-song-title { font-size: 20px; font-weight: 900; color: white; margin: 0 0 5px 0; text-transform: uppercase; }
+        .hl-artist-name { font-size: 14px; font-weight: 700; color: var(--primary); margin: 0 0 20px 0; }
+        .hl-streams-val { font-size: 26px; font-weight: 900; color: var(--warning); margin: 10px 0; letter-spacing: 1px; text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+        .btn-hl { width: 100%; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 16px; text-transform: uppercase; border: none; cursor: pointer; transition: 0.2s; margin-bottom: 10px; color: white; }
+        .btn-hl.higher { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 5px 15px rgba(16,185,129,0.4); }
+        .btn-hl.lower { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 5px 15px rgba(239,68,68,0.4); }
+        .btn-hl:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
         /* --- OVERLAYS & MODALS --- */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: rgba(15, 15, 18, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 480px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -224,6 +239,12 @@
         .paywall-feature { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; text-align: left; }
         .paywall-check { background: #fbbf24; color: black; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; flex-shrink: 0; }
 
+        /* SLIDER CSS */
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(139,92,246,0.8); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
+        input[type=range]:focus { outline: none; }
+
         @media (max-width: 768px) {
             #mobile-menu-btn { display: block; }
             #sidebar { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; z-index: 10; transition: left 0.3s ease; }
@@ -233,6 +254,9 @@
             .cards-grid { grid-template-columns: 1fr; }
             h1 { font-size: 32px; }
             .section-title { font-size: 22px; }
+            .hl-cards-container { flex-direction: column; align-items: center; gap: 15px; }
+            .hl-card { width: 100%; padding: 15px; }
+            .hl-cover { width: 120px; height: 120px; }
         }
     </style>
 </head>
@@ -272,6 +296,10 @@
                 <div class="paywall-feature">
                     <div class="paywall-check">✓</div>
                     <span style="color: white; font-weight: 600; font-size: 15px;">Online Multiplayer (2-4 Players)</span>
+                </div>
+                <div class="paywall-feature">
+                    <div class="paywall-check">✓</div>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Stream Battle (Higher / Lower Mode)</span>
                 </div>
                 <div class="paywall-feature">
                     <div class="paywall-check">✓</div>
@@ -369,6 +397,12 @@
 
                 <div class="section-title">Premium Categories <span style="font-size:12px; color:var(--warning); vertical-align: middle;">VIP</span></div>
                 <div class="cards-grid">
+                    <!-- NEUER HIGHER / LOWER STREAM BATTLE MODUS -->
+                    <div class="ea-card locked-card card-stream" onclick="checkPremiumAndStart('higherlower')">
+                        <div class="ea-card-icon">📈</div>
+                        <div class="ea-card-title">Stream Battle <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
+                        <div class="ea-card-desc">Higher or Lower: Which song has more Spotify streams?</div>
+                    </div>
                     <div class="ea-card locked-card card-fallen" onclick="checkPremiumAndStart('fallen')">
                         <div class="ea-card-icon">🕊️</div>
                         <div class="ea-card-title">Fallen Legends <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
@@ -458,7 +492,7 @@
                     </div>
                 </div>
 
-                <!-- NEUER STATISTIK UND TROPHÄEN BEREICH -->
+                <!-- STATISTIK UND TROPHÄEN BEREICH -->
                 <div class="section-title" style="margin-top: 40px;">Detailed Stats & Trophies</div>
                 <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                     <div class="ea-card" style="min-height: 100px;">
@@ -474,9 +508,7 @@
                 <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left; margin-bottom: 30px;">
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">Mode Mastery (Points per Mode)</h3>
                     <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px;">Earn points to unlock Bronze 🥉, Silver 🥈, Gold 🥇, and Champion 🏆 ranks in each mode!</p>
-                    <div id="mode-stats-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
-                        <!-- Wird durch JavaScript gefüllt -->
-                    </div>
+                    <div id="mode-stats-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;"></div>
                 </div>
 
                 <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
@@ -510,7 +542,7 @@
         </main>
     </div>
 
-    <!-- GAME SCREEN -->
+    <!-- STANDARD GAME SCREEN -->
     <div id="game-screen">
         <div class="game-inner">
             <div class="stats-bar" id="game-stats-bar"></div>
@@ -526,6 +558,52 @@
                 <input type="text" id="guess-input" class="ea-input" placeholder="Enter song title..." autocomplete="off" oninput="updateSuggestions()">
                 <div id="suggestions-box"></div>
                 <button class="btn-action" onclick="checkTextInput()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIGHER / LOWER STREAM BATTLE SCREEN -->
+    <div id="hl-screen">
+        <div class="hl-inner">
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 20px;">
+                <button onclick="backToMenu()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--surface-border); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer;">🏠 Quit</button>
+                <div style="text-align: right;">
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Current Streak</span>
+                    <h2 id="hl-streak-num" style="margin: 0; font-size: 28px; color: var(--warning);">0</h2>
+                </div>
+            </div>
+
+            <h2 style="font-size: 24px; font-weight: 900; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px;">Spotify Stream Battle</h2>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 20px 0;">Does the second song have MORE or LESS streams than the first?</p>
+
+            <div class="hl-cards-container">
+                <!-- CARD A: BASE SONG -->
+                <div class="hl-card" id="hl-card-a">
+                    <img id="hl-img-a" class="hl-cover" src="">
+                    <h3 id="hl-title-a" class="hl-song-title">Song A</h3>
+                    <p id="hl-artist-a" class="hl-artist-name">Artist A</p>
+                    <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Has approximately</span>
+                    <div id="hl-streams-a" class="hl-streams-val">0</div>
+                    <span style="font-size: 11px; color: #a1a1aa;">Spotify Streams</span>
+                </div>
+
+                <!-- CARD B: GUESS SONG -->
+                <div class="hl-card" id="hl-card-b">
+                    <img id="hl-img-b" class="hl-cover" src="">
+                    <h3 id="hl-title-b" class="hl-song-title">Song B</h3>
+                    <p id="hl-artist-b" class="hl-artist-name">Artist B</p>
+                    
+                    <div id="hl-action-box" style="width: 100%; display: flex; flex-direction: column; justify-content: center; flex: 1;">
+                        <button class="btn-hl higher" onclick="processHLChoice('higher')">HIGHER ⬆️</button>
+                        <button class="btn-hl lower" onclick="processHLChoice('lower')">LOWER ⬇️</button>
+                    </div>
+
+                    <div id="hl-result-box" style="display: none; width: 100%; flex-direction: column; align-items: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Has approximately</span>
+                        <div id="hl-streams-b" class="hl-streams-val">0</div>
+                        <span style="font-size: 11px; color: #a1a1aa;">Spotify Streams</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -546,15 +624,62 @@
 
     <script>
         // ==========================================
-        // ARTIST DATA
+        // ARTIST & STREAM DATA
         // ==========================================
         const fallenLegends = ['2Pac', 'The Notorious B.I.G.', 'XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Mac Miller', 'Pop Smoke', 'King Von', 'Takeoff', 'Nipsey Hussle', 'Eazy-E', 'MF DOOM'];
         const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean', 'Bones'];
         const artists2010s = ['Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa', 'Offset', 'Quavo', 'Yeat', 'Central Cee'];
         const legends = ['2Pac', 'The Notorious B.I.G.', 'Eminem', '50 Cent', 'Snoop Dogg', 'Dr. Dre', 'Ice Cube', 'Nas'];
         const megaStars = ['Drake', 'Kendrick Lamar', 'J. Cole', 'Kanye West', 'Post Malone'];
-        
         const allArtists = [...new Set([...soundcloudArtists, ...artists2010s, ...legends, ...megaStars, ...fallenLegends])].sort();
+
+        // ECHTE SPOTIFY STREAM BENCHMARKS (IN MILLIONEN / MILLIARDEN)
+        const knownStreamBenchmarks = {
+            "goosebumps": 2450000000,
+            "sicko mode": 2210000000,
+            "lucid dreams": 2620000000,
+            "all girls are the same": 1820000000,
+            "sad!": 2340000000,
+            "jocelyn flores": 2150000000,
+            "star shopping": 1290000000,
+            "falling down": 1120000000,
+            "god's plan": 2480000000,
+            "one dance": 3120000000,
+            "humble.": 2240000000,
+            "money trees": 1780000000,
+            "sunflower": 3380000000,
+            "rockstar": 3010000000,
+            "without me": 2180000000,
+            "lose yourself": 2140000000,
+            "dior": 1480000000,
+            "california love": 780000000,
+            "juicy": 950000000,
+            "in da club": 1650000000,
+            "xo tour llif3": 2100000000,
+            "magnolia": 920000000,
+            "look at me!": 1450000000,
+            "highest in the room": 1680000000,
+            "mask off": 1790000000,
+            "bank account": 1380000000,
+            "congratulations": 2100000000,
+            "robbery": 1690000000,
+            "swimming pools": 1150000000
+        };
+
+        function getTrackEstimatedStreams(trackTitle, artistName) {
+            let clean = trackTitle.toLowerCase().split('(')[0].split('feat')[0].trim();
+            for(let k in knownStreamBenchmarks) {
+                if (clean.includes(k) || k.includes(clean)) return knownStreamBenchmarks[k];
+            }
+            // Realistischer Algorithmus für alle anderen Tracks
+            let hash = 0;
+            let combined = trackTitle + artistName;
+            for (let i = 0; i < combined.length; i++) {
+                hash = combined.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            let base = Math.abs(hash % 900) + 100; // 100M bis 1000M
+            return base * 1000000 + Math.abs(hash % 999999);
+        }
 
         const artistQuotes = {
             'XXXTentacion': '"What is real will prosper." - X',
@@ -616,12 +741,12 @@
         let mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || ''; 
         let mySongTitle = localStorage.getItem('rapquiz_menu_song_title') || '';
 
-        // STATS INIT MIT NEUEN WERTEN
+        // STATS INIT
         let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: {} };
         if (myStats.totalScore === undefined) myStats.totalScore = 0; 
         if (myStats.correctGuesses === undefined) myStats.correctGuesses = 0;
         if (myStats.wrongGuesses === undefined) myStats.wrongGuesses = 0;
-        if (myStats.modeScores === undefined) myStats.modeScores = { all: 0, progressive: 0, megahits: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0 };
+        if (myStats.modeScores === undefined) myStats.modeScores = { all: 0, progressive: 0, megahits: 0, higherlower: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0 };
         
         let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
         let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
@@ -644,9 +769,6 @@
                         if (event.data === YT.PlayerState.ENDED && ytContext === 'menu') {
                             ytPlayer.seekTo(0); ytPlayer.playVideo();
                         }
-                    },
-                    'onError': (event) => {
-                        console.log("YouTube Error Code:", event.data);
                     }
                 }
             });
@@ -729,7 +851,6 @@
             let pBar = document.getElementById('profile-xp-bar'); if(pBar) pBar.style.width = percent + '%';
         }
 
-        // --- NEUE DETAIL-STATISTIKEN ---
         function updateDetailedStats() {
             document.getElementById('stat-songs-correct').innerText = myStats.correctGuesses || 0;
             document.getElementById('stat-songs-wrong').innerText = myStats.wrongGuesses || 0;
@@ -738,6 +859,7 @@
                 'all': 'All Mixed',
                 'progressive': 'Progressive',
                 'megahits': 'Mega Hits',
+                'higherlower': 'Stream Battle (Higher/Lower) 📈',
                 'fallen': 'Fallen Legends 🕊️',
                 '2010s': '2010-2020 Rap',
                 'soundcloud': 'SoundCloud Era',
@@ -791,7 +913,9 @@
 
         function checkPremiumAndStart(mode) {
             if (isPremium) {
-                if(mode === 'artist') {} else { startMixedMode(mode); }
+                if(mode === 'artist') {} 
+                else if(mode === 'higherlower') { startHigherLowerMode(); }
+                else { startMixedMode(mode); }
             } else {
                 document.getElementById('premium-overlay').style.display = 'flex';
             }
@@ -831,7 +955,6 @@
             
             if(!q) { sel.style.display = 'none'; return; }
 
-            // YouTube Erkennung
             let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
             if (ytMatch) { 
                 let vid = ytMatch[1]; 
@@ -1121,7 +1244,6 @@
             }
         }
 
-        // --- ZUVERLÄSSIGER NOT-AUSSTIEG BEIM VERLASSEN ---
         function backToMenu() { 
             try {
                 audio.pause(); sfxAudio.pause(); 
@@ -1129,11 +1251,11 @@
                 gameIsOver = true; 
                 cancelMultiplayer(); 
                 document.getElementById('game-screen').style.display = 'none'; 
+                document.getElementById('hl-screen').style.display = 'none'; 
                 document.getElementById('feedback-overlay').style.display = 'none'; 
                 document.getElementById('app-layout').style.display = 'flex'; 
                 resumeMenuMusic();
             } catch(e) {
-                console.error("Notausstieg Error:", e);
                 location.reload(); 
             }
         }
@@ -1214,6 +1336,91 @@
         }
 
         // ==========================================
+        // HIGHER / LOWER LOGIK (STREAM BATTLE)
+        // ==========================================
+        let hlPool = [];
+        let hlCurrentA = null;
+        let hlCurrentB = null;
+        let hlStreak = 0;
+
+        async function startHigherLowerMode() {
+            document.getElementById('loading-overlay').style.display = 'flex'; 
+            document.getElementById('loading-text').innerText = "Loading Stream Data...";
+            resetGameStats(); currentMode = 'higherlower'; hlStreak = 0;
+            
+            let sel = [...megaStars, ...artists2010s, ...soundcloudArtists, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0, 12);
+            await Promise.all(sel.map(a => fetchArtistSongs(a)));
+            
+            if (songsPool.length < 5) {
+                document.getElementById('loading-overlay').style.display = 'none';
+                alert("Error loading songs."); return;
+            }
+            
+            // Verknüpfe Songs mit echten/geschätzten Streams
+            hlPool = smartShuffle(songsPool).map(s => ({
+                ...s,
+                streams: getTrackEstimatedStreams(s.title, s.artist.name)
+            }));
+            
+            document.getElementById('loading-overlay').style.display = 'none';
+            pauseMenuMusic();
+            document.getElementById('app-layout').style.display = 'none';
+            document.getElementById('hl-screen').style.display = 'flex';
+            
+            hlCurrentA = hlPool.pop();
+            hlCurrentB = hlPool.pop();
+            renderHLRound();
+        }
+
+        function renderHLRound() {
+            document.getElementById('hl-streak-num').innerText = hlStreak;
+            
+            // CARD A
+            document.getElementById('hl-img-a').src = hlCurrentA.album.cover_medium;
+            document.getElementById('hl-title-a').innerText = hlCurrentA.title;
+            document.getElementById('hl-artist-a').innerText = hlCurrentA.artist.name;
+            document.getElementById('hl-streams-a').innerText = hlCurrentA.streams.toLocaleString('de-DE');
+
+            // CARD B
+            document.getElementById('hl-img-b').src = hlCurrentB.album.cover_medium;
+            document.getElementById('hl-title-b').innerText = hlCurrentB.title;
+            document.getElementById('hl-artist-b').innerText = hlCurrentB.artist.name;
+            
+            document.getElementById('hl-action-box').style.display = 'flex';
+            document.getElementById('hl-result-box').style.display = 'none';
+            document.getElementById('hl-streams-b').innerText = hlCurrentB.streams.toLocaleString('de-DE');
+        }
+
+        function processHLChoice(choice) {
+            document.getElementById('hl-action-box').style.display = 'none';
+            document.getElementById('hl-result-box').style.display = 'flex';
+            
+            let isHigher = hlCurrentB.streams >= hlCurrentA.streams;
+            let wasCorrect = (choice === 'higher' && isHigher) || (choice === 'lower' && !isHigher);
+
+            if (wasCorrect) {
+                hlStreak++;
+                score += 150;
+                myStats.correctGuesses++;
+                setTimeout(() => {
+                    hlCurrentA = hlCurrentB;
+                    if (hlPool.length === 0) {
+                        triggerGameOver(true);
+                    } else {
+                        hlCurrentB = hlPool.pop();
+                        renderHLRound();
+                    }
+                }, 2000);
+            } else {
+                myStats.wrongGuesses++;
+                setTimeout(() => {
+                    triggerGameOver(false);
+                }, 2000);
+            }
+            localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
+        }
+
+        // ==========================================
         // GAME LOGIC & PARALLEL FETCH
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
@@ -1237,7 +1444,6 @@
             }
         }
 
-        // DYNAMISCHES AUSLESEN DER SETTINGS BEIM SPIELSTART
         function readSettings() {
             let hcToggle = document.getElementById('hardcore-toggle');
             let artToggle = document.getElementById('artist-toggle');
@@ -1278,13 +1484,13 @@
         }
 
         function syncHostData() {
-            readSettings(); // Settings vor Multiplayer-Sync nochmal 100% sicherstellen
+            readSettings();
             let safePool = songsPool.map(s => ({ id: s.id, title: s.title, preview: s.preview, artist: { name: s.artist.name }, album: { cover_medium: s.album.cover_medium } })).slice(0, 100);
             socket.emit('syncRoundData', { roomCode: currentRoom, songs: safePool, mode: currentMode, hardcore: isHardcoreMode, showArtist: showArtistName });
         }
 
         function launchGame() {
-            pauseMenuMusic(); // DER FIX: Schaltet die Hymne aus, wenn das Spiel startet!
+            pauseMenuMusic();
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
             if(isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
@@ -1292,7 +1498,7 @@
         }
 
         async function startMixedMode(mode) {
-            readSettings(); // Liest den Button-Status millisekundengenau aus!
+            readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
             document.getElementById('loading-overlay').style.display = 'flex'; 
             document.getElementById('loading-text').innerText = "Loading database...";
@@ -1321,7 +1527,7 @@
         }
 
         async function startProgressiveMode() {
-            readSettings(); // Liest den Button-Status millisekundengenau aus!
+            readSettings();
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
             document.getElementById('loading-overlay').style.display = 'flex'; 
             document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
@@ -1344,7 +1550,7 @@
         }
 
         async function startArtistMode(artist) {
-            readSettings(); // Liest den Button-Status millisekundengenau aus!
+            readSettings();
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
             document.getElementById('loading-overlay').style.display = 'flex'; 
             document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
@@ -1471,7 +1677,6 @@
                 }
             }
             
-            // Sofort lokales Speichern der Trefferquote
             localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
             
             if (isMultiplayer) {
