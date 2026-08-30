@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapmusik Guessr</title>
+    
+    <!-- Supabase SDK for Cloud Database -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Socket.io for 2-4 Player Multiplayer -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <!-- YouTube Iframe API -->
-    <script src="https://www.youtube.com/iframe_api"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700;800;900&display=swap');
 
@@ -45,15 +47,6 @@
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
             background-size: 100% 4px; z-index: -1; pointer-events: none;
         }
-
-        #music-toggle-btn {
-            position: absolute; top: 20px; right: 20px;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-            border: 1px solid var(--surface-border); color: white;
-            padding: 10px 15px; border-radius: 12px; cursor: pointer; z-index: 100;
-            transition: 0.3s; font-weight: 700; display: none;
-        }
-        #music-toggle-btn:hover { border-color: var(--primary); transform: scale(1.05); }
 
         h1 { color: var(--text); font-size: 40px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 25px rgba(0,0,0,0.8); }
 
@@ -96,7 +89,7 @@
         .tab-content.active { display: block; }
         @keyframes fadeIn { 0% { opacity: 0; transform: translateX(20px); } 100% { opacity: 1; transform: translateX(0); } }
 
-        .section-title { font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; border-bottom: 2px solid var(--surface-border); padding-bottom: 10px; color: white; text-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between;}
+        .section-title { font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; border-bottom: 2px solid var(--surface-border); padding-bottom: 10px; color: white; text-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between; }
 
         /* --- BANNER DESIGN --- */
         .banner-container { 
@@ -113,12 +106,6 @@
         .banner-subtitle { margin: 0 0 5px 0; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 2px; }
         .banner-title { margin: 0; color: white; text-transform: uppercase; font-size: 32px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 15px rgba(139,92,246,0.8); }
 
-        /* --- RANGE SLIDER (VOLUME) --- */
-        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(139,92,246,0.8); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
-        input[type=range]:focus { outline: none; }
-
         /* --- CARDS & UI --- */
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 40px; }
         
@@ -132,8 +119,7 @@
             position: relative; overflow: hidden;
         }
         .ea-card:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(139, 92, 246, 0.25); }
-
-        /* PAYWALL LOCK */
+        
         .locked-card::after {
             content: "🔒 PREMIUM"; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
@@ -151,6 +137,10 @@
         .card-sc { border-color: rgba(255,85,0,0.5); }
         .card-gold { border-color: rgba(245,158,11,0.5); }
 
+        .artist-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        .artist-tile { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; color: white; backdrop-filter: blur(5px); }
+        .artist-tile:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
+
         .settings-bar { display: flex; gap: 20px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 12px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; backdrop-filter: blur(10px); flex-wrap: wrap;}
         .settings-group { display: flex; align-items: center; gap: 10px; }
         .settings-label { font-size: 12px; font-weight: 700; color: white; text-transform: uppercase; }
@@ -163,17 +153,14 @@
         input:checked + .slider.green { background-color: var(--success); border-color: var(--success); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        .artist-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-        .artist-tile { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; color: white; backdrop-filter: blur(5px); }
-        .artist-tile:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-2px);}
-
-        .ea-input { width: 100%; padding: 18px; background: rgba(0,0,0,0.7); border: 1px solid var(--surface-border); color: white; border-radius: 12px; font-size: 16px; font-weight: 600; box-sizing: border-box; margin-bottom: 15px; text-align: center; transition: 0.3s; backdrop-filter: blur(5px); }
+        /* --- UI EINGABEFELDER --- */
+        .ea-input { width: 100%; padding: 16px; background: rgba(0,0,0,0.7); border: 1px solid var(--surface-border); color: white; border-radius: 12px; font-size: 15px; font-weight: 600; box-sizing: border-box; margin-bottom: 15px; transition: 0.3s; backdrop-filter: blur(5px); }
         .ea-input:focus { outline: none; border-color: var(--primary); background: rgba(0,0,0,0.9); box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); }
-
+        
         select.ea-input { text-align: left; cursor: pointer; color: white !important; background-color: #141419 !important; }
         select.ea-input option { background-color: #141419 !important; color: #ffffff !important; padding: 12px; font-weight: 600; font-family: 'Poppins', sans-serif;}
 
-        .btn-action { background: var(--primary); color: white; border: none; padding: 18px; font-size: 16px; font-weight: 800; border-radius: 12px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; box-shadow: 0 5px 15px rgba(139,92,246,0.3); }
+        .btn-action { background: var(--primary); color: white; border: none; padding: 16px; font-size: 15px; font-weight: 800; border-radius: 12px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; box-shadow: 0 5px 15px rgba(139,92,246,0.3); }
         .btn-action:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139,92,246,0.5); }
         .btn-gold { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); border: 1px solid #fcd34d; }
         .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245, 158, 11, 0.6); }
@@ -200,17 +187,17 @@
         .option-btn:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
 
         #text-input-container { position: relative; }
-        #suggestions-box { position: absolute; bottom: 100%; left: 0; width: 100%; background: rgba(20,20,25,0.95); border: 1px solid var(--primary); border-radius: 12px; max-height: 200px; overflow-y: auto; text-align: left; display: none; margin-bottom: 5px; backdrop-filter: blur(10px); }
+        #suggestions-box { position: absolute; bottom: 100%; left: 0; width: 100%; background: rgba(20,20,25,0.95); border: 1px solid var(--primary); border-radius: 12px; max-height: 200px; overflow-y: auto; text-align: left; display: none; margin-bottom: 5px; backdrop-filter: blur(10px); z-index: 50;}
         .suggestion-item { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 14px; font-weight: 700; color: white;}
         .suggestion-item:hover { background: var(--primary); }
 
         /* --- OVERLAYS & MODALS --- */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal { background: rgba(15, 15, 18, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 500px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal { background: rgba(15, 15, 18, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 480px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-        .modal h2 { font-size: 28px; margin: 0 0 10px 0; font-weight: 900; }
-        .modal p { font-size: 14px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.5; }
+        .modal h2 { font-size: 26px; margin: 0 0 10px 0; font-weight: 900; }
+        .modal p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
 
         #feedback-cover { width: 160px; height: 160px; border-radius: 16px; object-fit: cover; margin: 0 auto 20px auto; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid var(--surface-border); transition: all 0.5s ease; }
         .modal.correct { border-color: var(--success); box-shadow: 0 0 40px rgba(16, 185, 129, 0.2); } .modal.correct h2 { color: var(--success); }
@@ -227,6 +214,12 @@
         .paywall-feature { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; text-align: left; }
         .paywall-check { background: #fbbf24; color: black; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; flex-shrink: 0; }
 
+        /* SLIDER CSS */
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(139,92,246,0.8); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
+        input[type=range]:focus { outline: none; }
+
         @media (max-width: 768px) {
             #mobile-menu-btn { display: block; }
             #sidebar { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; z-index: 10; transition: left 0.3s ease; }
@@ -236,7 +229,6 @@
             .cards-grid { grid-template-columns: 1fr; }
             h1 { font-size: 32px; }
             .section-title { font-size: 22px; }
-            #music-toggle-btn { top: 20px; right: 20px; padding: 10px; font-size: 12px; z-index: 90;}
             .banner-container { flex-direction: column; text-align: center; padding: 20px; gap: 15px;}
             .banner-text-box { text-align: center; }
             .banner-img { width: 120px; height: 120px; }
@@ -253,31 +245,18 @@
 
     <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
 
-    <!-- PROFIL SETUP (Login/Register) -->
+    <!-- PROFIL SETUP OVERLAY -->
     <div id="profile-overlay" class="overlay">
-        <div class="modal" style="border-top: 5px solid var(--primary);">
-            <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 30px;">RAPMUSIK GUESSR</h2>
-            <p style="font-size:13px; color: var(--text-muted); margin-bottom: 20px;">Create your profile or login to your local account.</p>
+        <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
+            <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
+            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login or create your cloud profile.</p>
             
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <input type="text" id="username-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="👤 Username" autocomplete="off">
                 <input type="password" id="password-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="🔑 Password">
             </div>
             
-            <div id="artist-select-container" style="text-align: left; background: rgba(255,255,255,0.03); padding: 18px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08);">
-                <label style="display: block; font-size: 11px; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px;">1. Favorite Artist (Avatar)</label>
-                <select id="fav-artist-select" class="ea-input" style="margin-bottom: 15px;"></select>
-
-                <label style="display: block; font-size: 11px; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px;">2. Your Anthem (Search song or paste YouTube link)</label>
-                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                    <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1;" placeholder="e.g. Sicko Mode OR https://youtube.com/...">
-                    <button class="btn-action" style="width: 55px; padding: 0; margin: 0; font-size: 18px; display: flex; align-items: center; justify-content: center;" onclick="searchMenuSong('setup')">🔍</button>
-                </div>
-                
-                <select id="menu-song-select" class="ea-input" style="display: none; color: var(--success); font-size: 13px;"></select>
-            </div>
-            
-            <button class="btn-action" onclick="handleProfileLogin(false)" style="margin-top: 10px;">Login / Register ➔</button>
+            <button id="login-btn" class="btn-action" onclick="handleProfileLogin()" style="margin-top: 15px;">Login / Register ➔</button>
             <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
         </div>
     </div>
@@ -285,28 +264,28 @@
     <!-- PREMIUM PAYWALL OVERLAY -->
     <div id="premium-overlay" class="overlay" style="display: none;">
         <div class="modal paywall-modal">
-            <div style="font-size: 45px; margin-bottom: 8px;">👑</div>
-            <h2 style="color: #fbbf24; font-weight: 900; letter-spacing: 2px; font-size: 30px; margin-bottom: 5px;">LIFETIME VIP</h2>
-            <p style="color: #d4d4d8; font-size: 13px; margin-bottom: 20px;">Support the servers once and unlock everything forever.</p>
+            <div style="font-size: 50px; margin-bottom: 10px;">👑</div>
+            <h2 style="color: #fbbf24; font-weight: 900; letter-spacing: 2px; font-size: 32px; margin-bottom: 5px;">LIFETIME VIP</h2>
+            <p style="color: #d4d4d8; font-size: 14px; margin-bottom: 25px;">Support the servers once and unlock everything forever.</p>
             
-            <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(251, 191, 36, 0.2);">
+            <div style="background: rgba(255,255,255,0.05); padding: 25px 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid rgba(251, 191, 36, 0.2);">
                 <div class="paywall-feature">
                     <div class="paywall-check">✓</div>
-                    <span style="color: white; font-weight: 600; font-size: 14px;">Online Multiplayer (2-4 Players)</span>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Online Multiplayer (2-4 Players)</span>
                 </div>
                 <div class="paywall-feature">
                     <div class="paywall-check">✓</div>
-                    <span style="color: white; font-weight: 600; font-size: 14px;">Premium Eras (2010s, SoundCloud)</span>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Premium Eras (2010s, SoundCloud)</span>
                 </div>
                 <div class="paywall-feature" style="margin-bottom: 0;">
                     <div class="paywall-check">✓</div>
-                    <span style="color: white; font-weight: 600; font-size: 14px;">Full Artist Catalog Mode</span>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Full Artist Catalog Mode</span>
                 </div>
             </div>
 
-            <button class="btn-action btn-gold" style="font-size: 17px; padding: 18px; margin-bottom: 12px;" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Unlock on Gumroad (12€) ➔</button>
+            <button class="btn-action btn-gold" style="font-size: 18px; padding: 20px; margin-bottom: 15px;" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Unlock on Gumroad (12€) ➔</button>
             
-            <p style="margin-top: 12px; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('premium-overlay').style.display='none'">Maybe later</p>
+            <p style="margin-top: 15px; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('premium-overlay').style.display='none'">Maybe later</p>
         </div>
     </div>
 
@@ -344,7 +323,6 @@
         </nav>
 
         <main id="main-content">
-            <!-- PLAY TAB -->
             <div id="play-tab" class="tab-content active">
                 <div class="settings-bar">
                     <div class="settings-group">
@@ -358,7 +336,6 @@
                 </div>
 
                 <div class="section-title">Your Club</div>
-                
                 <div id="fav-artist-banner" class="banner-container" style="display: none;">
                     <img id="fav-artist-img-1" src="" class="banner-img">
                     <div class="banner-text-box">
@@ -408,18 +385,18 @@
             <div id="multiplayer-tab" class="tab-content">
                 <div class="section-title">Online Multiplayer (2-4 Players)</div>
                 <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-                    <div class="ea-card" style="border-color: var(--success); cursor: default; justify-content: flex-start;">
+                    <div class="ea-card" style="border-color: var(--success); justify-content: flex-start;">
                         <h3 style="margin-top: 0; color: var(--success); font-weight: 800; letter-spacing: 1px;">HOST MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Create a lobby for 2 to 4 players. Host chooses mode to start.</p>
+                        <p style="font-size: 13px; color: var(--text-muted);">Create a lobby for 2 to 4 players.</p>
                         <button class="btn-action" style="background: var(--success); margin-bottom: 20px;" onclick="createRoom()">Generate Code</button>
                         <div style="text-align: center;">
                             <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Your Room Code:</span>
                             <h2 id="room-code-display" style="margin: 0; font-size: 40px; letter-spacing: 8px; color: white;">----</h2>
                         </div>
                     </div>
-                    <div class="ea-card" style="cursor: default; justify-content: flex-start;">
+                    <div class="ea-card" style="justify-content: flex-start;">
                         <h3 style="margin-top: 0; color: white; font-weight: 800; letter-spacing: 1px;">JOIN MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Enter your friend's 4-digit code to join the lobby.</p>
+                        <p style="font-size: 13px; color: var(--text-muted);">Enter your friend's 4-digit code.</p>
                         <input type="number" id="join-code-input" class="ea-input" style="letter-spacing: 5px; font-size: 24px; text-align: center;" placeholder="CODE">
                         <button class="btn-action" onclick="joinRoom()">Join</button>
                     </div>
@@ -427,11 +404,9 @@
                 
                 <div style="background: rgba(0,0,0,0.5); padding: 25px; border-radius: 16px; text-align: center; border: 1px solid var(--surface-border); margin-top: 20px;">
                     <h3 style="margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase; color: white; letter-spacing: 1px;">Players in Lobby</h3>
-                    
                     <div id="lobby-players-container" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px;">
                         <span style="color: var(--text-muted); font-size: 14px;">No one here yet...</span>
                     </div>
-                    
                     <p id="mp-status" style="color: var(--warning); font-weight: 800; margin: 0; font-size: 16px; text-transform: uppercase;">Not connected</p>
                 </div>
             </div>
@@ -443,11 +418,7 @@
                     <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
                     <div style="text-align: left; flex: 1;">
                         <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
-                        
-                        <p id="profile-view-quote" style="margin: 0 0 10px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
-                        
-                        <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Anthem: <span id="profile-view-hymn" style="color: white;">Artist</span></p>
-                        
+                        <p id="profile-view-quote" style="margin: 0 0 15px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
                         <div style="width: 100%; max-width: 400px;">
                             <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
                                 <span>Level <span id="profile-level-num">1</span></span>
@@ -457,7 +428,6 @@
                                 <div id="profile-xp-bar" style="background: var(--success); width: 0%; height: 100%; transition: width 0.5s ease;"></div>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
@@ -476,7 +446,6 @@
                     </div>
                 </div>
 
-                <!-- GUMROAD VIP BUY/REDEEM SECTION -->
                 <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
                     <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
@@ -491,15 +460,8 @@
                 </div>
 
                 <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Change Artist (Avatar & Background)</h3>
-                    <select id="edit-fav-artist-select" class="ea-input" onchange="updateFavArtist()"></select>
-
-                    <h3 style="margin-top: 20px; font-size: 14px; text-transform: uppercase;">2. Change Anthem & Menu Music</h3>
-                    <div style="display:flex; gap:10px; margin-bottom:10px;">
-                        <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="Search song OR paste YouTube Link...">
-                        <button class="btn-action" style="width:auto; padding:0 20px;" onclick="searchMenuSong('edit')">🔍</button>
-                    </div>
-                    <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">Change Favorite Artist</h3>
+                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 0;" onchange="updateFavArtist()"></select>
                 </div>
                 
                 <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Log Out / Switch Account</button>
@@ -507,21 +469,17 @@
         </main>
     </div>
 
-    <!-- IN-GAME SCREEN -->
+    <!-- GAME SCREEN -->
     <div id="game-screen">
         <div class="game-inner">
-
             <div class="stats-bar" id="game-stats-bar"></div>
-            
             <div class="visualizer"><div class="visualizer-inner">🎵</div></div>
-
             <div class="game-controls">
                 <button onclick="backToMenu()">🏠 Quit</button>
                 <button onclick="replaySnippet()" style="border-color: #3b82f6;">🔄 Replay</button>
                 <button id="add-time-btn" onclick="addTime()">+3s</button>
                 <button onclick="skipSong()" style="border-color: var(--danger); color: var(--danger);">⏭️ Skip (-250)</button>
             </div>
-            
             <div id="options" class="options-container"></div>
             <div id="text-input-container" style="display: none;">
                 <input type="text" id="guess-input" class="ea-input" placeholder="Enter song title..." autocomplete="off" oninput="updateSuggestions()">
@@ -531,30 +489,23 @@
         </div>
     </div>
 
-    <!-- LADE-SCREEN -->
-    <div id="loading-overlay" class="overlay">
-        <div style="text-align: center;">
-            <div class="loader"></div>
-            <h2 id="loading-text" style="color: white; font-size: 20px; letter-spacing: 2px; text-transform: uppercase;">Please Wait...</h2>
-        </div>
+    <!-- LOADING & FEEDBACK OVERLAYS -->
+    <div id="loading-overlay" class="overlay" style="display: none;">
+        <div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Please Wait...</h2></div>
     </div>
-
-    <!-- FEEDBACK & END SCREEN -->
-    <div id="feedback-overlay" class="overlay">
+    <div id="feedback-overlay" class="overlay" style="display: none;">
         <div id="feedback-modal" class="modal">
             <h2 id="feedback-title">Title</h2>
             <img id="feedback-cover" src="">
             <p id="feedback-desc">Description</p>
-            
             <div id="mp-result" style="display: none; margin-bottom: 25px;"></div>
-            
             <button id="feedback-btn" class="btn-action">Next ➔</button>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // ARTIST DATEN & ZITATE
+        // ARTIST DATA
         // ==========================================
         const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean', 'Bones'];
         const artists2010s = ['Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa', 'Offset', 'Quavo', 'Yeat', 'Central Cee'];
@@ -594,180 +545,61 @@
             'Snoop Dogg': '"Drop it like it\'s hot." - Snoop'
         };
 
-        function getArtistQuote(name) {
-            return artistQuotes[name] || `"Ready to dominate the game." - ${name}`;
-        }
+        function getArtistQuote(name) { return artistQuotes[name] || `"Ready to dominate the game." - ${name}`; }
 
         // ==========================================
-        // SYSTEM & PROFIL
+        // SYSTEM INIT & LOCAL STORAGE
         // ==========================================
         const SERVER_URL = 'https://mukke886.onrender.com';
-        const socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
-        
-        socket.on('connect', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🟢 Ready for Multiplayer'; el.style.color = 'var(--success)'; } });
-        socket.on('connect_error', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🔴 Server unreachable'; el.style.color = 'var(--danger)'; } });
+        let globalVolume = 0.5;
+        try { let storedVol = parseFloat(localStorage.getItem('rapquiz_volume')); if (!isNaN(storedVol)) globalVolume = storedVol; } catch(e) {}
 
-        let globalVolume = parseFloat(localStorage.getItem('rapquiz_volume'));
-        if (isNaN(globalVolume)) globalVolume = 0.5;
+        let socket = { on: () => {}, emit: () => {} }; 
+        try {
+            if (typeof io !== 'undefined') {
+                socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
+                socket.on('connect', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🟢 Ready for Multiplayer'; el.style.color = 'var(--success)'; } });
+            }
+        } catch (e) { }
 
-        // LOCAL STORAGE LOGIN (The robust way!)
-        let playerName = localStorage.getItem('rapquiz_username'); 
-        let savedPw = localStorage.getItem('rapquiz_password');
+        let playerName = localStorage.getItem('rapquiz_username') || ''; 
+        let savedPw = localStorage.getItem('rapquiz_password') || '';
         let myFavArtist = localStorage.getItem('rapquiz_fav_artist') || ''; 
-        let mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || ''; 
-        let mySongTitle = localStorage.getItem('rapquiz_menu_song_title') || '';
         let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; 
         let myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
-        let myQuote = localStorage.getItem('rapquiz_quote') || (myFavArtist ? getArtistQuote(myFavArtist) : '');
+        let myQuote = localStorage.getItem('rapquiz_quote') || (myFavArtist ? getArtistQuote(myFavArtist) : '"Ready to dominate the game."');
         let isPremium = localStorage.getItem('rapquiz_premium') === 'true';
 
-        let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, draws: 0, totalScore: 0 };
+        let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, totalScore: 0 };
         if (myStats.totalScore === undefined) myStats.totalScore = 0; 
-
-        // --- YOUTUBE INTEGRATION LOGIK ---
-        let ytPlayer;
-        let ytReady = false;
-        let ytContext = 'menu';
-
-        function onYouTubeIframeAPIReady() {
-            ytPlayer = new YT.Player('yt-player', {
-                height: '200', width: '200',
-                playerVars: { 'autoplay': 1, 'controls': 0, 'showinfo': 0, 'rel': 0, 'playsinline': 1 },
-                events: {
-                    'onReady': () => { ytReady = true; },
-                    'onStateChange': (event) => {
-                        if (event.data === YT.PlayerState.ENDED && ytContext === 'menu') {
-                            ytPlayer.seekTo(0); ytPlayer.playVideo();
-                        }
-                    },
-                    'onError': (event) => {
-                        console.log("YouTube Error Code:", event.data);
-                        if (event.data === 101 || event.data === 150) {
-                            alert("❌ YouTube blocked this official video due to copyright embedding restrictions.\n\nPlease search for a 'Lyrics' or 'Audio' video instead!");
-                        }
-                    }
-                }
-            });
-        }
-
-        let menuAudio = new Audio(); menuAudio.loop = true; menuAudio.crossOrigin = "anonymous"; menuAudio.volume = globalVolume * 0.4;
-        let isMenuMusicPlaying = false;
         
-        let gameIsOver = false;
-        let isMultiplayer = false;
-        let isMpHost = false;
-        let lobbyPlayers = []; 
-        let currentRoom = '';
+        let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
+        let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
         
-        let matchEndData = {}; 
-        let isWinnerScreenShown = false; 
-        let playersAnsweredThisRound = new Set();
-        let playersReadyForNextRound = new Set();
-        let expectedAnswers = 1;
+        let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = '';
+        let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('sidebar-overlay').classList.toggle('active');
-        }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('active'); }
 
         function changeVolume(val) {
-            globalVolume = parseFloat(val);
-            localStorage.setItem('rapquiz_volume', globalVolume);
-            menuAudio.volume = globalVolume * 0.4;
-            audio.volume = globalVolume;
-            sfxAudio.volume = globalVolume;
-            if(ytReady && ytPlayer.setVolume) {
-                let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100;
-                ytPlayer.setVolume(globalVolume * vol); 
-            }
-        }
-
-        function playMenuMusic(url) {
-            if(!url) return;
-            isMenuMusicPlaying = true;
-            ytContext = 'menu';
-            
-            if (url.startsWith('yt:')) {
-                menuAudio.pause();
-                let vid = url.substring(3);
-                if(ytReady && ytPlayer.loadVideoById) {
-                    ytPlayer.setVolume(globalVolume * 40);
-                    ytPlayer.loadVideoById(vid);
-                    ytPlayer.playVideo();
-                } else {
-                    setTimeout(() => playMenuMusic(url), 500);
-                }
-            } else {
-                if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-                menuAudio.src = url; menuAudio.volume = globalVolume * 0.4;
-                menuAudio.play().catch(e=>{});
-            }
-            let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
-            btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
-        }
-
-        function toggleMenuMusic() {
-            if (isMenuMusicPlaying) {
-                pauseMenuMusic(); isMenuMusicPlaying = false;
-                let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
-                btns.forEach(b => { if(b) { b.innerHTML = "🔇 Music Off"; b.style.opacity = "0.7"; } });
-            } else {
-                resumeMenuMusic(); isMenuMusicPlaying = true;
-                let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
-                btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
-            }
-        }
-
-        function pauseMenuMusic() {
-            menuAudio.pause();
-            if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-        }
-
-        function resumeMenuMusic() {
-            if (!isMenuMusicPlaying) return;
-            ytContext = 'menu';
-            if (mySongUrl.startsWith('yt:')) {
-                if(ytReady && ytPlayer.playVideo) {
-                    ytPlayer.setVolume(globalVolume * 40); ytPlayer.playVideo();
-                }
-            } else {
-                menuAudio.play().catch(e=>{});
-            }
+            globalVolume = parseFloat(val); 
+            try { localStorage.setItem('rapquiz_volume', globalVolume); } catch(e){}
+            audio.volume = globalVolume; sfxAudio.volume = globalVolume;
         }
 
         function updateLevelDisplay() {
-            let total = myStats.totalScore || 0;
-            let lvl = Math.floor(total / 4000) + 1;
-            let currentXp = total % 4000;
-            let percent = (currentXp / 4000) * 100;
-
-            let sbLevel = document.getElementById('sidebar-level');
-            if(sbLevel) sbLevel.innerText = 'Lvl ' + lvl;
-
-            let pLvl = document.getElementById('profile-level-num');
-            if(pLvl) pLvl.innerText = lvl;
-            
-            let pXp = document.getElementById('profile-xp-current');
-            if(pXp) pXp.innerText = currentXp;
-
-            let pBar = document.getElementById('profile-xp-bar');
-            if(pBar) pBar.style.width = percent + '%';
+            let total = myStats.totalScore || 0; let lvl = Math.floor(total / 4000) + 1; let currentXp = total % 4000; let percent = (currentXp / 4000) * 100;
+            let sbLevel = document.getElementById('sidebar-level'); if(sbLevel) sbLevel.innerText = 'Lvl ' + lvl;
+            let pLvl = document.getElementById('profile-level-num'); if(pLvl) pLvl.innerText = lvl;
+            let pXp = document.getElementById('profile-xp-current'); if(pXp) pXp.innerText = currentXp;
+            let pBar = document.getElementById('profile-xp-bar'); if(pBar) pBar.style.width = percent + '%';
         }
 
         function smartShuffle(pool) {
-            let byArtist = {};
-            for(let s of pool) {
-                if(!byArtist[s.artist.name]) byArtist[s.artist.name] = [];
-                byArtist[s.artist.name].push(s);
-            }
+            let byArtist = {}; for(let s of pool) { if(!byArtist[s.artist.name]) byArtist[s.artist.name] = []; byArtist[s.artist.name].push(s); }
             for(let a in byArtist) byArtist[a].sort(() => 0.5 - Math.random());
             let result = []; let artists = Object.keys(byArtist); let keepGoing = true;
-            while(keepGoing) {
-                keepGoing = false; artists.sort(() => 0.5 - Math.random()); 
-                for(let a of artists) {
-                    if(byArtist[a].length > 0) { result.push(byArtist[a].pop()); keepGoing = true; }
-                }
-            }
+            while(keepGoing) { keepGoing = false; artists.sort(() => 0.5 - Math.random()); for(let a of artists) { if(byArtist[a].length > 0) { result.push(byArtist[a].pop()); keepGoing = true; } } }
             return result;
         }
 
@@ -776,17 +608,22 @@
                 document.getElementById('premium-overlay').style.display = 'flex';
                 return;
             }
-
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
             if(tabId === 'profile-tab') { 
                 document.getElementById('stat-played').innerText = myStats.played; 
                 document.getElementById('stat-wins').innerText = myStats.wins; 
                 document.getElementById('stat-losses').innerText = myStats.losses; 
-                updateLevelDisplay();
+                updateLevelDisplay(); 
             }
-            if (window.innerWidth <= 768) {
-                document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active');
+            if (window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active'); }
+        }
+
+        function checkPremiumAndStart(mode) {
+            if (isPremium) {
+                if(mode === 'artist') {} else { startMixedMode(mode); }
+            } else {
+                document.getElementById('premium-overlay').style.display = 'flex';
             }
         }
 
@@ -805,14 +642,86 @@
         function updateAllAvatars() { 
             ['sidebar-avatar', 'profile-view-avatar'].forEach(id => { let el = document.getElementById(id); if(el) el.src = myAvatar; }); 
             let b1 = document.getElementById('fav-artist-img-1'); let bName = document.getElementById('banner-artist-name');
-            if (b1 && myBgUrl) { 
-                b1.src = myBgUrl; 
-                if(bName) bName.innerText = myFavArtist; 
-                document.getElementById('fav-artist-banner').style.display = 'flex'; 
-            }
+            if (b1 && myBgUrl) { b1.src = myBgUrl; if(bName) bName.innerText = myFavArtist; document.getElementById('fav-artist-banner').style.display = 'flex'; }
         }
 
-        // --- GUMROAD API: LICENSE VERIFICATION ---
+        window.onload = () => {
+            let volSlider = document.getElementById('volume-slider');
+            if(volSlider) volSlider.value = globalVolume;
+
+            let editSel = document.getElementById('edit-fav-artist-select');
+            if (editSel) {
+                editSel.innerHTML = ''; 
+                allArtists.forEach(a => { 
+                    let opt = document.createElement('option'); opt.value = a; opt.innerText = a; 
+                    if(a === myFavArtist) opt.selected = true; 
+                    editSel.appendChild(opt); 
+                });
+            }
+            
+            let grid = document.getElementById('artist-grid');
+            if(grid) {
+                grid.innerHTML = '';
+                allArtists.forEach(a => { 
+                    let d = document.createElement('div'); d.className = isPremium ? 'artist-tile' : 'artist-tile locked-card'; 
+                    if(!isPremium) {
+                        d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:10px; margin-top:3px; color:var(--warning);">🔒 VIP</span>`;
+                        d.onclick = () => { document.getElementById('premium-overlay').style.display = 'flex'; };
+                    } else {
+                        d.innerText = a; 
+                        d.onclick = () => startArtistMode(a); 
+                    }
+                    grid.appendChild(d); 
+                });
+            }
+
+            if (isPremium) {
+                document.getElementById('premium-badge').style.display = 'inline-block';
+                document.getElementById('vip-buy-section').style.display = 'none';
+                document.getElementById('vip-redeem-section').style.display = 'none';
+                document.querySelectorAll('.locked-card').forEach(el => {
+                    el.classList.remove('locked-card');
+                    let lockIcon = el.querySelector('.lock-icon');
+                    if(lockIcon) lockIcon.style.display = 'none';
+                });
+            }
+
+            if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
+
+            if (!playerName || !savedPw) { 
+                document.getElementById('profile-overlay').style.display = 'flex'; 
+            } else { 
+                document.getElementById('profile-overlay').style.display = 'none';
+                handleProfileLogin(true); 
+            }
+        };
+
+        function handleProfileLogin(isAutoLogin = false) {
+            let err = document.getElementById('profile-error');
+            if (!isAutoLogin) {
+                let name = document.getElementById('username-input').value.trim(); 
+                let pw = document.getElementById('password-input').value.trim(); 
+                if (!name || !pw) { err.innerText = "Please fill in username and password!"; err.style.display = 'block'; return; }
+                if (savedPw && pw !== savedPw) { err.innerText = "Wrong password!"; err.style.display = 'block'; return; }
+                if(!savedPw) {
+                    localStorage.setItem('rapquiz_username', name); 
+                    localStorage.setItem('rapquiz_password', pw); 
+                    playerName = name; savedPw = pw; 
+                    myAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
+                    localStorage.setItem('rapquiz_avatar', myAvatar);
+                }
+            }
+            
+            updateLevelDisplay();
+            document.getElementById('profile-overlay').style.display = 'none'; 
+            document.getElementById('app-layout').style.display = 'flex';
+            document.getElementById('sidebar-name').innerText = playerName; 
+            document.getElementById('profile-view-name').innerText = playerName; 
+            document.getElementById('profile-view-quote').innerText = myQuote; 
+            
+            updateAllAvatars();
+        }
+
         async function redeemVIPCode() {
             let code = document.getElementById('vip-code-input').value.trim();
             if(!code) return alert("Please enter your Gumroad code!");
@@ -850,119 +759,8 @@
             btn.innerText = originalText;
         }
 
-        function searchMenuSong(mode) {
-            let inputId = mode === 'setup' ? 'song-search-input' : 'edit-song-search-input'; 
-            let selectId = mode === 'setup' ? 'menu-song-select' : 'edit-menu-song-select';
-            let q = document.getElementById(inputId).value.trim(); if(!q) return;
-
-            let sel = document.getElementById(selectId);
-            
-            let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-            if (ytMatch) {
-                let vid = ytMatch[1];
-                sel.innerHTML = `<option value="yt:${vid}">YouTube Track (Full Length)</option>`;
-                sel.style.display = 'block';
-                return;
-            }
-
-            const cb = 'deezer_song_' + Date.now();
-            window[cb] = function(res) {
-                sel.innerHTML = '';
-                if(res && res.data && res.data.length > 0) {
-                    res.data.filter(t => t.preview).slice(0, 10).forEach(t => { let opt = document.createElement('option'); opt.value = t.preview; opt.innerText = `${t.artist.name} - ${t.title} (30s Snippet)`; sel.appendChild(opt); });
-                    sel.style.display = 'block';
-                } else { sel.innerHTML = '<option value="">No songs found</option>'; sel.style.display = 'block'; }
-            };
-            const s = document.createElement('script'); s.src = `https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=10&output=jsonp&callback=${cb}`; document.head.appendChild(s);
-        }
-
-        window.onload = () => {
-            let volSlider = document.getElementById('volume-slider');
-            if(volSlider) volSlider.value = globalVolume;
-
-            let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
-            selects.forEach(sel => { allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; if(a === myFavArtist) opt.selected = true; sel.appendChild(opt); }); });
-            
-            let grid = document.getElementById('artist-grid');
-            allArtists.forEach(a => { 
-                let d = document.createElement('div'); 
-                d.className = isPremium ? 'artist-tile' : 'artist-tile locked-card'; 
-                if(!isPremium) {
-                    d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:10px; margin-top:3px; color:var(--warning);">🔒 VIP</span>`;
-                    d.onclick = () => { document.getElementById('premium-overlay').style.display = 'flex'; };
-                } else {
-                    d.innerText = a; 
-                    d.onclick = () => startArtistMode(a); 
-                }
-                grid.appendChild(d); 
-            });
-
-            if (isPremium) {
-                document.getElementById('premium-badge').style.display = 'inline-block';
-                document.getElementById('vip-buy-section').style.display = 'none';
-                document.getElementById('vip-redeem-section').style.display = 'none';
-                
-                document.querySelectorAll('.locked-card').forEach(el => {
-                    el.classList.remove('locked-card');
-                    let lockIcon = el.querySelector('.lock-icon');
-                    if(lockIcon) lockIcon.style.display = 'none';
-                });
-            }
-
-            if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
-
-            if (!playerName || !savedPw || !mySongUrl) { 
-                document.getElementById('profile-overlay').style.display = 'flex'; 
-            } else { 
-                document.getElementById('profile-overlay').style.display = 'none';
-                handleProfileLogin(true); 
-            }
-        };
-
-        function handleProfileLogin(isAutoLogin = false) {
-            let err = document.getElementById('profile-error');
-            if (!isAutoLogin) {
-                let name = document.getElementById('username-input').value.trim(); 
-                let pw = document.getElementById('password-input').value.trim(); 
-                if (!name || !pw) { err.innerText = "Please fill in username and password!"; err.style.display = 'block'; return; }
-                if (savedPw && pw !== savedPw) { err.innerText = "Wrong password!"; err.style.display = 'block'; return; }
-                if(!savedPw || !mySongUrl) {
-                    let songDropdown = document.getElementById('menu-song-select');
-                    if(songDropdown.style.display === 'none' || !songDropdown.value) { err.innerText = "Search and select your anthem first!"; err.style.display = 'block'; return; }
-                    myFavArtist = document.getElementById('fav-artist-select').value; 
-                    mySongUrl = songDropdown.value; 
-                    mySongTitle = songDropdown.options[songDropdown.selectedIndex].text;
-                    myQuote = getArtistQuote(myFavArtist);
-                    
-                    localStorage.setItem('rapquiz_username', name); 
-                    localStorage.setItem('rapquiz_password', pw); 
-                    localStorage.setItem('rapquiz_fav_artist', myFavArtist); 
-                    localStorage.setItem('rapquiz_quote', myQuote);
-                    localStorage.setItem('rapquiz_menu_song_url', mySongUrl); 
-                    localStorage.setItem('rapquiz_menu_song_title', mySongTitle);
-                    playerName = name; savedPw = pw; 
-                }
-            }
-            
-            loadArtistVisuals(myFavArtist);
-            updateLevelDisplay();
-            
-            document.getElementById('profile-overlay').style.display = 'none'; 
-            document.getElementById('app-layout').style.display = 'flex';
-            document.getElementById('sidebar-name').innerText = playerName; 
-            document.getElementById('profile-view-name').innerText = playerName; 
-            document.getElementById('profile-view-quote').innerText = myQuote; 
-            document.getElementById('profile-view-hymn').innerText = mySongTitle || myFavArtist; 
-            
-            let musicBtn = document.getElementById('music-toggle-btn');
-            if(musicBtn && window.innerWidth > 768) musicBtn.style.display = 'block';
-            if (isAutoLogin && myAvatar && myBgUrl) updateAllAvatars();
-            
-            playMenuMusic(mySongUrl);
-        }
-
         function resetProfile() { localStorage.clear(); location.reload(); }
-        
+
         function updateFavArtist() { 
             myFavArtist = document.getElementById('edit-fav-artist-select').value; 
             localStorage.setItem('rapquiz_fav_artist', myFavArtist); 
@@ -971,18 +769,9 @@
             document.getElementById('profile-view-quote').innerText = myQuote; 
             loadArtistVisuals(myFavArtist); 
         }
-        
-        function updateFavSong() {
-            let sel = document.getElementById('edit-menu-song-select');
-            if(sel.value) {
-                mySongUrl = sel.value; mySongTitle = sel.options[sel.selectedIndex].text;
-                localStorage.setItem('rapquiz_menu_song_url', mySongUrl); localStorage.setItem('rapquiz_menu_song_title', mySongTitle); document.getElementById('profile-view-hymn').innerText = mySongTitle; 
-                playMenuMusic(mySongUrl);
-            }
-        }
 
         // ==========================================
-        // MULTIPLAYER LOBBY LOGIK (2-4 Spieler)
+        // MULTIPLAYER LOBBY LOGIC (2-4 Players)
         // ==========================================
         function encodeAvatarAndQuote() { return myAvatar + '|Q|' + myQuote; }
 
@@ -1121,10 +910,9 @@
             }
         }
 
-        // --- SUDDEN DEATH LOKALE LOGIK ---
         function triggerSuddenDeathLocal(tiedIds) {
             let amITied = tiedIds.includes(socket.id);
-            sfxAudio.pause(); if(ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+            sfxAudio.pause(); 
             
             tiedIds.forEach(id => delete matchEndData[id]); 
             
@@ -1155,20 +943,9 @@
             updateStatsDisplay();
         }
 
-        // --- DER SIEGER BILDSCHIRM ---
-        function playWinnerAnthem(url) {
-            sfxAudio.pause(); pauseMenuMusic();
-            if (url && url.startsWith('yt:')) {
-                let vid = url.substring(3);
-                if(ytReady && ytPlayer.loadVideoById) {
-                    ytContext = 'winner';
-                    ytPlayer.setVolume(globalVolume * 100); 
-                    ytPlayer.loadVideoById(vid);
-                    ytPlayer.playVideo();
-                }
-            } else {
-                sfxAudio.src = url || 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
-            }
+        function playWinnerAnthem() {
+            sfxAudio.pause(); 
+            sfxAudio.src = 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
         }
 
         function showWinnerScreen(winner) {
@@ -1178,7 +955,7 @@
 
             let m = document.getElementById('feedback-modal'); m.className = "modal correct"; 
             document.getElementById('feedback-title').innerText = "🏆 WINNER 🏆";
-            document.getElementById('feedback-desc').innerText = "Playing winner's anthem...";
+            document.getElementById('feedback-desc').innerText = "Playing ultimate theme...";
             
             let cov = document.getElementById('feedback-cover');
             cov.src = wAv; cov.style.display = 'block'; cov.style.borderRadius = '50%';
@@ -1191,11 +968,11 @@
                 <p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>
             `;
             
-            playWinnerAnthem(winner.anthem);
+            playWinnerAnthem();
             document.getElementById('feedback-btn').style.display = 'none'; 
             
             setTimeout(() => {
-                sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+                sfxAudio.pause(); 
                 cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
                 document.getElementById('feedback-title').innerText = "📊 FINAL STANDINGS"; document.getElementById('feedback-desc').innerText = "";
                 renderMpLeaderboard(); 
@@ -1205,7 +982,7 @@
         }
 
         // ==========================================
-        // GAME LOGIC & PARALLEL FETCH
+        // GAME LOGIC & PARALLEL FETCH (100% ITUNES NOW!)
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
         
@@ -1216,6 +993,7 @@
             
             if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
             
+            audio.volume = globalVolume; 
             let p = audio.play();
             if (p !== undefined) {
                 p.then(() => {
@@ -1230,36 +1008,54 @@
         function toggleHardcoreMode() { isHardcoreMode = document.getElementById('hardcore-toggle').checked; }
         function toggleArtistName() { showArtistName = document.getElementById('artist-toggle').checked; }
 
-        function fetchDeezer(artist) {
-            return new Promise(resolve => {
-                const cb = 'deezer_' + Date.now() + Math.floor(Math.random() * 10000);
-                let isResolved = false;
-                const timeout = setTimeout(() => { if(!isResolved) { isResolved = true; resolve(); } }, 3000); 
-                window[cb] = function(r) { 
-                    if(!isResolved) { 
-                        isResolved = true; clearTimeout(timeout); 
-                        if (r && r.data) {
-                            let filtered = r.data.filter(t => t.preview && t.artist.name.toLowerCase() === artist.toLowerCase());
-                            songsPool = songsPool.concat(filtered); 
-                        } 
-                        resolve(); 
-                    } 
-                };
-                const query = `artist:"${artist}"`;
-                const s = document.createElement('script'); s.src = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=50&output=jsonp&callback=${cb}`; document.head.appendChild(s);
-            });
+        // BOMB-PROOF ITUNES FETCH
+        async function fetchArtistSongs(artist) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 Sek Timeout Notbremse!
+                
+                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=40`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                let data = await res.json();
+                if (data && data.results) {
+                    let valid = data.results.filter(t => t.previewUrl);
+                    let mapped = valid.map(t => ({
+                        id: t.trackId.toString(),
+                        title: t.trackName,
+                        preview: t.previewUrl,
+                        artist: { name: t.artistName },
+                        album: { cover_medium: t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '500x500bb') : '' }
+                    }));
+                    songsPool = songsPool.concat(mapped);
+                }
+            } catch (e) {
+                console.warn("API Error for", artist, e);
+            }
         }
 
         function resetGameStats() {
             songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
-            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-            document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
+            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); 
+            let box = document.getElementById('suggestions-box'); if(box) box.style.display = 'none'; 
+            let res = document.getElementById('mp-result'); if(res) res.style.display = 'none';
+        }
+
+        function syncHostData() {
+            let safePool = songsPool.map(s => ({ id: s.id, title: s.title, preview: s.preview, artist: { name: s.artist.name }, album: { cover_medium: s.album.cover_medium } })).slice(0, 100);
+            socket.emit('syncRoundData', { roomCode: currentRoom, songs: safePool, mode: currentMode, hardcore: isHardcoreMode, showArtist: showArtistName });
+        }
+
+        function launchGame() {
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
+            if(isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
+            nextRound();
         }
 
         function backToMenu() { 
-            audio.pause(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+            audio.pause(); sfxAudio.pause(); 
             clearTimeout(precisionTimer); cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; 
-            resumeMenuMusic(); 
         }
 
         async function startMixedMode(mode) {
@@ -1272,12 +1068,21 @@
             if (mode === 'soundcloud') sel = [...soundcloudArtists].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === '2010s') sel = [...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === 'megahits') sel = [...megaStars, ...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
-            await Promise.all(sel.map(a => fetchDeezer(a)));
-            if (mode === 'megahits') songsPool = songsPool.filter(s => s.rank > 600000);
-            if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Not enough songs found. Please try again!"); return; }
             
-            songsPool = smartShuffle(songsPool); 
-            if (isMultiplayer && isMpHost) syncHostData(); launchGame();
+            try {
+                await Promise.all(sel.map(a => fetchArtistSongs(a)));
+                if (songsPool.length < 4) { 
+                    document.getElementById('loading-overlay').style.display = 'none'; 
+                    alert("Network error or Adblocker blocked the songs. Please try again!"); 
+                    return; 
+                }
+                songsPool = smartShuffle(songsPool); 
+                if (isMultiplayer && isMpHost) syncHostData(); 
+                launchGame();
+            } catch (err) {
+                document.getElementById('loading-overlay').style.display = 'none'; 
+                alert("Error loading songs.");
+            }
         }
 
         async function startProgressiveMode() {
@@ -1286,11 +1091,20 @@
             document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
             resetGameStats(); currentMode = 'progressive';
             
-            await Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchDeezer(a)));
-            if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading."); return; }
-            
-            songsPool = smartShuffle(songsPool); 
-            if (isMultiplayer && isMpHost) syncHostData(); launchGame();
+            try {
+                await Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchArtistSongs(a)));
+                if (songsPool.length < 4) { 
+                    document.getElementById('loading-overlay').style.display = 'none'; 
+                    alert("Network error or Adblocker blocked the songs. Please try again!"); 
+                    return; 
+                }
+                songsPool = smartShuffle(songsPool); 
+                if (isMultiplayer && isMpHost) syncHostData(); 
+                launchGame();
+            } catch (err) {
+                document.getElementById('loading-overlay').style.display = 'none'; 
+                alert("Error loading songs.");
+            }
         }
 
         async function startArtistMode(artist) {
@@ -1299,24 +1113,20 @@
             document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
             resetGameStats(); currentMode = 'artist';
             
-            await fetchDeezer(artist);
-            if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Not enough songs for this artist."); return; }
-            
-            songsPool = smartShuffle(songsPool); 
-            if (isMultiplayer && isMpHost) syncHostData(); launchGame();
-        }
-
-        function syncHostData() {
-            let safePool = songsPool.map(s => ({ id: s.id, title: s.title, preview: s.preview, artist: { name: s.artist.name }, album: { cover_medium: s.album.cover_medium } })).slice(0, 100);
-            socket.emit('syncRoundData', { roomCode: currentRoom, songs: safePool, mode: currentMode, hardcore: isHardcoreMode, showArtist: showArtistName });
-        }
-
-        function launchGame() {
-            pauseMenuMusic(); 
-            document.getElementById('loading-overlay').style.display = 'none';
-            document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
-            if(isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
-            nextRound();
+            try {
+                await fetchArtistSongs(artist);
+                if (songsPool.length < 4) { 
+                    document.getElementById('loading-overlay').style.display = 'none'; 
+                    alert("Network error or Adblocker blocked the songs. Please try again!"); 
+                    return; 
+                }
+                songsPool = smartShuffle(songsPool); 
+                if (isMultiplayer && isMpHost) syncHostData(); 
+                launchGame();
+            } catch (err) {
+                document.getElementById('loading-overlay').style.display = 'none'; 
+                alert("Error loading songs.");
+            }
         }
 
         function updateSuggestions() {
@@ -1442,7 +1252,7 @@
             
             if (isMultiplayer) {
                 socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
-                let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
+                let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: '', roomCode: currentRoom };
                 matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
                 
                 t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
