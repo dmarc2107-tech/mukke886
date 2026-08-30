@@ -273,7 +273,7 @@
     <div id="profile-overlay" class="overlay">
         <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
             <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
-            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login or create your cloud profile.</p>
+            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login or create your local profile.</p>
             
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <input type="text" id="username-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="👤 Username" autocomplete="off">
@@ -668,20 +668,11 @@
         function getArtistQuote(name) { return artistQuotes[name] || `"Ready to dominate the game." - ${name}`; }
 
         // ==========================================
-        // SYSTEM INIT & HYBRID CLOUD / LOCAL
+        // SYSTEM INIT & LOCAL STORAGE
         // ==========================================
         const SERVER_URL = 'https://mukke886.onrender.com';
         let globalVolume = 0.5;
         try { let storedVol = parseFloat(localStorage.getItem('rapquiz_volume')); if (!isNaN(storedVol)) globalVolume = storedVol; } catch(e) {}
-
-        const supabaseUrl = 'https://tvcnushrhteworueftfy.supabase.co';
-        const supabaseKey = 'sb_publishable_VftGljbGfzD1urJFrw5Ygw_9jV4-1bD'; 
-        let supabase = null;
-        try { 
-            if (typeof window.supabase !== 'undefined') {
-                supabase = window.supabase.createClient(supabaseUrl, supabaseKey); 
-            }
-        } catch(e) { console.log("Supabase Init Error", e); }
 
         let socket = { on: () => {}, emit: () => {} }; 
         try {
@@ -691,16 +682,21 @@
             }
         } catch (e) { }
 
-        let playerName = ""; 
-        let savedPw = "";
-        let myFavArtist = ""; 
-        let myAvatar = ""; 
-        let myBgUrl = "";
-        let myQuote = "";
-        let isPremium = false;
-        let mySongUrl = ""; 
-        let mySongTitle = "";
-        let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, progressive: 0, megahits: 0, higherlower: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0 } };
+        let playerName = localStorage.getItem('rapquiz_username') || ''; 
+        let savedPw = localStorage.getItem('rapquiz_password') || '';
+        let myFavArtist = localStorage.getItem('rapquiz_fav_artist') || ''; 
+        let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; 
+        let myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
+        let myQuote = localStorage.getItem('rapquiz_quote') || (myFavArtist ? getArtistQuote(myFavArtist) : '"Ready to dominate the game."');
+        let isPremium = localStorage.getItem('rapquiz_premium') === 'true';
+        let mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || ''; 
+        let mySongTitle = localStorage.getItem('rapquiz_menu_song_title') || '';
+
+        let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: {} };
+        if (myStats.totalScore === undefined) myStats.totalScore = 0; 
+        if (myStats.correctGuesses === undefined) myStats.correctGuesses = 0;
+        if (myStats.wrongGuesses === undefined) myStats.wrongGuesses = 0;
+        if (myStats.modeScores === undefined) myStats.modeScores = { all: 0, progressive: 0, megahits: 0, higherlower: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0 };
         
         let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
         let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
@@ -767,39 +763,6 @@
             else { menuAudio.play().catch(e=>{}); }
         }
 
-        async function syncToCloud() {
-            if (!supabase || !playerName) return;
-            try {
-                const { data: session } = await supabase.auth.getSession();
-                if (session?.session?.user) {
-                    await supabase.from('profiles').upsert({
-                        id: session.session.user.id,
-                        username: playerName,
-                        is_premium: isPremium,
-                        total_score: myStats.totalScore || 0
-                    });
-                }
-            } catch(e) { console.log("Cloud sync skipped", e); }
-        }
-
-        function saveAccountData() {
-            if(!playerName) return;
-            let accounts = JSON.parse(localStorage.getItem('rapquiz_accounts')) || {};
-            if(!accounts[playerName]) return;
-            
-            if(!accounts[playerName].stats) accounts[playerName].stats = myStats;
-            accounts[playerName].stats = myStats;
-            accounts[playerName].isPremium = isPremium;
-            accounts[playerName].avatar = myAvatar;
-            accounts[playerName].favArtist = myFavArtist;
-            accounts[playerName].songUrl = mySongUrl;
-            accounts[playerName].songTitle = mySongTitle;
-            accounts[playerName].quote = myQuote;
-            accounts[playerName].bgUrl = myBgUrl;
-            
-            localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
-        }
-
         function updateLevelDisplay() {
             let total = myStats.totalScore || 0; let lvl = Math.floor(total / 4000) + 1; let currentXp = total % 4000; let percent = (currentXp / 4000) * 100;
             let sbLevel = document.getElementById('sidebar-level'); if(sbLevel) sbLevel.innerText = 'Lvl ' + lvl;
@@ -862,7 +825,7 @@
             window[cb] = function(res) {
                 if (res && res.data && res.data.length > 0) {
                     myBgUrl = res.data[0].picture_xl; myAvatar = res.data[0].picture_medium;
-                    saveAccountData();
+                    localStorage.setItem('rapquiz_avatar', myAvatar); localStorage.setItem('rapquiz_bg_url', myBgUrl);
                     document.getElementById('app-background').src = myBgUrl; updateAllAvatars();
                 }
             };
@@ -906,155 +869,64 @@
             let sel = document.getElementById('edit-menu-song-select');
             if(sel.value) {
                 mySongUrl = sel.value; let selectedOpt = sel.options[sel.selectedIndex]; mySongTitle = selectedOpt.getAttribute('data-title') || selectedOpt.text;
-                saveAccountData();
+                localStorage.setItem('rapquiz_menu_song_url', mySongUrl); localStorage.setItem('rapquiz_menu_song_title', mySongTitle); 
                 let hymnDisplay = document.getElementById('profile-view-hymn'); if (hymnDisplay) hymnDisplay.innerText = mySongTitle; 
                 playMenuMusic(mySongUrl);
             }
         }
 
-        function buildArtistGrid() {
-            let grid = document.getElementById('artist-grid'); if(!grid) return;
-            grid.innerHTML = '';
-            allArtists.forEach(a => { 
-                let d = document.createElement('div'); d.className = isPremium ? 'artist-tile' : 'artist-tile locked-card'; 
-                if(!isPremium) {
-                    d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:10px; margin-top:3px; color:var(--warning);">🔒 VIP</span>`;
-                    d.onclick = () => { document.getElementById('premium-overlay').style.display = 'flex'; };
-                } else { d.innerText = a; d.onclick = () => startArtistMode(a); }
-                grid.appendChild(d); 
-            });
-        }
-
         window.onload = () => {
             let volSlider = document.getElementById('volume-slider'); if(volSlider) volSlider.value = globalVolume;
-            
             let editSel = document.getElementById('edit-fav-artist-select');
-            if (editSel) { editSel.innerHTML = ''; allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; editSel.appendChild(opt); }); }
+            if (editSel) { editSel.innerHTML = ''; allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; if(a === myFavArtist) opt.selected = true; editSel.appendChild(opt); }); }
             
-            let accounts = JSON.parse(localStorage.getItem('rapquiz_accounts')) || {};
-            let activeUser = localStorage.getItem('rapquiz_active_user');
-
-            if (activeUser && accounts[activeUser]) { 
-                document.getElementById('profile-overlay').style.display = 'none'; 
-                handleProfileLogin(true, activeUser); 
-            } else { 
-                document.getElementById('profile-overlay').style.display = 'flex'; 
+            let grid = document.getElementById('artist-grid');
+            if(grid) {
+                grid.innerHTML = '';
+                allArtists.forEach(a => { 
+                    let d = document.createElement('div'); d.className = isPremium ? 'artist-tile' : 'artist-tile locked-card'; 
+                    if(!isPremium) {
+                        d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:10px; margin-top:3px; color:var(--warning);">🔒 VIP</span>`;
+                        d.onclick = () => { document.getElementById('premium-overlay').style.display = 'flex'; };
+                    } else { d.innerText = a; d.onclick = () => startArtistMode(a); }
+                    grid.appendChild(d); 
+                });
             }
-        };
-
-        async function handleProfileLogin(isAutoLogin = false, autoName = "") {
-            let err = document.getElementById('profile-error');
-            let btn = document.getElementById('login-btn');
-            
-            let accounts = JSON.parse(localStorage.getItem('rapquiz_accounts')) || {};
-            
-            let name = isAutoLogin ? autoName : document.getElementById('username-input').value.trim(); 
-            let pw = isAutoLogin ? (accounts[name]?.password || "") : document.getElementById('password-input').value.trim(); 
-
-            if (!name || !pw) { 
-                if(err) { err.innerText = "Bitte fülle Username und Passwort aus!"; err.style.display = 'block'; } 
-                document.getElementById('profile-overlay').style.display = 'flex';
-                return; 
-            }
-
-            if (!isAutoLogin && btn) { btn.innerText = "Lade... ⏳"; btn.disabled = true; }
-
-            let localAccountExists = !!accounts[name];
-
-            if (localAccountExists && !isAutoLogin) {
-                if (accounts[name].password !== pw) { 
-                    if(err) { err.innerText = "Falsches Passwort!"; err.style.display = 'block'; } 
-                    if(btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
-                    return; 
-                }
-            }
-
-            if (!localAccountExists) {
-                accounts[name] = {
-                    password: pw, isPremium: false, 
-                    stats: { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, progressive: 0, megahits: 0, higherlower: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0 } },
-                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-                    bgUrl: '', favArtist: '', quote: '"Ready to dominate the game."', songUrl: '', songTitle: ''
-                };
-            }
-
-            playerName = name; savedPw = pw;
-            
-            // Lade lokale Daten sicher
-            myStats = accounts[playerName].stats || { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: {} };
-            isPremium = accounts[playerName].isPremium || false;
-            myAvatar = accounts[playerName].avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
-            myBgUrl = accounts[playerName].bgUrl || '';
-            myFavArtist = accounts[playerName].favArtist || '';
-            myQuote = accounts[playerName].quote || '';
-            mySongUrl = accounts[playerName].songUrl || '';
-            mySongTitle = accounts[playerName].songTitle || '';
-
-            try {
-                if (supabase) {
-                    let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
-                    let { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email: fakeEmail, password: pw });
-                    
-                    if (authError) {
-                        let { data: regData, error: regError } = await supabase.auth.signUp({ email: fakeEmail, password: pw });
-                        if (regData?.user) authData = regData;
-                    }
-
-                    if (authData?.user) {
-                        let { data: profile } = await supabase.from('profiles').select('*').eq('id', authData.user.id).single();
-                        if (profile) {
-                            isPremium = profile.is_premium || isPremium;
-                            myStats.totalScore = Math.max(myStats.totalScore || 0, profile.total_score || 0);
-                        }
-                        syncToCloud(); 
-                    }
-                }
-            } catch(e) {
-                console.log("Cloud offline, spiele lokal weiter.", e);
-            }
-
-            // SICHERHEITS-FIX: Verhindern von "undefined" Abstürzen
-            if (!accounts[playerName].stats) accounts[playerName].stats = myStats;
-
-            accounts[playerName].isPremium = isPremium;
-            accounts[playerName].stats.totalScore = myStats.totalScore;
-            
-            localStorage.setItem('rapquiz_active_user', playerName);
-            localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
-
-            updateLevelDisplay(); updateDetailedStats();
-            document.getElementById('profile-overlay').style.display = 'none'; 
-            document.getElementById('app-layout').style.display = 'flex';
-            document.getElementById('sidebar-name').innerText = playerName; 
-            document.getElementById('profile-view-name').innerText = playerName; 
-            document.getElementById('profile-view-quote').innerText = myQuote || ""; 
-            
-            let hymnDisplay = document.getElementById('profile-view-hymn'); if (hymnDisplay) hymnDisplay.innerText = mySongTitle || "None";
-            if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
-            
-            let editSel = document.getElementById('edit-fav-artist-select'); if (editSel && myFavArtist) editSel.value = myFavArtist;
-
-            buildArtistGrid();
 
             if (isPremium) {
-                let badge = document.getElementById('premium-badge'); if(badge) badge.style.display = 'inline-block'; 
-                let buy = document.getElementById('vip-buy-section'); if(buy) buy.style.display = 'none'; 
-                let redeem = document.getElementById('vip-redeem-section'); if(redeem) redeem.style.display = 'none';
+                document.getElementById('premium-badge').style.display = 'inline-block'; document.getElementById('vip-buy-section').style.display = 'none'; document.getElementById('vip-redeem-section').style.display = 'none';
                 document.querySelectorAll('.locked-card').forEach(el => { el.classList.remove('locked-card'); let lockIcon = el.querySelector('.lock-icon'); if(lockIcon) lockIcon.style.display = 'none'; });
             }
+            if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
 
+            if (!playerName || !savedPw) { document.getElementById('profile-overlay').style.display = 'flex'; } 
+            else { document.getElementById('profile-overlay').style.display = 'none'; handleProfileLogin(true); }
+        };
+
+        function handleProfileLogin(isAutoLogin = false) {
+            let err = document.getElementById('profile-error');
+            if (!isAutoLogin) {
+                let name = document.getElementById('username-input').value.trim(); let pw = document.getElementById('password-input').value.trim(); 
+                if (!name || !pw) { err.innerText = "Please fill in username and password!"; err.style.display = 'block'; return; }
+                if (savedPw && pw !== savedPw) { err.innerText = "Wrong password!"; err.style.display = 'block'; return; }
+                if(!savedPw) {
+                    localStorage.setItem('rapquiz_username', name); localStorage.setItem('rapquiz_password', pw); playerName = name; savedPw = pw; 
+                    myAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`; localStorage.setItem('rapquiz_avatar', myAvatar);
+                }
+            }
+            updateLevelDisplay(); updateDetailedStats();
+            document.getElementById('profile-overlay').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex';
+            document.getElementById('sidebar-name').innerText = playerName; document.getElementById('profile-view-name').innerText = playerName; document.getElementById('profile-view-quote').innerText = myQuote; 
+            let hymnDisplay = document.getElementById('profile-view-hymn'); if (hymnDisplay) hymnDisplay.innerText = mySongTitle || "None";
             updateAllAvatars(); playMenuMusic(mySongUrl);
-            if (btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
         }
 
-        function resetProfile() { localStorage.removeItem('rapquiz_active_user'); location.reload(); }
+        function resetProfile() { localStorage.clear(); location.reload(); }
 
         function updateFavArtist() { 
-            myFavArtist = document.getElementById('edit-fav-artist-select').value; 
-            myQuote = getArtistQuote(myFavArtist);
-            document.getElementById('profile-view-quote').innerText = myQuote; 
-            saveAccountData();
-            loadArtistVisuals(myFavArtist); 
+            myFavArtist = document.getElementById('edit-fav-artist-select').value; localStorage.setItem('rapquiz_fav_artist', myFavArtist); 
+            myQuote = getArtistQuote(myFavArtist); localStorage.setItem('rapquiz_quote', myQuote);
+            document.getElementById('profile-view-quote').innerText = myQuote; loadArtistVisuals(myFavArtist); 
         }
 
         async function redeemVIPCode() {
@@ -1075,12 +947,12 @@
                 
                 let data = await res.json();
                 if (data.success && !data.purchase.refunded) {
-                    isPremium = true; saveAccountData(); syncToCloud();
+                    localStorage.setItem('rapquiz_premium', 'true');
                     alert("🎉 SUCCESS! License verified. You are now a Lifetime VIP!"); location.reload();
                 } else { alert("❌ Invalid or refunded code."); }
             } catch (e) {
                 if(code.length >= 10 && code.includes('-')) {
-                    isPremium = true; saveAccountData(); syncToCloud();
+                    localStorage.setItem('rapquiz_premium', 'true');
                     alert("🎉 SUCCESS! (Fallback Verification) You are now a Lifetime VIP!"); location.reload();
                 } else {
                     alert("❌ API Error. Check your connection or format.");
@@ -1155,7 +1027,7 @@
                     isWinnerScreenShown = true; let winner = sorted[0]; let amIFirst = (winner.id === socket.id);
                     myStats.played++; if(amIFirst) myStats.wins++; else myStats.losses++;
                     myStats.totalScore = (myStats.totalScore || 0) + score; if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0; myStats.modeScores[currentMode] += score;
-                    saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats(); showWinnerScreen(winner);
+                    localStorage.setItem('rapquiz_stats', JSON.stringify(myStats)); updateLevelDisplay(); updateDetailedStats(); showWinnerScreen(winner);
                 }
             } else { renderMpLeaderboard(); }
         }
@@ -1203,7 +1075,7 @@
         }
 
         // ==========================================
-        // HIGHER / LOWER LOGIK
+        // HIGHER / LOWER LOGIK (ANTI-DUPLIKAT & AUDIO FIX)
         // ==========================================
         let hlPool = []; let hlCurrentA = null; let hlCurrentB = null; let hlStreak = 0; let hlRecentArtists = [];
 
@@ -1237,7 +1109,7 @@
             document.getElementById('hl-action-box').style.display = 'flex'; document.getElementById('hl-result-box').style.display = 'none'; document.getElementById('hl-streams-b').innerText = hlCurrentB.streams.toLocaleString('en-US');
 
             audio.pause(); clearTimeout(precisionTimer);
-            if (hlCurrentB.preview) { audio.src = hlCurrentB.preview; audio.volume = globalVolume; audio.play().catch(e=>{}); }
+            if (hlCurrentB.preview) { audio.src = hlCurrentB.preview; audio.volume = globalVolume; audio.loop = true; audio.play().catch(e=>{}); }
         }
 
         function processHLChoice(choice) {
@@ -1260,11 +1132,11 @@
             } else {
                 myStats.wrongGuesses++; setTimeout(() => { triggerGameOver(false); }, 2000);
             }
-            saveAccountData();
+            localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
         }
 
         // ==========================================
-        // GAME LOGIC & DEEP FETCH
+        // GAME LOGIC & DEEP FETCH (ANTI-TRASH FILTER)
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
         let currentPlayId = 0; 
@@ -1272,7 +1144,7 @@
         function playAudioSnippet(isReplay = false) { 
             clearTimeout(precisionTimer); let playId = ++currentPlayId;
             if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
-            audio.volume = globalVolume; let p = audio.play();
+            audio.volume = globalVolume; audio.loop = false; let p = audio.play();
             if (p !== undefined) { p.then(() => { if (playId !== currentPlayId) return; if (maxPlayTime < 30) { precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000); } }).catch(e=>{}); }
         }
 
@@ -1305,12 +1177,12 @@
                     }));
                     songsPool = songsPool.concat(mapped);
                 }
-            } catch (e) {}
+            } catch (e) { console.warn("API Error for", artist, e); }
         }
 
         function resetGameStats() {
             songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
-            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); 
+            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); audio.loop = false;
             let box = document.getElementById('suggestions-box'); if(box) box.style.display = 'none'; 
             let res = document.getElementById('mp-result'); if(res) res.style.display = 'none';
         }
@@ -1479,7 +1351,7 @@
                 }
             }
             
-            saveAccountData();
+            localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
             
             if (isMultiplayer) {
                 socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
@@ -1524,7 +1396,9 @@
                     myStats.totalScore = (myStats.totalScore || 0) + score;
                     if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0;
                     myStats.modeScores[currentMode] += score;
-                    saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats();
+                    localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
+                    updateLevelDisplay();
+                    updateDetailedStats();
 
                     b.innerText = "Exit 🏠"; b.style.display = 'block'; 
                     b.onclick = () => { backToMenu(); };
