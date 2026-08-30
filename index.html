@@ -51,7 +51,7 @@
         h1 { color: var(--text); font-size: 40px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 25px rgba(0,0,0,0.8); }
 
         /* --- LAYOUT & MOBILE UI --- */
-        #app-layout { display: none; width: 100%; height: 100%; flex-direction: row; }
+        #app-layout { display: flex; width: 100%; height: 100%; flex-direction: row; }
 
         #mobile-menu-btn {
             position: fixed; top: 20px; left: 20px;
@@ -77,7 +77,7 @@
         .sidebar-logo span { color: var(--primary); }
 
         .sidebar-user { display: flex; align-items: center; gap: 15px; padding: 15px 25px; margin-bottom: 30px; background: rgba(0,0,0,0.4); border-top: 1px solid var(--surface-border); border-bottom: 1px solid var(--surface-border); }
-        .sidebar-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
+        .sidebar-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); background: var(--bg-color); }
         .sidebar-name { font-size: 14px; font-weight: 800; text-transform: uppercase; }
 
         .nav-item { padding: 18px 25px; font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.3s; border-left: 4px solid transparent; display: flex; gap: 15px; }
@@ -90,21 +90,6 @@
         @keyframes fadeIn { 0% { opacity: 0; transform: translateX(20px); } 100% { opacity: 1; transform: translateX(0); } }
 
         .section-title { font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; border-bottom: 2px solid var(--surface-border); padding-bottom: 10px; color: white; text-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between; }
-
-        /* --- BANNER DESIGN --- */
-        .banner-container { 
-            display: flex; align-items: center; gap: 25px; padding: 25px; 
-            border-radius: 16px; border: 2px solid var(--primary); 
-            background: linear-gradient(135deg, rgba(20,20,25,0.9), rgba(139,92,246,0.15)); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 40px; 
-        }
-        .banner-img { 
-            width: 140px; height: 140px; border-radius: 16px; object-fit: cover; 
-            border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 8px 20px rgba(0,0,0,0.5); flex-shrink: 0; 
-        }
-        .banner-text-box { text-align: left; }
-        .banner-subtitle { margin: 0 0 5px 0; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 2px; }
-        .banner-title { margin: 0; color: white; text-transform: uppercase; font-size: 32px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 15px rgba(139,92,246,0.8); }
 
         /* --- CARDS & UI --- */
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 40px; }
@@ -134,7 +119,6 @@
         .ea-card-desc { font-size: 12px; color: #e4e4e7; font-weight: 600; text-shadow: 0 0 5px black;}
 
         .card-highlight { border-color: rgba(139,92,246,0.5); }
-        .card-sc { border-color: rgba(255,85,0,0.5); }
         .card-gold { border-color: rgba(245,158,11,0.5); }
 
         .artist-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
@@ -175,7 +159,7 @@
         .option-btn:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
 
         #text-input-container { position: relative; }
-        #suggestions-box { position: absolute; bottom: 100%; left: 0; width: 100%; background: rgba(20,20,25,0.95); border: 1px solid var(--primary); border-radius: 12px; max-height: 200px; overflow-y: auto; text-align: left; display: none; margin-bottom: 5px; backdrop-filter: blur(10px); }
+        #suggestions-box { position: absolute; bottom: 100%; left: 0; width: 100%; background: rgba(20,20,25,0.95); border: 1px solid var(--primary); border-radius: 12px; max-height: 200px; overflow-y: auto; text-align: left; display: none; margin-bottom: 5px; backdrop-filter: blur(10px); z-index: 50; }
         .suggestion-item { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 14px; font-weight: 700; color: white;}
         .suggestion-item:hover { background: var(--primary); }
 
@@ -221,10 +205,6 @@
             .cards-grid { grid-template-columns: 1fr; }
             h1 { font-size: 32px; }
             .section-title { font-size: 22px; }
-            .banner-container { flex-direction: column; text-align: center; padding: 20px; gap: 15px;}
-            .banner-text-box { text-align: center; }
-            .banner-img { width: 120px; height: 120px; }
-            .banner-title { font-size: 24px; }
         }
     </style>
 </head>
@@ -232,22 +212,6 @@
 
     <img id="app-background" src="" alt="">
     <div class="scanlines"></div>
-
-    <!-- PROFIL SETUP OVERLAY (Super Clean UI - Ohne Dropdowns!) -->
-    <div id="profile-overlay" class="overlay" style="display: flex;">
-        <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
-            <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
-            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login or create your cloud profile.</p>
-            
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <input type="text" id="username-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="👤 Username" autocomplete="off">
-                <input type="password" id="password-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="🔑 Password">
-            </div>
-            
-            <button id="login-btn" class="btn-action" onclick="handleProfileLogin()" style="margin-top: 15px;">Login / Register ➔</button>
-            <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
-        </div>
-    </div>
 
     <!-- PREMIUM PAYWALL OVERLAY -->
     <div id="premium-overlay" class="overlay" style="display: none;">
@@ -272,7 +236,6 @@
             </div>
 
             <button class="btn-action btn-gold" style="font-size: 18px; padding: 20px; margin-bottom: 15px;" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Unlock on Gumroad (12€) ➔</button>
-            
             <p style="margin-top: 15px; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('premium-overlay').style.display='none'">Maybe later</p>
         </div>
     </div>
@@ -287,7 +250,7 @@
             <div class="sidebar-user">
                 <img id="sidebar-avatar" class="sidebar-avatar" src="">
                 <div class="sidebar-user-info">
-                    <span id="sidebar-name" class="sidebar-name">Name</span>
+                    <span id="sidebar-name" class="sidebar-name">Guest</span>
                     <span class="sidebar-status" style="display:flex; gap:10px; align-items:center;">
                         <span id="premium-badge" style="display:none; background: var(--warning); color: black; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 900;">VIP</span>
                         <span id="sidebar-level" style="color:var(--primary); font-weight:900; font-size:12px;">Lvl 1</span>
@@ -309,6 +272,7 @@
         </nav>
 
         <main id="main-content">
+            <!-- PLAY TAB -->
             <div id="play-tab" class="tab-content active">
                 <div class="settings-bar">
                     <div class="settings-group">
@@ -318,15 +282,6 @@
                     <div class="settings-group">
                         <span class="settings-label">Show Artist</span>
                         <label class="switch"><input type="checkbox" id="artist-toggle" onchange="toggleArtistName()" checked><span class="slider green"></span></label>
-                    </div>
-                </div>
-
-                <div class="section-title">Your Club</div>
-                <div id="fav-artist-banner" class="banner-container" style="display: none;">
-                    <img id="fav-artist-img-1" src="" class="banner-img">
-                    <div class="banner-text-box">
-                        <h3 class="banner-subtitle">Your Favorite Artist</h3>
-                        <h2 id="banner-artist-name" class="banner-title">Artist</h2>
                     </div>
                 </div>
 
@@ -397,44 +352,62 @@
                 </div>
             </div>
 
-            <!-- PROFILE TAB -->
+            <!-- PROFILE TAB (NEW IN-GAME LOGIN) -->
             <div id="profile-tab" class="tab-content">
-                <div class="section-title">My Club</div>
-                <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
-                    <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
-                    <div style="text-align: left; flex: 1;">
-                        <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
-                        <div style="width: 100%; max-width: 400px; margin-top: 15px;">
-                            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
-                                <span>Level <span id="profile-level-num">1</span></span>
-                                <span><span id="profile-xp-current">0</span> / 4000 XP</span>
-                            </div>
-                            <div style="background: rgba(255,255,255,0.1); width: 100%; height: 8px; border-radius: 4px; overflow: hidden;">
-                                <div id="profile-xp-bar" style="background: var(--success); width: 0%; height: 100%; transition: width 0.5s ease;"></div>
+                
+                <!-- STATE 1: NOT LOGGED IN (SHOW LOGIN FORM) -->
+                <div id="club-auth-section" style="max-width: 400px; margin: 40px auto; text-align: center;">
+                    <div style="font-size: 50px; margin-bottom: 10px;">👤</div>
+                    <h2 style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900; text-transform: uppercase;">Join the Club</h2>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 30px;">Login or register to save your level and unlock VIP features.</p>
+                    
+                    <input type="text" id="club-username-input" class="ea-input" style="text-align: center;" placeholder="Username" autocomplete="off">
+                    <input type="password" id="club-password-input" class="ea-input" style="text-align: center;" placeholder="Password">
+                    
+                    <button id="club-login-btn" class="btn-action" style="margin-top: 10px;" onclick="handleClubLogin()">Login / Register ➔</button>
+                    <p id="club-error" style="color: var(--danger); display: none; font-size: 13px; margin-top: 15px; font-weight: bold;"></p>
+                </div>
+
+                <!-- STATE 2: LOGGED IN (SHOW CLUB STATS) -->
+                <div id="club-stats-section" style="display: none;">
+                    <div class="section-title">My Club</div>
+                    <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
+                        <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
+                        <div style="text-align: left; flex: 1;">
+                            <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
+                            <p id="profile-view-quote" style="margin: 0 0 15px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
+                            <div style="width: 100%; max-width: 400px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
+                                    <span>Level <span id="profile-level-num">1</span></span>
+                                    <span><span id="profile-xp-current">0</span> / 4000 XP</span>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.1); width: 100%; height: 8px; border-radius: 4px; overflow: hidden;">
+                                    <div id="profile-xp-bar" style="background: var(--success); width: 0%; height: 100%; transition: width 0.5s ease;"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
-                    <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
-                </div>
-
-                <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 Redeem Gumroad License</h3>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="e.g. A7X9-B2M4-99PL-Q1ZS">
-                        <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Verify</button>
+                    <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
+                        <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
+                        <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
                     </div>
-                </div>
 
-                <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">Change Favorite Artist</h3>
-                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 0;" onchange="updateFavArtist()"></select>
+                    <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
+                        <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 Redeem Gumroad License</h3>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="e.g. A7X9-B2M4-99PL-Q1ZS">
+                            <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Verify</button>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
+                        <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">Change Favorite Artist (Avatar)</h3>
+                        <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 0;" onchange="updateFavArtist()"></select>
+                    </div>
+                    
+                    <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Log Out</button>
                 </div>
-                
-                <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Log Out / Switch Account</button>
             </div>
         </main>
     </div>
@@ -509,7 +482,10 @@
             }
         } catch(e) {}
 
-        let playerName = ''; let myFavArtist = ''; let myAvatar = ''; let myBgUrl = ''; let myQuote = '"Ready to dominate the game."'; let isPremium = false; let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
+        // DEFAULT GUEST SETTINGS
+        let playerName = 'Guest_' + Math.floor(Math.random() * 9000 + 1000); 
+        let myFavArtist = ''; let myAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerName}`; let myBgUrl = ''; let myQuote = '"Just playing for fun."'; let isPremium = false; let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
+        let isLoggedIn = false;
         
         let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
         let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
@@ -566,7 +542,7 @@
                 if (res && res.data && res.data.length > 0) {
                     myBgUrl = res.data[0].picture_xl; myAvatar = res.data[0].picture_medium;
                     document.getElementById('app-background').src = myBgUrl; updateAllAvatars();
-                    saveProfileToDB(); 
+                    if(isLoggedIn) saveProfileToDB(); 
                 }
             };
             const s = document.createElement('script'); s.src = `https://api.deezer.com/search/artist?q="${encodeURIComponent(artistName)}"&limit=1&output=jsonp&callback=${cb}`; document.head.appendChild(s);
@@ -574,14 +550,19 @@
 
         function updateAllAvatars() { 
             ['sidebar-avatar', 'profile-view-avatar'].forEach(id => { let el = document.getElementById(id); if(el) el.src = myAvatar; }); 
-            let b1 = document.getElementById('fav-artist-img-1'); let bName = document.getElementById('banner-artist-name');
-            if (b1 && myBgUrl) { b1.src = myBgUrl; if(bName) bName.innerText = myFavArtist; document.getElementById('fav-artist-banner').style.display = 'flex'; }
+            let bName = document.getElementById('banner-artist-name');
+            if (myBgUrl) { document.getElementById('app-background').src = myBgUrl; }
         }
 
         // ==========================================
-        // AUTO-LOGIN & SYSTEM START
+        // NON-BLOCKING START & IN-GAME LOGIN
         // ==========================================
         window.onload = async () => {
+            // Zeige das Hauptspiel IMMER an (kein Blackscreen-Blocker mehr!)
+            document.getElementById('app-layout').style.display = 'flex';
+            document.getElementById('sidebar-name').innerText = playerName;
+            updateAllAvatars();
+
             try {
                 let editSel = document.getElementById('edit-fav-artist-select');
                 if (editSel) {
@@ -600,48 +581,49 @@
                     grid.appendChild(d); 
                 });
 
-                if (!supabase) {
-                    let errEl = document.getElementById('profile-error');
-                    errEl.innerText = "⚠️ Warnung: Datenbank-Verbindung blockiert. Bitte Adblocker prüfen.";
-                    errEl.style.display = 'block';
-                    document.getElementById('login-btn').disabled = true;
-                    return;
-                }
+                if (!supabase) return;
 
-                const { data: session, error } = await supabase.auth.getSession();
-                if (error) throw error;
-
+                const { data: session } = await supabase.auth.getSession();
                 if (session?.session?.user) {
-                    document.getElementById('profile-overlay').style.display = 'none';
                     await loadProfileFromDB(session.session.user.id);
-                } else {
-                    document.getElementById('profile-overlay').style.display = 'flex';
                 }
 
             } catch (err) {
-                console.error("System Start Error:", err);
+                console.error("System Start Error (Ignored to prevent blackscreen):", err);
             }
         };
 
-        async function handleProfileLogin() {
-            let btn = document.getElementById('login-btn'); btn.innerText = "Loading..."; btn.disabled = true;
-            let err = document.getElementById('profile-error'); err.style.display = 'none';
-            let name = document.getElementById('username-input').value.trim(); 
-            let pw = document.getElementById('password-input').value.trim(); 
+        function showClubUI() {
+            document.getElementById('club-auth-section').style.display = 'none';
+            document.getElementById('club-stats-section').style.display = 'block';
+            document.getElementById('sidebar-name').innerText = playerName;
+            document.getElementById('profile-view-name').innerText = playerName; 
+            updateLevelDisplay();
+            updateAllAvatars();
+        }
+
+        function showAuthUI() {
+            document.getElementById('club-auth-section').style.display = 'block';
+            document.getElementById('club-stats-section').style.display = 'none';
+            playerName = 'Guest_' + Math.floor(Math.random() * 9000 + 1000); 
+            myAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerName}`;
+            document.getElementById('sidebar-name').innerText = playerName;
+            updateAllAvatars();
+        }
+
+        async function handleClubLogin() {
+            let btn = document.getElementById('club-login-btn'); btn.innerText = "Loading..."; btn.disabled = true;
+            let err = document.getElementById('club-error'); err.style.display = 'none';
+            let name = document.getElementById('club-username-input').value.trim(); 
+            let pw = document.getElementById('club-password-input').value.trim(); 
             
             if (!name || !pw) { 
                 err.innerText = "Please fill in username and password!"; 
-                err.style.display = 'block'; 
-                btn.innerText = "Login / Register ➔"; 
-                btn.disabled = false; 
-                return; 
+                err.style.display = 'block'; btn.innerText = "Login / Register ➔"; btn.disabled = false; return; 
             }
             if (!supabase) {
-                err.innerText = "Database connection error."; 
-                err.style.display = 'block'; 
-                btn.innerText = "Login / Register ➔"; 
-                btn.disabled = false; 
-                return; 
+                err.innerText = "Database offline. Check Adblocker."; 
+                err.style.display = 'block'; btn.innerText = "Login / Register ➔"; btn.disabled = false; return; 
             }
 
             let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
@@ -651,28 +633,35 @@
                 let { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email: fakeEmail, password: pw });
                 if (signUpError) {
                     err.innerText = "Error: Password too weak (min 6 chars) or wrong credentials."; 
-                    err.style.display = 'block'; 
-                    btn.innerText = "Login / Register ➔"; 
-                    btn.disabled = false; 
-                    return;
+                    err.style.display = 'block'; btn.innerText = "Login / Register ➔"; btn.disabled = false; return;
                 }
-                data = signUpData;
                 
+                // SUPABASE E-MAIL FALLBACK CHECK
+                if (signUpData?.user && !signUpData?.session) {
+                    err.innerText = "⚠️ Supabase Error: You MUST disable 'Confirm email' in your Supabase Auth settings to allow automatic login!"; 
+                    err.style.display = 'block'; btn.innerText = "Login / Register ➔"; btn.disabled = false; return;
+                }
+
+                data = signUpData;
                 playerName = name;
                 myAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
+                isLoggedIn = true;
                 
-                await saveProfileToDB(); 
+                setTimeout(() => saveProfileToDB(), 2000); 
             }
 
             if (data?.user) {
                 await loadProfileFromDB(data.user.id);
             }
+            btn.innerText = "Login / Register ➔"; btn.disabled = false;
         }
 
         async function loadProfileFromDB(userId) {
             if (!supabase) return;
             let { data: profile, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
             
+            isLoggedIn = true;
+
             if (profile) {
                 playerName = profile.username || "Player";
                 myAvatar = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerName}`;
@@ -692,17 +681,11 @@
                 });
             }
 
-            document.getElementById('profile-overlay').style.display = 'none'; 
-            document.getElementById('app-layout').style.display = 'flex';
-            document.getElementById('sidebar-name').innerText = playerName; 
-            document.getElementById('profile-view-name').innerText = playerName; 
-            
-            updateLevelDisplay();
-            updateAllAvatars();
+            showClubUI();
         }
 
         async function saveProfileToDB() {
-            if (!supabase) return;
+            if (!supabase || !isLoggedIn) return;
             const { data: session } = await supabase.auth.getSession();
             if (session?.session?.user) {
                 await supabase.from('profiles').upsert({
@@ -717,14 +700,13 @@
         async function updateDbScore(addedScore) {
             myStats.totalScore += addedScore;
             updateLevelDisplay();
-            if (!supabase) return;
+            if (!supabase || !isLoggedIn) return;
             const { data: session } = await supabase.auth.getSession();
             if (session?.session?.user) {
                 await supabase.from('profiles').update({ total_score: myStats.totalScore }).eq('id', session.session.user.id);
             }
         }
 
-        // --- GUMROAD API: LICENSE VERIFICATION ---
         async function redeemVIPCode() {
             let code = document.getElementById('vip-code-input').value.trim();
             if(!code) return alert("Please enter your Gumroad code!");
@@ -738,18 +720,13 @@
                 let res = await fetch('https://api.gumroad.com/v2/licenses/verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        product_id: 'ZWtMCbbtsw3aVMslIZK7MQ==', 
-                        license_key: code,
-                        increment_uses_count: true
-                    })
+                    body: JSON.stringify({ product_id: 'ZWtMCbbtsw3aVMslIZK7MQ==', license_key: code, increment_uses_count: true })
                 });
-                
                 let data = await res.json();
                 
                 if (data.success && !data.purchase.refunded && !data.purchase.chargebacked) {
                     isPremium = true;
-                    if(supabase) {
+                    if(supabase && isLoggedIn) {
                         const { data: session } = await supabase.auth.getSession();
                         if (session?.session?.user) {
                             await supabase.from('profiles').update({ is_premium: true }).eq('id', session.session.user.id);
@@ -763,14 +740,16 @@
             } catch (e) {
                 alert("❌ API Error. Please check your internet connection or try again later.");
             }
-
             document.getElementById('vip-code-input').disabled = false;
             btn.innerText = originalText;
         }
 
         async function resetProfile() { 
             if(supabase) await supabase.auth.signOut();
-            localStorage.clear(); location.reload(); 
+            isLoggedIn = false;
+            isPremium = false;
+            myStats.totalScore = 0;
+            showAuthUI();
         }
 
         function updateFavArtist() { 
@@ -1238,6 +1217,7 @@
                 myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
                 updateDbScore(score);
 
+                if (!victory && score < 500) { sfxAudio.src = "roddy.mp3"; sfxAudio.play().catch(e=>{}); }
                 b.innerText = "Exit 🏠"; b.style.display = 'block'; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
                 document.getElementById('feedback-overlay').style.display = 'flex';
             }
