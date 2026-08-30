@@ -273,7 +273,7 @@
     <div id="profile-overlay" class="overlay">
         <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
             <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
-            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login or create your cloud profile.</p>
+            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login or create your local account.</p>
             
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <input type="text" id="username-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="👤 Username" autocomplete="off">
@@ -540,7 +540,7 @@
         </main>
     </div>
 
-    <!-- GAME SCREEN -->
+    <!-- STANDARD GAME SCREEN -->
     <div id="game-screen">
         <div class="game-inner">
             <div class="stats-bar" id="game-stats-bar"></div>
@@ -668,16 +668,11 @@
         function getArtistQuote(name) { return artistQuotes[name] || `"Ready to dominate the game." - ${name}`; }
 
         // ==========================================
-        // SYSTEM INIT & HYBRID CLOUD / LOCAL
+        // SYSTEM INIT & LOCAL ACCOUNTS
         // ==========================================
         const SERVER_URL = 'https://mukke886.onrender.com';
         let globalVolume = 0.5;
         try { let storedVol = parseFloat(localStorage.getItem('rapquiz_volume')); if (!isNaN(storedVol)) globalVolume = storedVol; } catch(e) {}
-
-        const supabaseUrl = 'https://tvcnushrhteworueftfy.supabase.co';
-        const supabaseKey = 'sb_publishable_VftGljbGfzD1urJFrw5Ygw_9jV4-1bD'; 
-        let supabase = null;
-        try { if (typeof window.supabase !== 'undefined') supabase = window.supabase.createClient(supabaseUrl, supabaseKey); } catch(e) {}
 
         let socket = { on: () => {}, emit: () => {} }; 
         try {
@@ -687,8 +682,8 @@
             }
         } catch (e) { }
 
+        // NEUES ACCOUNT SYSTEM
         let playerName = ""; 
-        let savedPw = "";
         let myFavArtist = ""; 
         let myAvatar = ""; 
         let myBgUrl = "";
@@ -761,21 +756,6 @@
             if (!isMenuMusicPlaying) return; ytContext = 'menu';
             if (mySongUrl.startsWith('yt:')) { if(ytReady && ytPlayer && ytPlayer.playVideo) { ytPlayer.setVolume(globalVolume * 40); ytPlayer.playVideo(); } } 
             else { menuAudio.play().catch(e=>{}); }
-        }
-
-        async function syncToCloud() {
-            if (!supabase || !playerName) return;
-            try {
-                const { data: session } = await supabase.auth.getSession();
-                if (session?.session?.user) {
-                    await supabase.from('profiles').upsert({
-                        id: session.session.user.id,
-                        username: playerName,
-                        is_premium: isPremium,
-                        total_score: myStats.totalScore
-                    });
-                }
-            } catch(e) { console.log("Cloud sync skipped"); }
         }
 
         function saveAccountData() {
@@ -908,7 +888,8 @@
         }
 
         function buildArtistGrid() {
-            let grid = document.getElementById('artist-grid'); if(!grid) return;
+            let grid = document.getElementById('artist-grid');
+            if(!grid) return;
             grid.innerHTML = '';
             allArtists.forEach(a => { 
                 let d = document.createElement('div'); d.className = isPremium ? 'artist-tile' : 'artist-tile locked-card'; 
@@ -937,76 +918,41 @@
             }
         };
 
-        async function handleProfileLogin(isAutoLogin = false, autoName = "") {
+        function handleProfileLogin(isAutoLogin = false, autoName = "") {
             let err = document.getElementById('profile-error');
-            let btn = document.getElementById('login-btn');
-            
-            let name = isAutoLogin ? autoName : document.getElementById('username-input').value.trim(); 
-            let pw = isAutoLogin ? savedPw : document.getElementById('password-input').value.trim(); 
-
-            if (!name || !pw) { if(err) { err.innerText = "Bitte fülle Username und Passwort aus!"; err.style.display = 'block'; } return; }
-
-            if (!isAutoLogin && btn) { btn.innerText = "Syncing Cloud ☁️..."; btn.disabled = true; }
-
-            let isCloudSuccess = false;
-
-            // 1. SUPABASE CLOUD AUTH
-            if (supabase) {
-                let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
-                let { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email: fakeEmail, password: pw });
-                
-                if (authError) {
-                    let { data: regData, error: regError } = await supabase.auth.signUp({ email: fakeEmail, password: pw });
-                    if (regError && regError.message.includes("already registered")) {
-                        if(err) { err.innerText = "Falsches Passwort für diesen Account!"; err.style.display = 'block'; }
-                        if (btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
-                        return;
-                    } else if (regData?.user) {
-                        authData = regData;
-                    }
-                }
-
-                if (authData?.user) {
-                    isCloudSuccess = true;
-                    let { data: profile } = await supabase.from('profiles').select('*').eq('id', authData.user.id).single();
-                    if (profile) {
-                        isPremium = profile.is_premium || false;
-                        myStats.totalScore = profile.total_score || 0;
-                    }
-                }
-            }
-
-            // 2. LOCAL STORAGE (Fallback & Cache)
             let accounts = JSON.parse(localStorage.getItem('rapquiz_accounts')) || {};
-            if (!accounts[name]) {
-                accounts[name] = {
-                    password: pw, isPremium: isPremium, 
-                    stats: { played: 0, wins: 0, losses: 0, totalScore: myStats.totalScore || 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, progressive: 0, megahits: 0, higherlower: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0 } },
-                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-                    bgUrl: '', favArtist: '', quote: '"Ready to dominate the game."', songUrl: '', songTitle: ''
-                };
+
+            if (!isAutoLogin) {
+                let name = document.getElementById('username-input').value.trim(); let pw = document.getElementById('password-input').value.trim(); 
+                if (!name || !pw) { err.innerText = "Please fill in username and password!"; err.style.display = 'block'; return; }
+                
+                if (accounts[name]) {
+                    if (accounts[name].password !== pw) { err.innerText = "Wrong password!"; err.style.display = 'block'; return; }
+                } else {
+                    accounts[name] = {
+                        password: pw, isPremium: false, 
+                        stats: { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, progressive: 0, megahits: 0, higherlower: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0 } },
+                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+                        bgUrl: '', favArtist: '', quote: '"Ready to dominate the game."', songUrl: '', songTitle: ''
+                    };
+                }
+                playerName = name;
             } else {
-                // Update local with cloud
-                accounts[name].isPremium = isPremium || accounts[name].isPremium;
-                accounts[name].stats.totalScore = Math.max(myStats.totalScore, accounts[name].stats.totalScore);
+                playerName = autoName;
             }
 
-            playerName = name; savedPw = pw;
-            
-            // Lade alle Daten in den RAM
-            myStats = accounts[playerName].stats;
-            isPremium = accounts[playerName].isPremium;
-            myAvatar = accounts[playerName].avatar;
-            myBgUrl = accounts[playerName].bgUrl;
-            myFavArtist = accounts[playerName].favArtist;
-            myQuote = accounts[playerName].quote;
-            mySongUrl = accounts[playerName].songUrl;
-            mySongTitle = accounts[playerName].songTitle;
+            let acc = accounts[playerName];
+            myStats = acc.stats || { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, progressive: 0, megahits: 0, higherlower: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0 } };
+            isPremium = acc.isPremium || false;
+            myAvatar = acc.avatar;
+            myBgUrl = acc.bgUrl;
+            myFavArtist = acc.favArtist;
+            myQuote = acc.quote;
+            mySongUrl = acc.songUrl;
+            mySongTitle = acc.songTitle;
 
             localStorage.setItem('rapquiz_active_user', playerName);
-            saveAccountData();
-
-            if (isCloudSuccess) syncToCloud();
+            localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
 
             updateLevelDisplay(); updateDetailedStats();
             document.getElementById('profile-overlay').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex';
@@ -1015,7 +961,8 @@
             let hymnDisplay = document.getElementById('profile-view-hymn'); if (hymnDisplay) hymnDisplay.innerText = mySongTitle || "None";
             if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
             
-            let editSel = document.getElementById('edit-fav-artist-select'); if (editSel && myFavArtist) editSel.value = myFavArtist;
+            let editSel = document.getElementById('edit-fav-artist-select');
+            if (editSel && myFavArtist) editSel.value = myFavArtist;
 
             buildArtistGrid();
 
@@ -1055,12 +1002,12 @@
                 
                 let data = await res.json();
                 if (data.success && !data.purchase.refunded) {
-                    isPremium = true; saveAccountData(); syncToCloud();
+                    isPremium = true; saveAccountData();
                     alert("🎉 SUCCESS! License verified. You are now a Lifetime VIP!"); location.reload();
                 } else { alert("❌ Invalid or refunded code."); }
             } catch (e) {
                 if(code.length >= 10 && code.includes('-')) {
-                    isPremium = true; saveAccountData(); syncToCloud();
+                    isPremium = true; saveAccountData();
                     alert("🎉 SUCCESS! (Fallback Verification) You are now a Lifetime VIP!"); location.reload();
                 } else {
                     alert("❌ API Error. Check your connection or format.");
@@ -1135,7 +1082,7 @@
                     isWinnerScreenShown = true; let winner = sorted[0]; let amIFirst = (winner.id === socket.id);
                     myStats.played++; if(amIFirst) myStats.wins++; else myStats.losses++;
                     myStats.totalScore = (myStats.totalScore || 0) + score; if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0; myStats.modeScores[currentMode] += score;
-                    saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats(); showWinnerScreen(winner);
+                    saveAccountData(); updateLevelDisplay(); updateDetailedStats(); showWinnerScreen(winner);
                 }
             } else { renderMpLeaderboard(); }
         }
@@ -1504,7 +1451,7 @@
                     myStats.totalScore = (myStats.totalScore || 0) + score;
                     if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0;
                     myStats.modeScores[currentMode] += score;
-                    saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats();
+                    saveAccountData(); updateLevelDisplay(); updateDetailedStats();
 
                     b.innerText = "Exit 🏠"; b.style.display = 'block'; 
                     b.onclick = () => { backToMenu(); };
