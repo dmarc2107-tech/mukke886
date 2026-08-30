@@ -630,7 +630,7 @@
         
         const allArtists = [...new Set([...soundcloudArtists, ...artists2010s, ...legends, ...megaStars, ...fallenLegends])].sort();
 
-        // ERWEITERTE SPOTIFY BENCHMARKS (Echte Meilensteine)
+        // ERWEITERTE SPOTIFY BENCHMARKS
         const knownStreamBenchmarks = {
             "goosebumps": 2450000000, "sicko mode": 2210000000, "lucid dreams": 2620000000, "all girls are the same": 1820000000,
             "sad!": 2340000000, "jocelyn flores": 2150000000, "star shopping": 1290000000, "falling down": 1120000000,
@@ -647,20 +647,16 @@
             "moonlight": 1900000000, "fuck love": 1500000000
         };
 
-        // SCHLAUER ALGORITHMUS: Basiert auf Artist-Tiers für realistische Fake-Zahlen bei unbekannten Songs
         function getTrackEstimatedStreams(trackTitle, artistName) {
             let clean = trackTitle.toLowerCase().split('(')[0].split('feat')[0].split('-')[0].trim();
             for(let k in knownStreamBenchmarks) { if (clean === k || clean.includes(k) || k.includes(clean)) return knownStreamBenchmarks[k]; }
-            
             let hash = 0; let combined = trackTitle + artistName;
             for (let i = 0; i < combined.length; i++) hash = combined.charCodeAt(i) + ((hash << 5) - hash);
-            
             let baseMin = 50; let baseMax = 200;
             if (megaStars.includes(artistName)) { baseMin = 300; baseMax = 900; }
             else if (legends.includes(artistName)) { baseMin = 200; baseMax = 600; }
             else if (fallenLegends.includes(artistName)) { baseMin = 250; baseMax = 800; }
             else if (artists2010s.includes(artistName)) { baseMin = 150; baseMax = 500; }
-            
             let randomTier = Math.abs(hash % (baseMax - baseMin)) + baseMin;
             return randomTier * 1000000 + Math.abs(hash % 999999);
         }
@@ -1058,7 +1054,6 @@
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('hl-screen').style.display = 'flex';
             
             hlCurrentA = hlPool.pop(); 
-            // ANTI-DUPLIKAT: Finde eine Karte, die NICHT vom selben Artist ist wie Karte A
             let nextIndex = hlPool.findIndex(s => s.artist.name !== hlCurrentA.artist.name);
             if(nextIndex !== -1) { hlCurrentB = hlPool.splice(nextIndex, 1)[0]; } else { hlCurrentB = hlPool.pop(); }
             
@@ -1067,9 +1062,9 @@
 
         function renderHLRound() {
             document.getElementById('hl-streak-num').innerText = hlStreak;
-            document.getElementById('hl-img-a').src = hlCurrentA.album.cover_medium; document.getElementById('hl-title-a').innerText = hlCurrentA.title; document.getElementById('hl-artist-a').innerText = hlCurrentA.artist.name; document.getElementById('hl-streams-a').innerText = hlCurrentA.streams.toLocaleString('de-DE');
+            document.getElementById('hl-img-a').src = hlCurrentA.album.cover_medium; document.getElementById('hl-title-a').innerText = hlCurrentA.title; document.getElementById('hl-artist-a').innerText = hlCurrentA.artist.name; document.getElementById('hl-streams-a').innerText = hlCurrentA.streams.toLocaleString('en-US');
             document.getElementById('hl-img-b').src = hlCurrentB.album.cover_medium; document.getElementById('hl-title-b').innerText = hlCurrentB.title; document.getElementById('hl-artist-b').innerText = hlCurrentB.artist.name;
-            document.getElementById('hl-action-box').style.display = 'flex'; document.getElementById('hl-result-box').style.display = 'none'; document.getElementById('hl-streams-b').innerText = hlCurrentB.streams.toLocaleString('de-DE');
+            document.getElementById('hl-action-box').style.display = 'flex'; document.getElementById('hl-result-box').style.display = 'none'; document.getElementById('hl-streams-b').innerText = hlCurrentB.streams.toLocaleString('en-US');
         }
 
         function processHLChoice(choice) {
@@ -1081,7 +1076,6 @@
                     hlCurrentA = hlCurrentB; 
                     if (hlPool.length === 0) { triggerGameOver(true); } 
                     else { 
-                        // ANTI-DUPLIKAT FÜR DIE NÄCHSTE KARTE
                         let nextIndex = hlPool.findIndex(s => s.artist.name !== hlCurrentA.artist.name);
                         if(nextIndex !== -1) { hlCurrentB = hlPool.splice(nextIndex, 1)[0]; } else { hlCurrentB = hlPool.pop(); }
                         renderHLRound(); 
@@ -1094,7 +1088,7 @@
         }
 
         // ==========================================
-        // GAME LOGIC & DEEP FETCH
+        // GAME LOGIC & DEEP FETCH (ANTI-TRASH FILTER)
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
         let currentPlayId = 0; 
@@ -1113,15 +1107,27 @@
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 4000); 
                 
-                // DEEP FETCH: Holt bis zu 200 Songs pro Artist für maximale Vielfalt!
                 let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=200`, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 
                 let data = await res.json();
                 if (data && data.results) {
-                    let valid = data.results.filter(t => t.previewUrl);
+                    const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok'];
+                    let valid = data.results.filter(t => {
+                        if (!t.previewUrl) return false;
+                        
+                        let trackNameLower = t.trackName.toLowerCase();
+                        let artistNameLower = t.artistName.toLowerCase();
+                        let searchArtistLower = artist.toLowerCase();
+
+                        if (!artistNameLower.includes(searchArtistLower)) return false;
+
+                        for (let term of forbidden) {
+                            if (trackNameLower.includes(term) || artistNameLower.includes(term)) { return false; }
+                        }
+                        return true;
+                    });
                     
-                    // ANTI-DUPLIKAT: Entfernt Live, Clean und Explicit Doppelungen
                     let uniqueTracks = new Map();
                     for (let t of valid) {
                         let cleanName = t.trackName.toLowerCase().split('(')[0].split('[')[0].trim();
@@ -1129,7 +1135,7 @@
                     }
                     
                     let uniqueArray = Array.from(uniqueTracks.values());
-                    uniqueArray.sort(() => 0.5 - Math.random()); // DEEP SHUFFLE
+                    uniqueArray.sort(() => 0.5 - Math.random());
                     
                     let mapped = uniqueArray.slice(0, 40).map(t => ({
                         id: t.trackId.toString(),
@@ -1186,7 +1192,7 @@
         }
 
         async function startProgressiveMode() {
-            readSettings();
+            readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
             document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
             resetGameStats(); currentMode = 'progressive';
@@ -1199,7 +1205,7 @@
         }
 
         async function startArtistMode(artist) {
-            readSettings();
+            readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
             document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
             resetGameStats(); currentMode = 'artist';
