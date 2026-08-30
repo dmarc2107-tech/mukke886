@@ -7,11 +7,9 @@
     
     <!-- Supabase SDK for Cloud Database -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <!-- Socket.io for 2-4 Player Multiplayer -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <!-- YouTube Iframe API -->
-    <script src="https://www.youtube.com/iframe_api"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700;800;900&display=swap');
 
@@ -49,15 +47,6 @@
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
             background-size: 100% 4px; z-index: -1; pointer-events: none;
         }
-
-        #music-toggle-btn {
-            position: absolute; top: 20px; right: 20px;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-            border: 1px solid var(--surface-border); color: white;
-            padding: 10px 15px; border-radius: 12px; cursor: pointer; z-index: 100;
-            transition: 0.3s; font-weight: 700; display: none;
-        }
-        #music-toggle-btn:hover { border-color: var(--primary); transform: scale(1.05); }
 
         h1 { color: var(--text); font-size: 40px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 25px rgba(0,0,0,0.8); }
 
@@ -152,7 +141,7 @@
         .artist-tile { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; color: white; backdrop-filter: blur(5px); }
         .artist-tile:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
 
-        /* --- UI EINGABEFELDER & DROPDOWN FIX --- */
+        /* --- UI EINGABEFELDER --- */
         .ea-input { width: 100%; padding: 16px; background: rgba(0,0,0,0.7); border: 1px solid var(--surface-border); color: white; border-radius: 12px; font-size: 15px; font-weight: 600; box-sizing: border-box; margin-bottom: 15px; transition: 0.3s; backdrop-filter: blur(5px); }
         .ea-input:focus { outline: none; border-color: var(--primary); background: rgba(0,0,0,0.9); box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); }
         
@@ -185,6 +174,11 @@
         .option-btn { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 18px; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s; backdrop-filter: blur(5px); }
         .option-btn:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
 
+        #text-input-container { position: relative; }
+        #suggestions-box { position: absolute; bottom: 100%; left: 0; width: 100%; background: rgba(20,20,25,0.95); border: 1px solid var(--primary); border-radius: 12px; max-height: 200px; overflow-y: auto; text-align: left; display: none; margin-bottom: 5px; backdrop-filter: blur(10px); }
+        .suggestion-item { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 14px; font-weight: 700; color: white;}
+        .suggestion-item:hover { background: var(--primary); }
+
         /* --- OVERLAYS & MODALS --- */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: rgba(15, 15, 18, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 480px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -204,6 +198,20 @@
         .paywall-feature { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; text-align: left; }
         .paywall-check { background: #fbbf24; color: black; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; flex-shrink: 0; }
         
+        /* SLIDER CSS */
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(139,92,246,0.8); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
+        input[type=range]:focus { outline: none; }
+        
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #27272a; transition: .4s; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); }
+        .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider.red { background-color: var(--danger); border-color: var(--danger); }
+        input:checked + .slider.green { background-color: var(--success); border-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
         @media (max-width: 768px) {
             #mobile-menu-btn { display: block; }
             #sidebar { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; z-index: 10; transition: left 0.3s ease; }
@@ -213,7 +221,6 @@
             .cards-grid { grid-template-columns: 1fr; }
             h1 { font-size: 32px; }
             .section-title { font-size: 22px; }
-            #music-toggle-btn { top: 20px; right: 20px; padding: 10px; font-size: 12px; z-index: 90;}
             .banner-container { flex-direction: column; text-align: center; padding: 20px; gap: 15px;}
             .banner-text-box { text-align: center; }
             .banner-img { width: 120px; height: 120px; }
@@ -223,15 +230,13 @@
 </head>
 <body>
 
-    <div id="yt-player" style="position: absolute; top: -9999px; left: -9999px; width: 20px; height: 20px; opacity: 0; pointer-events: none;"></div>
     <img id="app-background" src="" alt="">
     <div class="scanlines"></div>
-    <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
 
-    <!-- PROFIL SETUP OVERLAY (Clean & Modern UI) -->
+    <!-- PROFIL SETUP OVERLAY (Super Clean UI - Ohne Anthem) -->
     <div id="profile-overlay" class="overlay" style="display: flex;">
         <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
-            <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">WELCOME</h2>
+            <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
             <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login or create your cloud profile.</p>
             
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -240,18 +245,8 @@
             </div>
             
             <div id="artist-select-container" style="text-align: left; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);">
-                <label style="display: block; font-size: 11px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px;">Favorite Artist (Avatar)</label>
-                <!-- Wird per JavaScript vollautomatisch mit allen 50+ Artists gefüllt! -->
-                <select id="fav-artist-select" class="ea-input" style="margin-bottom: 20px; padding: 15px;"></select>
-
-                <label style="display: block; font-size: 11px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px;">Your Anthem (Live Search or YT Link)</label>
-                <div style="display: flex; gap: 10px; margin-bottom: 0;">
-                    <!-- oninput triggert die Live-Suche während dem Tippen! -->
-                    <input type="text" id="song-search-input" class="ea-input" style="margin: 0; flex: 1; padding: 15px;" placeholder="e.g. Sicko Mode..." oninput="handleAnthemInput('setup')">
-                    <button id="song-search-btn-setup" class="btn-action" style="width: 60px; padding: 0; margin: 0; font-size: 20px; display: flex; align-items: center; justify-content: center;" onclick="searchMenuSong('setup')">🔍</button>
-                </div>
-                <!-- Hier erscheinen sofort die Resultate -->
-                <select id="menu-song-select" class="ea-input" style="display: none; color: var(--success); font-size: 14px; cursor: pointer; margin-top: 15px; padding: 15px;"></select>
+                <label style="display: block; font-size: 11px; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px;">Choose your Avatar / Artist</label>
+                <select id="fav-artist-select" class="ea-input" style="margin-bottom: 0; padding: 15px;"></select>
             </div>
             
             <button id="login-btn" class="btn-action" onclick="handleProfileLogin()">Login / Register ➔</button>
@@ -310,12 +305,27 @@
                 <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 My Club</div>
             </div>
             <div class="sidebar-footer">
-                <button id="music-toggle-btn-sidebar" onclick="toggleMenuMusic()" style="background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 700; width: 80%; margin: 0 auto; display: block;">🔇 Music Off</button>
+                <div style="display:flex; align-items:center; gap:10px; margin-top:15px; padding: 0 15px;">
+                    <span style="font-size:16px;">🔉</span>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.05" oninput="changeVolume(this.value)">
+                    <span style="font-size:16px;">🔊</span>
+                </div>
             </div>
         </nav>
 
         <main id="main-content">
             <div id="play-tab" class="tab-content active">
+                <div class="settings-bar">
+                    <div class="settings-group">
+                        <span class="settings-label">Hardcore (Typing)</span>
+                        <label class="switch"><input type="checkbox" id="hardcore-toggle" onchange="toggleHardcoreMode()"><span class="slider red"></span></label>
+                    </div>
+                    <div class="settings-group">
+                        <span class="settings-label">Show Artist</span>
+                        <label class="switch"><input type="checkbox" id="artist-toggle" onchange="toggleArtistName()" checked><span class="slider green"></span></label>
+                    </div>
+                </div>
+
                 <div class="section-title">Your Club</div>
                 <div id="fav-artist-banner" class="banner-container" style="display: none;">
                     <img id="fav-artist-img-1" src="" class="banner-img">
@@ -399,8 +409,7 @@
                     <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
                     <div style="text-align: left; flex: 1;">
                         <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
-                        <p id="profile-view-quote" style="margin: 0 0 10px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
-                        <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Anthem: <span id="profile-view-hymn" style="color: white;">Artist</span></p>
+                        <p id="profile-view-quote" style="margin: 0 0 15px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
                         <div style="width: 100%; max-width: 400px;">
                             <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
                                 <span>Level <span id="profile-level-num">1</span></span>
@@ -427,17 +436,8 @@
                 </div>
 
                 <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Change Artist (Avatar & Background)</h3>
-                    <!-- Wird per JS befüllt -->
-                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 20px;" onchange="updateFavArtist()"></select>
-
-                    <h3 style="margin-top: 20px; font-size: 14px; text-transform: uppercase;">2. Change Anthem & Menu Music</h3>
-                    <div style="display:flex; gap:8px; margin-bottom:10px;">
-                        <!-- oninput für Live Search -->
-                        <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="Search song OR paste YouTube Link..." oninput="handleAnthemInput('edit')">
-                        <button id="song-search-btn-edit" class="btn-action" style="width:55px; padding:0;" onclick="searchMenuSong('edit')">🔍</button>
-                    </div>
-                    <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">Change Favorite Artist</h3>
+                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 0;" onchange="updateFavArtist()"></select>
                 </div>
                 
                 <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Log Out / Switch Account</button>
@@ -457,6 +457,11 @@
                 <button onclick="skipSong()" style="border-color: var(--danger); color: var(--danger);">⏭️ Skip (-250)</button>
             </div>
             <div id="options" class="options-container"></div>
+            <div id="text-input-container" style="display: none;">
+                <input type="text" id="guess-input" class="ea-input" placeholder="Enter song title..." autocomplete="off" oninput="updateSuggestions()">
+                <div id="suggestions-box"></div>
+                <button class="btn-action" onclick="checkTextInput()">Confirm</button>
+            </div>
         </div>
     </div>
 
@@ -544,59 +549,20 @@
             }
         } catch(e) {}
 
-        let playerName = ''; let myFavArtist = ''; let mySongUrl = ''; let myAvatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; let myBgUrl = ''; let myQuote = ''; let isPremium = false; let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
-        let ytPlayer; let ytReady = false; let ytContext = 'menu';
+        let playerName = ''; let myFavArtist = ''; let myAvatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; let myBgUrl = ''; let myQuote = ''; let isPremium = false; let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
         
-        function onYouTubeIframeAPIReady() {
-            try {
-                ytPlayer = new YT.Player('yt-player', {
-                    height: '200', width: '200',
-                    playerVars: { 'autoplay': 1, 'controls': 0, 'showinfo': 0, 'rel': 0, 'playsinline': 1 },
-                    events: {
-                        'onReady': () => { ytReady = true; },
-                        'onStateChange': (event) => { if (event.data === YT.PlayerState.ENDED && ytContext === 'menu') { ytPlayer.seekTo(0); ytPlayer.playVideo(); } }
-                    }
-                });
-            } catch(e) {}
-        }
-
-        let menuAudio = new Audio(); menuAudio.loop = true; menuAudio.crossOrigin = "anonymous"; menuAudio.volume = globalVolume * 0.4;
-        let isMenuMusicPlaying = false;
+        let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
+        let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
         
         let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = '';
         let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('active'); }
 
-        function toggleMenuMusic() {
-            if (isMenuMusicPlaying) {
-                pauseMenuMusic(); isMenuMusicPlaying = false;
-                let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
-                btns.forEach(b => { if(b) { b.innerHTML = "🔇 Music Off"; b.style.opacity = "0.7"; } });
-            } else {
-                resumeMenuMusic(); isMenuMusicPlaying = true;
-                let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
-                btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
-            }
-        }
-
-        function playMenuMusic(url) {
-            if(!url) return; isMenuMusicPlaying = true; ytContext = 'menu';
-            if (url.startsWith('yt:')) {
-                menuAudio.pause(); let vid = url.substring(3);
-                if(ytReady && ytPlayer && ytPlayer.loadVideoById) { ytPlayer.setVolume(globalVolume * 40); ytPlayer.loadVideoById(vid); ytPlayer.playVideo(); } else { setTimeout(() => playMenuMusic(url), 500); }
-            } else {
-                if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-                menuAudio.src = url; menuAudio.volume = globalVolume * 0.4; menuAudio.play().catch(e=>{});
-            }
-            let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
-            btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
-        }
-        
-        function pauseMenuMusic() { menuAudio.pause(); if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo(); }
-        function resumeMenuMusic() {
-            if (!isMenuMusicPlaying) return; ytContext = 'menu';
-            if (mySongUrl.startsWith('yt:')) { if(ytReady && ytPlayer && ytPlayer.playVideo) { ytPlayer.setVolume(globalVolume * 40); ytPlayer.playVideo(); } } else { menuAudio.play().catch(e=>{}); }
+        function changeVolume(val) {
+            globalVolume = parseFloat(val); 
+            try { localStorage.setItem('rapquiz_volume', globalVolume); } catch(e){}
+            audio.volume = globalVolume; sfxAudio.volume = globalVolume;
         }
 
         function updateLevelDisplay() {
@@ -653,66 +619,10 @@
         }
 
         // ==========================================
-        // ANTHEM LIVE SEARCH (TIPPEN = SUCHEN)
-        // ==========================================
-        let searchTimeout = null;
-        
-        function handleAnthemInput(mode) {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                searchMenuSong(mode);
-            }, 500); // Wartet 0.5 Sekunden nach dem letzten Tastendruck, bevor er sucht
-        }
-
-        function searchMenuSong(mode) {
-            let inputId = mode === 'setup' ? 'song-search-input' : 'edit-song-search-input'; 
-            let selectId = mode === 'setup' ? 'menu-song-select' : 'edit-menu-song-select';
-            
-            let q = document.getElementById(inputId).value.trim(); 
-            let sel = document.getElementById(selectId);
-            
-            if(!q) {
-                sel.style.display = 'none';
-                return;
-            }
-
-            // YouTube Link direkt abfangen
-            let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-            if (ytMatch) { 
-                let vid = ytMatch[1]; 
-                sel.innerHTML = `<option value="yt:${vid}">▶️ YouTube Video (${vid})</option>`; 
-                sel.style.display = 'block'; 
-                return; 
-            }
-            
-            // Die alte, robuste Deezer JSONP Suche, die von keinem Browser blockiert wird
-            const cb = 'deezer_song_' + Date.now() + Math.floor(Math.random() * 10000);
-            window[cb] = function(res) {
-                sel.innerHTML = '';
-                if(res && res.data && res.data.length > 0) {
-                    res.data.filter(t => t.preview).slice(0, 10).forEach(t => { 
-                        let opt = document.createElement('option'); 
-                        opt.value = t.preview; 
-                        opt.innerText = `${t.artist.name} - ${t.title} (Preview)`; 
-                        sel.appendChild(opt); 
-                    });
-                    sel.style.display = 'block';
-                } else { 
-                    sel.innerHTML = '<option value="">❌ No songs found</option>'; 
-                    sel.style.display = 'block'; 
-                }
-            };
-            const s = document.createElement('script'); 
-            s.src = `https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=10&output=jsonp&callback=${cb}`; 
-            document.head.appendChild(s);
-        }
-
-        // ==========================================
         // AUTO-LOGIN & SYSTEM START
         // ==========================================
         window.onload = async () => {
             try {
-                // Füllt die Artist-Dropdowns mit allen 50+ Artists
                 let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
                 selects.forEach(sel => { 
                     sel.innerHTML = ''; 
@@ -721,7 +631,6 @@
                     }); 
                 });
                 
-                // Füllt die Artist-Kacheln für den VIP-Modus
                 let grid = document.getElementById('artist-grid');
                 grid.innerHTML = '';
                 allArtists.forEach(a => { 
@@ -754,23 +663,30 @@
             let name = document.getElementById('username-input').value.trim(); 
             let pw = document.getElementById('password-input').value.trim(); 
             
-            if (!name || !pw) { err.innerText = "Please fill in username and password!"; err.style.display = 'block'; btn.innerText = "Login / Register ➔"; btn.disabled = false; return; }
+            if (!name || !pw) { 
+                err.innerText = "Please fill in username and password!"; 
+                err.style.display = 'block'; 
+                btn.innerText = "Login / Register ➔"; 
+                btn.disabled = false; 
+                return; 
+            }
             if (!supabase) return;
 
             let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
             let { data, error } = await supabase.auth.signInWithPassword({ email: fakeEmail, password: pw });
 
             if (error) {
-                let songDropdown = document.getElementById('menu-song-select');
                 let { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email: fakeEmail, password: pw });
                 if (signUpError) {
-                    err.innerText = "Error: Password too weak or server offline."; err.style.display = 'block'; 
-                    btn.innerText = "Login / Register ➔"; btn.disabled = false; return;
+                    err.innerText = "Error: Password too weak or server offline."; 
+                    err.style.display = 'block'; 
+                    btn.innerText = "Login / Register ➔"; 
+                    btn.disabled = false; 
+                    return;
                 }
                 data = signUpData;
                 
                 myFavArtist = document.getElementById('fav-artist-select').value; 
-                mySongUrl = (songDropdown && songDropdown.value) ? songDropdown.value : ''; 
                 myQuote = getArtistQuote(myFavArtist);
                 playerName = name;
                 
@@ -788,8 +704,7 @@
             
             if (profile) {
                 playerName = profile.username;
-                myFavArtist = profile.anthem_url ? "Artist" : ""; 
-                mySongUrl = profile.anthem_url;
+                myFavArtist = profile.anthem_url ? "Artist" : document.getElementById('fav-artist-select').value; 
                 myAvatar = profile.avatar_url;
                 myQuote = profile.quote || "Ready to dominate!";
                 isPremium = profile.is_premium || false;
@@ -815,10 +730,7 @@
             document.getElementById('profile-view-quote').innerText = myQuote; 
             
             updateLevelDisplay();
-            if (window.innerWidth > 768) document.getElementById('music-toggle-btn').style.display = 'block';
-            
             updateAllAvatars();
-            playMenuMusic(mySongUrl);
         }
 
         async function saveProfileToDB() {
@@ -827,8 +739,7 @@
             if (session?.session?.user) {
                 await supabase.from('profiles').update({
                     avatar_url: myAvatar,
-                    quote: myQuote,
-                    anthem_url: mySongUrl
+                    quote: myQuote
                 }).eq('id', session.session.user.id);
             }
         }
@@ -897,15 +808,6 @@
             myQuote = getArtistQuote(myFavArtist);
             document.getElementById('profile-view-quote').innerText = myQuote; 
             loadArtistVisuals(myFavArtist); 
-        }
-        
-        function updateFavSong() {
-            let sel = document.getElementById('edit-menu-song-select');
-            if(sel.value) {
-                mySongUrl = sel.value; 
-                saveProfileToDB();
-                playMenuMusic(mySongUrl);
-            }
         }
 
         // ==========================================
@@ -1046,7 +948,7 @@
 
         function triggerSuddenDeathLocal(tiedIds) {
             let amITied = tiedIds.includes(socket.id);
-            sfxAudio.pause(); if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+            sfxAudio.pause(); 
             
             tiedIds.forEach(id => delete matchEndData[id]); 
             
@@ -1078,18 +980,8 @@
         }
 
         function playWinnerAnthem(url) {
-            sfxAudio.pause(); pauseMenuMusic();
-            if (url && url.startsWith('yt:')) {
-                let vid = url.substring(3);
-                if(ytReady && ytPlayer && ytPlayer.loadVideoById) {
-                    ytContext = 'winner';
-                    ytPlayer.setVolume(globalVolume * 100); 
-                    ytPlayer.loadVideoById(vid);
-                    ytPlayer.playVideo();
-                }
-            } else {
-                sfxAudio.src = url || 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
-            }
+            sfxAudio.pause(); 
+            sfxAudio.src = 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
         }
 
         function showWinnerScreen(winner) {
@@ -1099,7 +991,7 @@
 
             let m = document.getElementById('feedback-modal'); m.className = "modal correct"; 
             document.getElementById('feedback-title').innerText = "🏆 WINNER 🏆";
-            document.getElementById('feedback-desc').innerText = "Playing winner's anthem...";
+            document.getElementById('feedback-desc').innerText = "Playing ultimate theme...";
             
             let cov = document.getElementById('feedback-cover');
             cov.src = wAv; cov.style.display = 'block'; cov.style.borderRadius = '50%';
@@ -1116,7 +1008,7 @@
             document.getElementById('feedback-btn').style.display = 'none'; 
             
             setTimeout(() => {
-                sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+                sfxAudio.pause(); 
                 cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
                 document.getElementById('feedback-title').innerText = "📊 FINAL STANDINGS"; document.getElementById('feedback-desc').innerText = "";
                 renderMpLeaderboard(); 
@@ -1129,9 +1021,6 @@
         // GAME LOGIC & PARALLEL FETCH
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
-        
-        let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
-        let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
         
         let currentPlayId = 0; 
         
@@ -1226,7 +1115,7 @@
 
         function resetGameStats() {
             songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
-            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); 
             let box = document.getElementById('suggestions-box'); if(box) box.style.display = 'none'; 
             let res = document.getElementById('mp-result'); if(res) res.style.display = 'none';
         }
@@ -1237,7 +1126,6 @@
         }
 
         function launchGame() {
-            pauseMenuMusic(); 
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
             if(isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
