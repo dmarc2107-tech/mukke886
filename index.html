@@ -48,6 +48,15 @@
             background-size: 100% 4px; z-index: -1; pointer-events: none;
         }
 
+        #music-toggle-btn {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+            border: 1px solid var(--surface-border); color: white;
+            padding: 10px 15px; border-radius: 12px; cursor: pointer; z-index: 100;
+            transition: 0.3s; font-weight: 700; display: none;
+        }
+        #music-toggle-btn:hover { border-color: var(--primary); transform: scale(1.05); }
+
         h1 { color: var(--text); font-size: 40px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 25px rgba(0,0,0,0.8); }
 
         /* --- LAYOUT & MOBILE UI --- */
@@ -245,7 +254,7 @@
 
     <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
 
-    <!-- PROFIL SETUP OVERLAY -->
+    <!-- PROFIL SETUP OVERLAY (Super Clean UI) -->
     <div id="profile-overlay" class="overlay">
         <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
             <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
@@ -418,7 +427,11 @@
                     <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
                     <div style="text-align: left; flex: 1;">
                         <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
-                        <p id="profile-view-quote" style="margin: 0 0 15px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
+                        <p id="profile-view-quote" style="margin: 0 0 10px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
+                        
+                        <!-- DIE HYMNE WIRD HIER ANGEZEIGT -->
+                        <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Anthem: <span id="profile-view-hymn" style="color: white;">None</span></p>
+                        
                         <div style="width: 100%; max-width: 400px;">
                             <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
                                 <span>Level <span id="profile-level-num">1</span></span>
@@ -460,8 +473,17 @@
                 </div>
 
                 <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">Change Favorite Artist</h3>
-                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 0;" onchange="updateFavArtist()"></select>
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Change Artist (Avatar & Background)</h3>
+                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 25px;" onchange="updateFavArtist()"></select>
+
+                    <!-- HYMNE LIVE-SUCHE (UNBLOCKBAR VIA ITUNES) -->
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">2. Change Anthem & Menu Music</h3>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px; margin-bottom: 10px;">Type a song name (results appear automatically) OR paste a YouTube link.</p>
+                    <div style="display:flex; gap:8px; margin-bottom:10px;">
+                        <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="e.g. Sicko Mode..." oninput="handleAnthemInput()">
+                        <button id="song-search-btn-edit" class="btn-action" style="width:55px; padding:0;" onclick="searchMenuSong()">🔍</button>
+                    </div>
+                    <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
                 </div>
                 
                 <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Log Out / Switch Account</button>
@@ -569,6 +591,8 @@
         let myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
         let myQuote = localStorage.getItem('rapquiz_quote') || (myFavArtist ? getArtistQuote(myFavArtist) : '"Ready to dominate the game."');
         let isPremium = localStorage.getItem('rapquiz_premium') === 'true';
+        let mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || ''; 
+        let mySongTitle = localStorage.getItem('rapquiz_menu_song_title') || '';
 
         let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, totalScore: 0 };
         if (myStats.totalScore === undefined) myStats.totalScore = 0; 
@@ -579,12 +603,96 @@
         let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = '';
         let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
 
+        // --- YOUTUBE INTEGRATION LOGIK ---
+        let ytPlayer;
+        let ytReady = false;
+        let ytContext = 'menu';
+
+        function onYouTubeIframeAPIReady() {
+            ytPlayer = new YT.Player('yt-player', {
+                height: '200', width: '200',
+                playerVars: { 'autoplay': 1, 'controls': 0, 'showinfo': 0, 'rel': 0, 'playsinline': 1 },
+                events: {
+                    'onReady': () => { ytReady = true; },
+                    'onStateChange': (event) => {
+                        if (event.data === YT.PlayerState.ENDED && ytContext === 'menu') {
+                            ytPlayer.seekTo(0); ytPlayer.playVideo();
+                        }
+                    },
+                    'onError': (event) => {
+                        console.log("YouTube Error Code:", event.data);
+                    }
+                }
+            });
+        }
+
+        let menuAudio = new Audio(); menuAudio.loop = true; menuAudio.crossOrigin = "anonymous"; menuAudio.volume = globalVolume * 0.4;
+        let isMenuMusicPlaying = false;
+
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('active'); }
 
         function changeVolume(val) {
             globalVolume = parseFloat(val); 
             try { localStorage.setItem('rapquiz_volume', globalVolume); } catch(e){}
+            menuAudio.volume = globalVolume * 0.4;
             audio.volume = globalVolume; sfxAudio.volume = globalVolume;
+            if(ytReady && ytPlayer && ytPlayer.setVolume) {
+                let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100;
+                ytPlayer.setVolume(globalVolume * vol); 
+            }
+        }
+
+        function playMenuMusic(url) {
+            if(!url) return;
+            isMenuMusicPlaying = true;
+            ytContext = 'menu';
+            
+            if (url.startsWith('yt:')) {
+                menuAudio.pause();
+                let vid = url.substring(3);
+                if(ytReady && ytPlayer && ytPlayer.loadVideoById) {
+                    ytPlayer.setVolume(globalVolume * 40);
+                    ytPlayer.loadVideoById(vid);
+                    ytPlayer.playVideo();
+                } else {
+                    setTimeout(() => playMenuMusic(url), 500);
+                }
+            } else {
+                if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+                menuAudio.src = url; menuAudio.volume = globalVolume * 0.4;
+                menuAudio.play().catch(e=>{});
+            }
+            let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
+            btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
+        }
+
+        function toggleMenuMusic() {
+            if (isMenuMusicPlaying) {
+                pauseMenuMusic(); isMenuMusicPlaying = false;
+                let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
+                btns.forEach(b => { if(b) { b.innerHTML = "🔇 Music Off"; b.style.opacity = "0.7"; } });
+            } else {
+                resumeMenuMusic(); isMenuMusicPlaying = true;
+                let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
+                btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
+            }
+        }
+
+        function pauseMenuMusic() {
+            menuAudio.pause();
+            if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+        }
+
+        function resumeMenuMusic() {
+            if (!isMenuMusicPlaying) return;
+            ytContext = 'menu';
+            if (mySongUrl.startsWith('yt:')) {
+                if(ytReady && ytPlayer && ytPlayer.playVideo) {
+                    ytPlayer.setVolume(globalVolume * 40); ytPlayer.playVideo();
+                }
+            } else {
+                menuAudio.play().catch(e=>{});
+            }
         }
 
         function updateLevelDisplay() {
@@ -645,6 +753,79 @@
             if (b1 && myBgUrl) { b1.src = myBgUrl; if(bName) bName.innerText = myFavArtist; document.getElementById('fav-artist-banner').style.display = 'flex'; }
         }
 
+        // ==========================================
+        // ANTHEM LIVE SEARCH (iTUNES)
+        // ==========================================
+        let searchTimeout = null;
+        
+        function handleAnthemInput() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => { searchMenuSong(); }, 500); 
+        }
+
+        async function searchMenuSong() {
+            let q = document.getElementById('edit-song-search-input').value.trim(); 
+            let sel = document.getElementById('edit-menu-song-select');
+            
+            if(!q) { sel.style.display = 'none'; return; }
+
+            // YouTube Erkennung
+            let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+            if (ytMatch) { 
+                let vid = ytMatch[1]; 
+                sel.innerHTML = `<option value="yt:${vid}" data-title="YouTube Track">▶️ YouTube Video (${vid})</option>`; 
+                sel.style.display = 'block'; 
+                return; 
+            }
+            
+            // iTUNES API (Unblockbar)
+            try {
+                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=10`);
+                let data = await res.json();
+                
+                sel.innerHTML = '';
+                if (data && data.results && data.results.length > 0) {
+                    let valid = data.results.filter(t => t.previewUrl);
+                    if (valid.length > 0) {
+                        sel.innerHTML = '<option value="">🎵 Choose your Anthem...</option>';
+                        valid.forEach(t => {
+                            let opt = document.createElement('option');
+                            opt.value = t.previewUrl;
+                            opt.innerText = `${t.artistName} - ${t.trackName}`;
+                            opt.setAttribute('data-title', `${t.artistName} - ${t.trackName}`);
+                            sel.appendChild(opt);
+                        });
+                        sel.style.display = 'block';
+                        return;
+                    }
+                }
+                sel.innerHTML = '<option value="">❌ No songs found</option>';
+                sel.style.display = 'block';
+            } catch(e) {
+                console.warn("iTunes Search Error:", e);
+            }
+        }
+
+        function updateFavSong() {
+            let sel = document.getElementById('edit-menu-song-select');
+            if(sel.value) {
+                mySongUrl = sel.value; 
+                let selectedOpt = sel.options[sel.selectedIndex];
+                mySongTitle = selectedOpt.getAttribute('data-title') || selectedOpt.text;
+                
+                localStorage.setItem('rapquiz_menu_song_url', mySongUrl); 
+                localStorage.setItem('rapquiz_menu_song_title', mySongTitle); 
+                
+                let hymnDisplay = document.getElementById('profile-view-hymn');
+                if (hymnDisplay) hymnDisplay.innerText = mySongTitle; 
+                
+                playMenuMusic(mySongUrl);
+            }
+        }
+
+        // ==========================================
+        // AUTO-LOGIN
+        // ==========================================
         window.onload = () => {
             let volSlider = document.getElementById('volume-slider');
             if(volSlider) volSlider.value = globalVolume;
@@ -719,44 +900,11 @@
             document.getElementById('profile-view-name').innerText = playerName; 
             document.getElementById('profile-view-quote').innerText = myQuote; 
             
+            let hymnDisplay = document.getElementById('profile-view-hymn');
+            if (hymnDisplay) hymnDisplay.innerText = mySongTitle || "None";
+            
             updateAllAvatars();
-        }
-
-        async function redeemVIPCode() {
-            let code = document.getElementById('vip-code-input').value.trim();
-            if(!code) return alert("Please enter your Gumroad code!");
-
-            let btn = document.querySelector('#vip-redeem-section button');
-            let originalText = btn.innerText;
-            btn.innerText = "Verifying...";
-            document.getElementById('vip-code-input').disabled = true;
-
-            try {
-                let res = await fetch('https://api.gumroad.com/v2/licenses/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        product_id: 'ZWtMCbbtsw3aVMslIZK7MQ==', 
-                        license_key: code,
-                        increment_uses_count: true
-                    })
-                });
-                
-                let data = await res.json();
-                
-                if (data.success && !data.purchase.refunded && !data.purchase.chargebacked) {
-                    localStorage.setItem('rapquiz_premium', 'true');
-                    alert("🎉 SUCCESS! License verified. You are now a Lifetime VIP!");
-                    location.reload();
-                } else {
-                    alert("❌ Invalid or refunded code. Please check the code from your email.");
-                }
-            } catch (e) {
-                alert("❌ API Error. Please check your internet connection or try again later.");
-            }
-
-            document.getElementById('vip-code-input').disabled = false;
-            btn.innerText = originalText;
+            playMenuMusic(mySongUrl);
         }
 
         function resetProfile() { localStorage.clear(); location.reload(); }
@@ -943,9 +1091,22 @@
             updateStatsDisplay();
         }
 
-        function playWinnerAnthem() {
-            sfxAudio.pause(); 
-            sfxAudio.src = 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
+        // --- WINNER ANTHEM LOGIK ---
+        function playWinnerAnthem(url) {
+            sfxAudio.pause(); pauseMenuMusic();
+            if (url && url.startsWith('yt:')) {
+                let vid = url.substring(3);
+                if(ytReady && ytPlayer && ytPlayer.loadVideoById) {
+                    ytContext = 'winner';
+                    ytPlayer.setVolume(globalVolume * 100); 
+                    ytPlayer.loadVideoById(vid);
+                    ytPlayer.playVideo();
+                }
+            } else if (url) {
+                sfxAudio.src = url; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
+            } else {
+                sfxAudio.src = 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
+            }
         }
 
         function showWinnerScreen(winner) {
@@ -955,7 +1116,7 @@
 
             let m = document.getElementById('feedback-modal'); m.className = "modal correct"; 
             document.getElementById('feedback-title').innerText = "🏆 WINNER 🏆";
-            document.getElementById('feedback-desc').innerText = "Playing ultimate theme...";
+            document.getElementById('feedback-desc').innerText = "Playing winner's anthem...";
             
             let cov = document.getElementById('feedback-cover');
             cov.src = wAv; cov.style.display = 'block'; cov.style.borderRadius = '50%';
@@ -968,11 +1129,11 @@
                 <p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>
             `;
             
-            playWinnerAnthem();
+            playWinnerAnthem(winner.anthem);
             document.getElementById('feedback-btn').style.display = 'none'; 
             
             setTimeout(() => {
-                sfxAudio.pause(); 
+                sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
                 cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
                 document.getElementById('feedback-title').innerText = "📊 FINAL STANDINGS"; document.getElementById('feedback-desc').innerText = "";
                 renderMpLeaderboard(); 
@@ -982,7 +1143,7 @@
         }
 
         // ==========================================
-        // GAME LOGIC & PARALLEL FETCH (100% ITUNES NOW!)
+        // GAME LOGIC & PARALLEL FETCH
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
         
@@ -1005,14 +1166,10 @@
             }
         }
 
-        function toggleHardcoreMode() { isHardcoreMode = document.getElementById('hardcore-toggle').checked; }
-        function toggleArtistName() { showArtistName = document.getElementById('artist-toggle').checked; }
-
-        // BOMB-PROOF ITUNES FETCH
         async function fetchArtistSongs(artist) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 Sek Timeout Notbremse!
+                const timeoutId = setTimeout(() => controller.abort(), 4000); 
                 
                 let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=40`, { signal: controller.signal });
                 clearTimeout(timeoutId);
@@ -1036,9 +1193,8 @@
 
         function resetGameStats() {
             songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
-            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); 
-            let box = document.getElementById('suggestions-box'); if(box) box.style.display = 'none'; 
-            let res = document.getElementById('mp-result'); if(res) res.style.display = 'none';
+            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+            document.getElementById('suggestions-box').style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
         }
 
         function syncHostData() {
@@ -1051,11 +1207,6 @@
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
             if(isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
             nextRound();
-        }
-
-        function backToMenu() { 
-            audio.pause(); sfxAudio.pause(); 
-            clearTimeout(precisionTimer); cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; 
         }
 
         async function startMixedMode(mode) {
@@ -1252,7 +1403,7 @@
             
             if (isMultiplayer) {
                 socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
-                let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: '', roomCode: currentRoom };
+                let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
                 matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
                 
                 t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
