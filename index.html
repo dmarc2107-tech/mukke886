@@ -239,12 +239,6 @@
         .paywall-feature { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; text-align: left; }
         .paywall-check { background: #fbbf24; color: black; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; flex-shrink: 0; }
 
-        /* SLIDER CSS */
-        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(139,92,246,0.8); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
-        input[type=range]:focus { outline: none; }
-
         @media (max-width: 768px) {
             #mobile-menu-btn { display: block; }
             #sidebar { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; z-index: 10; transition: left 0.3s ease; }
@@ -397,7 +391,6 @@
 
                 <div class="section-title">Premium Categories <span style="font-size:12px; color:var(--warning); vertical-align: middle;">VIP</span></div>
                 <div class="cards-grid">
-                    <!-- NEUER HIGHER / LOWER STREAM BATTLE MODUS -->
                     <div class="ea-card locked-card card-stream" onclick="checkPremiumAndStart('higherlower')">
                         <div class="ea-card-icon">📈</div>
                         <div class="ea-card-title">Stream Battle <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
@@ -492,7 +485,6 @@
                     </div>
                 </div>
 
-                <!-- STATISTIK UND TROPHÄEN BEREICH -->
                 <div class="section-title" style="margin-top: 40px;">Detailed Stats & Trophies</div>
                 <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                     <div class="ea-card" style="min-height: 100px;">
@@ -542,7 +534,7 @@
         </main>
     </div>
 
-    <!-- STANDARD GAME SCREEN -->
+    <!-- GAME SCREEN -->
     <div id="game-screen">
         <div class="game-inner">
             <div class="stats-bar" id="game-stats-bar"></div>
@@ -562,7 +554,7 @@
         </div>
     </div>
 
-    <!-- HIGHER / LOWER STREAM BATTLE SCREEN -->
+    <!-- HIGHER LOWER MODE SCREEN -->
     <div id="hl-screen">
         <div class="hl-inner">
             <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 20px;">
@@ -577,7 +569,6 @@
             <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 20px 0;">Does the second song have MORE or LESS streams than the first?</p>
 
             <div class="hl-cards-container">
-                <!-- CARD A: BASE SONG -->
                 <div class="hl-card" id="hl-card-a">
                     <img id="hl-img-a" class="hl-cover" src="">
                     <h3 id="hl-title-a" class="hl-song-title">Song A</h3>
@@ -587,7 +578,6 @@
                     <span style="font-size: 11px; color: #a1a1aa;">Spotify Streams</span>
                 </div>
 
-                <!-- CARD B: GUESS SONG -->
                 <div class="hl-card" id="hl-card-b">
                     <img id="hl-img-b" class="hl-cover" src="">
                     <h3 id="hl-title-b" class="hl-song-title">Song B</h3>
@@ -624,94 +614,38 @@
 
     <script>
         // ==========================================
-        // ARTIST & STREAM DATA
+        // ARTIST DATA
         // ==========================================
         const fallenLegends = ['2Pac', 'The Notorious B.I.G.', 'XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Mac Miller', 'Pop Smoke', 'King Von', 'Takeoff', 'Nipsey Hussle', 'Eazy-E', 'MF DOOM'];
         const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean', 'Bones'];
         const artists2010s = ['Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa', 'Offset', 'Quavo', 'Yeat', 'Central Cee'];
         const legends = ['2Pac', 'The Notorious B.I.G.', 'Eminem', '50 Cent', 'Snoop Dogg', 'Dr. Dre', 'Ice Cube', 'Nas'];
         const megaStars = ['Drake', 'Kendrick Lamar', 'J. Cole', 'Kanye West', 'Post Malone'];
+        
         const allArtists = [...new Set([...soundcloudArtists, ...artists2010s, ...legends, ...megaStars, ...fallenLegends])].sort();
 
-        // ECHTE SPOTIFY STREAM BENCHMARKS (IN MILLIONEN / MILLIARDEN)
+        // SPOTIFY BENCHMARKS
         const knownStreamBenchmarks = {
-            "goosebumps": 2450000000,
-            "sicko mode": 2210000000,
-            "lucid dreams": 2620000000,
-            "all girls are the same": 1820000000,
-            "sad!": 2340000000,
-            "jocelyn flores": 2150000000,
-            "star shopping": 1290000000,
-            "falling down": 1120000000,
-            "god's plan": 2480000000,
-            "one dance": 3120000000,
-            "humble.": 2240000000,
-            "money trees": 1780000000,
-            "sunflower": 3380000000,
-            "rockstar": 3010000000,
-            "without me": 2180000000,
-            "lose yourself": 2140000000,
-            "dior": 1480000000,
-            "california love": 780000000,
-            "juicy": 950000000,
-            "in da club": 1650000000,
-            "xo tour llif3": 2100000000,
-            "magnolia": 920000000,
-            "look at me!": 1450000000,
-            "highest in the room": 1680000000,
-            "mask off": 1790000000,
-            "bank account": 1380000000,
-            "congratulations": 2100000000,
-            "robbery": 1690000000,
+            "goosebumps": 2450000000, "sicko mode": 2210000000, "lucid dreams": 2620000000, "all girls are the same": 1820000000,
+            "sad!": 2340000000, "jocelyn flores": 2150000000, "star shopping": 1290000000, "falling down": 1120000000,
+            "god's plan": 2480000000, "one dance": 3120000000, "humble.": 2240000000, "money trees": 1780000000,
+            "sunflower": 3380000000, "rockstar": 3010000000, "without me": 2180000000, "lose yourself": 2140000000,
+            "dior": 1480000000, "california love": 780000000, "juicy": 950000000, "in da club": 1650000000,
+            "xo tour llif3": 2100000000, "magnolia": 920000000, "look at me!": 1450000000, "highest in the room": 1680000000,
+            "mask off": 1790000000, "bank account": 1380000000, "congratulations": 2100000000, "robbery": 1690000000,
             "swimming pools": 1150000000
         };
 
         function getTrackEstimatedStreams(trackTitle, artistName) {
             let clean = trackTitle.toLowerCase().split('(')[0].split('feat')[0].trim();
-            for(let k in knownStreamBenchmarks) {
-                if (clean.includes(k) || k.includes(clean)) return knownStreamBenchmarks[k];
-            }
-            // Realistischer Algorithmus für alle anderen Tracks
-            let hash = 0;
-            let combined = trackTitle + artistName;
-            for (let i = 0; i < combined.length; i++) {
-                hash = combined.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            let base = Math.abs(hash % 900) + 100; // 100M bis 1000M
-            return base * 1000000 + Math.abs(hash % 999999);
+            for(let k in knownStreamBenchmarks) { if (clean.includes(k) || k.includes(clean)) return knownStreamBenchmarks[k]; }
+            let hash = 0; let combined = trackTitle + artistName;
+            for (let i = 0; i < combined.length; i++) hash = combined.charCodeAt(i) + ((hash << 5) - hash);
+            return (Math.abs(hash % 900) + 100) * 1000000 + Math.abs(hash % 999999);
         }
 
         const artistQuotes = {
-            'XXXTentacion': '"What is real will prosper." - X',
-            'Juice WRLD': '"999. Turn the negative to a positive." - Juice WRLD',
-            'Lil Peep': '"Everything changes with time." - Lil Peep',
-            'Ski Mask the Slump God': '"Water!" - Ski Mask',
-            'Trippie Redd': '"I just wanna be a legend." - Trippie',
-            'Denzel Curry': '"I am the ultimate." - Denzel',
-            'Playboi Carti': '"Wake up, it\'s the first of the month." - Carti',
-            'Lil Uzi Vert': '"I just wanna go to outer space." - Uzi',
-            'Lil Pump': '"Esskeetit!" - Lil Pump',
-            'Chief Keef': '"A lot of people say they want to be famous..." - Sosa',
-            '$uicideboy$': '"G59 until the grave." - $uicideboy$',
-            'Travis Scott': '"I\'m the highest in the room." - Travis Scott',
-            'Migos': '"Rain drop, drop top." - Migos',
-            'Future': '"If you don\'t get it, you just don\'t get it." - Future',
-            'Young Thug': '"Slime Season." - Thugger',
-            '21 Savage': '"I do it for the gang." - 21',
-            'Lil Baby': '"I\'m just tryna be a better me." - Lil Baby',
-            'A$AP Rocky': '"I treat the game like a canvas." - Rocky',
-            'Tyler, The Creator': '"Find your wings." - Tyler',
-            'Mac Miller': '"No matter where life takes me, find me with a smile." - Mac',
-            'Drake': '"Started from the bottom, now we\'re here." - Drake',
-            'Kendrick Lamar': '"If God got us, then we gon\' be alright." - Kendrick',
-            'J. Cole': '"There\'s beauty in the struggle." - J. Cole',
-            'Kanye West': '"I still think I am the greatest." - Ye',
-            'Eminem': '"You only get one shot, do not miss your chance to blow." - Eminem',
-            '2Pac': '"Reality is wrong. Dreams are for real." - 2Pac',
-            'The Notorious B.I.G.': '"Mo money, mo problems." - Biggie',
-            '50 Cent': '"Get rich or die tryin\'." - 50 Cent',
-            'Snoop Dogg': '"Drop it like it\'s hot." - Snoop',
-            'Pop Smoke': '"Woo!" - Pop Smoke'
+            'XXXTentacion': '"What is real will prosper." - X', 'Juice WRLD': '"999. Turn the negative to a positive." - Juice WRLD', 'Lil Peep': '"Everything changes with time." - Lil Peep', 'Ski Mask the Slump God': '"Water!" - Ski Mask', 'Trippie Redd': '"I just wanna be a legend." - Trippie', 'Denzel Curry': '"I am the ultimate." - Denzel', 'Playboi Carti': '"Wake up, it\'s the first of the month." - Carti', 'Lil Uzi Vert': '"I just wanna go to outer space." - Uzi', 'Lil Pump': '"Esskeetit!" - Lil Pump', 'Chief Keef': '"A lot of people say they want to be famous..." - Sosa', '$uicideboy$': '"G59 until the grave." - $uicideboy$', 'Travis Scott': '"I\'m the highest in the room." - Travis Scott', 'Migos': '"Rain drop, drop top." - Migos', 'Future': '"If you don\'t get it, you just don\'t get it." - Future', 'Young Thug': '"Slime Season." - Thugger', '21 Savage': '"I do it for the gang." - 21', 'Lil Baby': '"I\'m just tryna be a better me." - Lil Baby', 'A$AP Rocky': '"I treat the game like a canvas." - Rocky', 'Tyler, The Creator': '"Find your wings." - Tyler', 'Mac Miller': '"No matter where life takes me, find me with a smile." - Mac', 'Drake': '"Started from the bottom, now we\'re here." - Drake', 'Kendrick Lamar': '"If God got us, then we gon\' be alright." - Kendrick', 'J. Cole': '"There\'s beauty in the struggle." - J. Cole', 'Kanye West': '"I still think I am the greatest." - Ye', 'Eminem': '"You only get one shot, do not miss your chance to blow." - Eminem', '2Pac': '"Reality is wrong. Dreams are for real." - 2Pac', 'The Notorious B.I.G.': '"Mo money, mo problems." - Biggie', '50 Cent': '"Get rich or die tryin\'." - 50 Cent', 'Snoop Dogg': '"Drop it like it\'s hot." - Snoop', 'Pop Smoke': '"Woo!" - Pop Smoke'
         };
 
         function getArtistQuote(name) { return artistQuotes[name] || `"Ready to dominate the game." - ${name}`; }
@@ -741,7 +675,6 @@
         let mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || ''; 
         let mySongTitle = localStorage.getItem('rapquiz_menu_song_title') || '';
 
-        // STATS INIT
         let myStats = JSON.parse(localStorage.getItem('rapquiz_stats')) || { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: {} };
         if (myStats.totalScore === undefined) myStats.totalScore = 0; 
         if (myStats.correctGuesses === undefined) myStats.correctGuesses = 0;
@@ -755,9 +688,7 @@
         let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
 
         // --- YOUTUBE INTEGRATION LOGIK ---
-        let ytPlayer;
-        let ytReady = false;
-        let ytContext = 'menu';
+        let ytPlayer; let ytReady = false; let ytContext = 'menu';
 
         function onYouTubeIframeAPIReady() {
             ytPlayer = new YT.Player('yt-player', {
@@ -765,11 +696,7 @@
                 playerVars: { 'autoplay': 1, 'controls': 0, 'showinfo': 0, 'rel': 0, 'playsinline': 1 },
                 events: {
                     'onReady': () => { ytReady = true; },
-                    'onStateChange': (event) => {
-                        if (event.data === YT.PlayerState.ENDED && ytContext === 'menu') {
-                            ytPlayer.seekTo(0); ytPlayer.playVideo();
-                        }
-                    }
+                    'onStateChange': (event) => { if (event.data === YT.PlayerState.ENDED && ytContext === 'menu') { ytPlayer.seekTo(0); ytPlayer.playVideo(); } }
                 }
             });
         }
@@ -782,33 +709,19 @@
         function changeVolume(val) {
             globalVolume = parseFloat(val); 
             try { localStorage.setItem('rapquiz_volume', globalVolume); } catch(e){}
-            menuAudio.volume = globalVolume * 0.4;
-            audio.volume = globalVolume; sfxAudio.volume = globalVolume;
-            if(ytReady && ytPlayer && ytPlayer.setVolume) {
-                let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100;
-                ytPlayer.setVolume(globalVolume * vol); 
-            }
+            menuAudio.volume = globalVolume * 0.4; audio.volume = globalVolume; sfxAudio.volume = globalVolume;
+            if(ytReady && ytPlayer && ytPlayer.setVolume) { let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100; ytPlayer.setVolume(globalVolume * vol); }
         }
 
         function playMenuMusic(url) {
-            if(!url) return;
-            isMenuMusicPlaying = true;
-            ytContext = 'menu';
-            
+            if(!url) return; isMenuMusicPlaying = true; ytContext = 'menu';
             if (url.startsWith('yt:')) {
-                menuAudio.pause();
-                let vid = url.substring(3);
-                if(ytReady && ytPlayer && ytPlayer.loadVideoById) {
-                    ytPlayer.setVolume(globalVolume * 40);
-                    ytPlayer.loadVideoById(vid);
-                    ytPlayer.playVideo();
-                } else {
-                    setTimeout(() => playMenuMusic(url), 500);
-                }
+                menuAudio.pause(); let vid = url.substring(3);
+                if(ytReady && ytPlayer && ytPlayer.loadVideoById) { ytPlayer.setVolume(globalVolume * 40); ytPlayer.loadVideoById(vid); ytPlayer.playVideo(); } 
+                else { setTimeout(() => playMenuMusic(url), 500); }
             } else {
                 if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-                menuAudio.src = url; menuAudio.volume = globalVolume * 0.4;
-                menuAudio.play().catch(e=>{});
+                menuAudio.src = url; menuAudio.volume = globalVolume * 0.4; menuAudio.play().catch(e=>{});
             }
             let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
             btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
@@ -826,21 +739,11 @@
             }
         }
 
-        function pauseMenuMusic() {
-            menuAudio.pause();
-            if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
-        }
-
+        function pauseMenuMusic() { menuAudio.pause(); if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo(); }
         function resumeMenuMusic() {
-            if (!isMenuMusicPlaying) return;
-            ytContext = 'menu';
-            if (mySongUrl.startsWith('yt:')) {
-                if(ytReady && ytPlayer && ytPlayer.playVideo) {
-                    ytPlayer.setVolume(globalVolume * 40); ytPlayer.playVideo();
-                }
-            } else {
-                menuAudio.play().catch(e=>{});
-            }
+            if (!isMenuMusicPlaying) return; ytContext = 'menu';
+            if (mySongUrl.startsWith('yt:')) { if(ytReady && ytPlayer && ytPlayer.playVideo) { ytPlayer.setVolume(globalVolume * 40); ytPlayer.playVideo(); } } 
+            else { menuAudio.play().catch(e=>{}); }
         }
 
         function updateLevelDisplay() {
@@ -854,25 +757,13 @@
         function updateDetailedStats() {
             document.getElementById('stat-songs-correct').innerText = myStats.correctGuesses || 0;
             document.getElementById('stat-songs-wrong').innerText = myStats.wrongGuesses || 0;
-            
-            const modeNames = {
-                'all': 'All Mixed',
-                'progressive': 'Progressive',
-                'megahits': 'Mega Hits',
-                'higherlower': 'Stream Battle (Higher/Lower) 📈',
-                'fallen': 'Fallen Legends 🕊️',
-                '2010s': '2010-2020 Rap',
-                'soundcloud': 'SoundCloud Era',
-                'artist': 'Artist Catalog'
-            };
-
+            const modeNames = { 'all': 'All Mixed', 'progressive': 'Progressive', 'megahits': 'Mega Hits', 'higherlower': 'Stream Battle 📈', 'fallen': 'Fallen Legends 🕊️', '2010s': '2010-2020 Rap', 'soundcloud': 'SoundCloud Era', 'artist': 'Artist Catalog' };
             const container = document.getElementById('mode-stats-container');
             if (container) {
                 container.innerHTML = '';
                 for (let mode in myStats.modeScores) {
                     let s = myStats.modeScores[mode] || 0;
                     let trophy = s >= 10000 ? '🏆' : (s >= 5000 ? '🥇' : (s >= 2000 ? '🥈' : (s >= 500 ? '🥉' : '🔒')));
-                    
                     container.innerHTML += `
                         <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 18px; border-radius: 8px;">
                             <span style="font-weight: 700; font-size: 13px; color: white;">${modeNames[mode] || mode}</span>
@@ -880,8 +771,7 @@
                                 <span style="color: var(--primary); font-weight: 900; font-size: 14px;">${s} Pts</span>
                                 <span style="font-size: 20px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">${trophy}</span>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 }
             }
         }
@@ -895,18 +785,12 @@
         }
 
         function switchTab(tabId, el) {
-            if (tabId === 'multiplayer-tab' && !isPremium) {
-                document.getElementById('premium-overlay').style.display = 'flex';
-                return;
-            }
+            if (tabId === 'multiplayer-tab' && !isPremium) { document.getElementById('premium-overlay').style.display = 'flex'; return; }
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
             if(tabId === 'profile-tab') { 
-                document.getElementById('stat-played').innerText = myStats.played; 
-                document.getElementById('stat-wins').innerText = myStats.wins; 
-                document.getElementById('stat-losses').innerText = myStats.losses; 
-                updateLevelDisplay(); 
-                updateDetailedStats();
+                document.getElementById('stat-played').innerText = myStats.played; document.getElementById('stat-wins').innerText = myStats.wins; document.getElementById('stat-losses').innerText = myStats.losses; 
+                updateLevelDisplay(); updateDetailedStats();
             }
             if (window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active'); }
         }
@@ -916,9 +800,7 @@
                 if(mode === 'artist') {} 
                 else if(mode === 'higherlower') { startHigherLowerMode(); }
                 else { startMixedMode(mode); }
-            } else {
-                document.getElementById('premium-overlay').style.display = 'flex';
-            }
+            } else { document.getElementById('premium-overlay').style.display = 'flex'; }
         }
 
         function loadArtistVisuals(artistName) {
@@ -939,88 +821,47 @@
             if (b1 && myBgUrl) { b1.src = myBgUrl; if(bName) bName.innerText = myFavArtist; document.getElementById('fav-artist-banner').style.display = 'flex'; }
         }
 
-        // ==========================================
-        // ANTHEM LIVE SEARCH (iTUNES)
-        // ==========================================
+        // --- ANTHEM SEARCH ---
         let searchTimeout = null;
-        
-        function handleAnthemInput() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => { searchMenuSong(); }, 500); 
-        }
+        function handleAnthemInput() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { searchMenuSong(); }, 500); }
 
         async function searchMenuSong() {
-            let q = document.getElementById('edit-song-search-input').value.trim(); 
-            let sel = document.getElementById('edit-menu-song-select');
-            
+            let q = document.getElementById('edit-song-search-input').value.trim(); let sel = document.getElementById('edit-menu-song-select');
             if(!q) { sel.style.display = 'none'; return; }
-
             let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-            if (ytMatch) { 
-                let vid = ytMatch[1]; 
-                sel.innerHTML = `<option value="yt:${vid}" data-title="YouTube Track">▶️ YouTube Video (${vid})</option>`; 
-                sel.style.display = 'block'; 
-                return; 
-            }
-            
+            if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = `<option value="yt:${vid}" data-title="YouTube Track">▶️ YouTube Video (${vid})</option>`; sel.style.display = 'block'; return; }
             try {
                 let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=10`);
                 let data = await res.json();
-                
                 sel.innerHTML = '';
                 if (data && data.results && data.results.length > 0) {
                     let valid = data.results.filter(t => t.previewUrl);
                     if (valid.length > 0) {
                         sel.innerHTML = '<option value="">🎵 Choose your Anthem...</option>';
                         valid.forEach(t => {
-                            let opt = document.createElement('option');
-                            opt.value = t.previewUrl;
-                            opt.innerText = `${t.artistName} - ${t.trackName}`;
-                            opt.setAttribute('data-title', `${t.artistName} - ${t.trackName}`);
-                            sel.appendChild(opt);
+                            let opt = document.createElement('option'); opt.value = t.previewUrl; opt.innerText = `${t.artistName} - ${t.trackName}`; opt.setAttribute('data-title', `${t.artistName} - ${t.trackName}`); sel.appendChild(opt);
                         });
-                        sel.style.display = 'block';
-                        return;
+                        sel.style.display = 'block'; return;
                     }
                 }
-                sel.innerHTML = '<option value="">❌ No songs found</option>';
-                sel.style.display = 'block';
+                sel.innerHTML = '<option value="">❌ No songs found</option>'; sel.style.display = 'block';
             } catch(e) {}
         }
 
         function updateFavSong() {
             let sel = document.getElementById('edit-menu-song-select');
             if(sel.value) {
-                mySongUrl = sel.value; 
-                let selectedOpt = sel.options[sel.selectedIndex];
-                mySongTitle = selectedOpt.getAttribute('data-title') || selectedOpt.text;
-                
-                localStorage.setItem('rapquiz_menu_song_url', mySongUrl); 
-                localStorage.setItem('rapquiz_menu_song_title', mySongTitle); 
-                
-                let hymnDisplay = document.getElementById('profile-view-hymn');
-                if (hymnDisplay) hymnDisplay.innerText = mySongTitle; 
-                
+                mySongUrl = sel.value; let selectedOpt = sel.options[sel.selectedIndex]; mySongTitle = selectedOpt.getAttribute('data-title') || selectedOpt.text;
+                localStorage.setItem('rapquiz_menu_song_url', mySongUrl); localStorage.setItem('rapquiz_menu_song_title', mySongTitle); 
+                let hymnDisplay = document.getElementById('profile-view-hymn'); if (hymnDisplay) hymnDisplay.innerText = mySongTitle; 
                 playMenuMusic(mySongUrl);
             }
         }
 
-        // ==========================================
-        // AUTO-LOGIN
-        // ==========================================
         window.onload = () => {
-            let volSlider = document.getElementById('volume-slider');
-            if(volSlider) volSlider.value = globalVolume;
-
+            let volSlider = document.getElementById('volume-slider'); if(volSlider) volSlider.value = globalVolume;
             let editSel = document.getElementById('edit-fav-artist-select');
-            if (editSel) {
-                editSel.innerHTML = ''; 
-                allArtists.forEach(a => { 
-                    let opt = document.createElement('option'); opt.value = a; opt.innerText = a; 
-                    if(a === myFavArtist) opt.selected = true; 
-                    editSel.appendChild(opt); 
-                });
-            }
+            if (editSel) { editSel.innerHTML = ''; allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; if(a === myFavArtist) opt.selected = true; editSel.appendChild(opt); }); }
             
             let grid = document.getElementById('artist-grid');
             if(grid) {
@@ -1030,97 +871,51 @@
                     if(!isPremium) {
                         d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:10px; margin-top:3px; color:var(--warning);">🔒 VIP</span>`;
                         d.onclick = () => { document.getElementById('premium-overlay').style.display = 'flex'; };
-                    } else {
-                        d.innerText = a; 
-                        d.onclick = () => startArtistMode(a); 
-                    }
+                    } else { d.innerText = a; d.onclick = () => startArtistMode(a); }
                     grid.appendChild(d); 
                 });
             }
 
             if (isPremium) {
-                document.getElementById('premium-badge').style.display = 'inline-block';
-                document.getElementById('vip-buy-section').style.display = 'none';
-                document.getElementById('vip-redeem-section').style.display = 'none';
-                document.querySelectorAll('.locked-card').forEach(el => {
-                    el.classList.remove('locked-card');
-                    let lockIcon = el.querySelector('.lock-icon');
-                    if(lockIcon) lockIcon.style.display = 'none';
-                });
+                document.getElementById('premium-badge').style.display = 'inline-block'; document.getElementById('vip-buy-section').style.display = 'none'; document.getElementById('vip-redeem-section').style.display = 'none';
+                document.querySelectorAll('.locked-card').forEach(el => { el.classList.remove('locked-card'); let lockIcon = el.querySelector('.lock-icon'); if(lockIcon) lockIcon.style.display = 'none'; });
             }
-
             if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
 
-            if (!playerName || !savedPw) { 
-                document.getElementById('profile-overlay').style.display = 'flex'; 
-            } else { 
-                document.getElementById('profile-overlay').style.display = 'none';
-                handleProfileLogin(true); 
-            }
+            if (!playerName || !savedPw) { document.getElementById('profile-overlay').style.display = 'flex'; } 
+            else { document.getElementById('profile-overlay').style.display = 'none'; handleProfileLogin(true); }
         };
 
         function handleProfileLogin(isAutoLogin = false) {
             let err = document.getElementById('profile-error');
             if (!isAutoLogin) {
-                let name = document.getElementById('username-input').value.trim(); 
-                let pw = document.getElementById('password-input').value.trim(); 
+                let name = document.getElementById('username-input').value.trim(); let pw = document.getElementById('password-input').value.trim(); 
                 if (!name || !pw) { err.innerText = "Please fill in username and password!"; err.style.display = 'block'; return; }
                 if (savedPw && pw !== savedPw) { err.innerText = "Wrong password!"; err.style.display = 'block'; return; }
                 if(!savedPw) {
-                    localStorage.setItem('rapquiz_username', name); 
-                    localStorage.setItem('rapquiz_password', pw); 
-                    playerName = name; savedPw = pw; 
-                    myAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
-                    localStorage.setItem('rapquiz_avatar', myAvatar);
+                    localStorage.setItem('rapquiz_username', name); localStorage.setItem('rapquiz_password', pw); playerName = name; savedPw = pw; 
+                    myAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`; localStorage.setItem('rapquiz_avatar', myAvatar);
                 }
             }
-            
-            updateLevelDisplay();
-            updateDetailedStats();
-            document.getElementById('profile-overlay').style.display = 'none'; 
-            document.getElementById('app-layout').style.display = 'flex';
-            document.getElementById('sidebar-name').innerText = playerName; 
-            document.getElementById('profile-view-name').innerText = playerName; 
-            document.getElementById('profile-view-quote').innerText = myQuote; 
-            
-            let hymnDisplay = document.getElementById('profile-view-hymn');
-            if (hymnDisplay) hymnDisplay.innerText = mySongTitle || "None";
-            
-            updateAllAvatars();
-            playMenuMusic(mySongUrl);
+            updateLevelDisplay(); updateDetailedStats();
+            document.getElementById('profile-overlay').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex';
+            document.getElementById('sidebar-name').innerText = playerName; document.getElementById('profile-view-name').innerText = playerName; document.getElementById('profile-view-quote').innerText = myQuote; 
+            let hymnDisplay = document.getElementById('profile-view-hymn'); if (hymnDisplay) hymnDisplay.innerText = mySongTitle || "None";
+            updateAllAvatars(); playMenuMusic(mySongUrl);
         }
 
         function resetProfile() { localStorage.clear(); location.reload(); }
 
         function updateFavArtist() { 
-            myFavArtist = document.getElementById('edit-fav-artist-select').value; 
-            localStorage.setItem('rapquiz_fav_artist', myFavArtist); 
-            myQuote = getArtistQuote(myFavArtist);
-            localStorage.setItem('rapquiz_quote', myQuote);
-            document.getElementById('profile-view-quote').innerText = myQuote; 
-            loadArtistVisuals(myFavArtist); 
+            myFavArtist = document.getElementById('edit-fav-artist-select').value; localStorage.setItem('rapquiz_fav_artist', myFavArtist); 
+            myQuote = getArtistQuote(myFavArtist); localStorage.setItem('rapquiz_quote', myQuote);
+            document.getElementById('profile-view-quote').innerText = myQuote; loadArtistVisuals(myFavArtist); 
         }
 
-        // ==========================================
-        // MULTIPLAYER LOBBY LOGIC (2-4 Players)
-        // ==========================================
         function encodeAvatarAndQuote() { return myAvatar + '|Q|' + myQuote; }
 
-        function createRoom() { 
-            isMultiplayer = true; isMpHost = true; 
-            socket.emit('createRoom', { name: playerName, avatar: encodeAvatarAndQuote() }); 
-            document.getElementById('mp-status').innerText = 'Connecting...'; 
-        }
-        
-        function joinRoom() { 
-            let c = document.getElementById('join-code-input').value; 
-            if(c) { 
-                isMultiplayer = true; isMpHost = false; 
-                socket.emit('joinRoom', { code: c, name: playerName, avatar: encodeAvatarAndQuote() }); 
-                document.getElementById('mp-status').innerText = 'Joining...'; 
-            } 
-        }
-        
+        function createRoom() { isMultiplayer = true; isMpHost = true; socket.emit('createRoom', { name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Connecting...'; }
+        function joinRoom() { let c = document.getElementById('join-code-input').value; if(c) { isMultiplayer = true; isMpHost = false; socket.emit('joinRoom', { code: c, name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Joining...'; } }
         function cancelMultiplayer() { isMultiplayer = false; isMpHost = false; currentRoom = ''; switchTab('play-tab', document.getElementById('nav-play')); }
 
         socket.on('roomCreated', (code) => { currentRoom = code; document.getElementById('room-code-display').innerText = code; });
@@ -1132,29 +927,19 @@
             if(currentRoom) {
                 let statusEl = document.getElementById('mp-status');
                 if(isMpHost) {
-                    if(players.length >= 2) {
-                        statusEl.innerHTML = `🟢 Ready! You can now choose a mode<br>in the left menu to start.`; statusEl.style.color = 'var(--success)';
-                    } else {
-                        statusEl.innerText = `Waiting for players... (${players.length}/4)`; statusEl.style.color = 'var(--warning)';
-                    }
-                } else {
-                    statusEl.innerText = `🟢 In lobby (${players.length}/4). Waiting for host to start...`; statusEl.style.color = 'var(--success)';
-                }
+                    if(players.length >= 2) { statusEl.innerHTML = `🟢 Ready! You can now choose a mode<br>in the left menu to start.`; statusEl.style.color = 'var(--success)'; } 
+                    else { statusEl.innerText = `Waiting for players... (${players.length}/4)`; statusEl.style.color = 'var(--warning)'; }
+                } else { statusEl.innerText = `🟢 In lobby (${players.length}/4). Waiting for host to start...`; statusEl.style.color = 'var(--success)'; }
             }
             if (gameIsOver) checkMatchEnd(); 
         });
 
         function renderLobbyPlayers() {
-            const container = document.getElementById('lobby-players-container');
-            if(!container) return;
+            const container = document.getElementById('lobby-players-container'); if(!container) return;
             if(lobbyPlayers.length === 0) { container.innerHTML = '<span style="color: var(--text-muted); font-size: 14px;">No one here yet...</span>'; return; }
             container.innerHTML = '';
             lobbyPlayers.forEach(p => {
-                let isMe = p.id === socket.id;
-                let parts = p.avatar.split('|Q|');
-                let pAv = parts[0];
-                let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
-                
+                let isMe = p.id === socket.id; let parts = p.avatar.split('|Q|'); let pAv = parts[0]; let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
                 container.innerHTML += `
                     <div style="background: rgba(20,20,25,0.8); padding: 10px 15px; border-radius: 12px; border: 1px solid ${isMe ? 'var(--primary)' : 'var(--surface-border)'}; display: flex; align-items: center; gap: 15px; width: 100%; max-width: 320px; text-align: left;">
                         <img src="${pAv}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid ${isMe ? 'var(--primary)' : 'white'}; flex-shrink: 0;">
@@ -1162,260 +947,113 @@
                             <span style="font-weight: 800; font-size: 15px; color: white;">${p.name} ${isMe ? '(You)' : ''}</span>
                             <span style="font-size: 11px; color: var(--text-muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title='${pQt.replace(/'/g, "&apos;")}'>${pQt}</span>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
         
-        socket.on('gameReady', (code) => { 
-            if(!isMpHost) { 
-                document.getElementById('loading-overlay').style.display = 'flex';
-                document.getElementById('loading-text').innerText = "Loading game data from host...";
-            } 
-        });
-
-        socket.on('receiveRoundData', (data) => { 
-            resetGameStats(); songsPool = data.songs; currentMode = data.mode; isHardcoreMode = data.hardcore; showArtistName = data.showArtist; 
-            document.getElementById('hardcore-toggle').checked = isHardcoreMode; document.getElementById('artist-toggle').checked = showArtistName; 
-            isMultiplayer = true; document.getElementById('loading-overlay').style.display = 'none'; launchGame(); 
-        });
-
-        socket.on('updateAllStats', (players) => { 
-            lobbyPlayers = players; 
-            if(!isWinnerScreenShown) updateStatsDisplay(); 
-            if(gameIsOver) renderMpLeaderboard(); 
-        });
-
+        socket.on('gameReady', (code) => { if(!isMpHost) { document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading game data from host..."; } });
+        socket.on('receiveRoundData', (data) => { resetGameStats(); songsPool = data.songs; currentMode = data.mode; isHardcoreMode = data.hardcore; showArtistName = data.showArtist; document.getElementById('hardcore-toggle').checked = isHardcoreMode; document.getElementById('artist-toggle').checked = showArtistName; isMultiplayer = true; document.getElementById('loading-overlay').style.display = 'none'; launchGame(); });
+        socket.on('updateAllStats', (players) => { lobbyPlayers = players; if(!isWinnerScreenShown) updateStatsDisplay(); if(gameIsOver) renderMpLeaderboard(); });
         socket.on('teammateAnswered', (data) => {
-            if (data.type === 'ROUND_ANSWERED') {
-                playersAnsweredThisRound.add(data.id); checkAllAnswered();
-            } else if (data.type === 'READY_NEXT') {
-                playersReadyForNextRound.add(data.id); checkAllReady();
-            } else if (data.type === 'SUDDEN_DEATH') {
-                triggerSuddenDeathLocal(data.ids);
-            }
+            if (data.type === 'ROUND_ANSWERED') { playersAnsweredThisRound.add(data.id); checkAllAnswered(); } 
+            else if (data.type === 'READY_NEXT') { playersReadyForNextRound.add(data.id); checkAllReady(); } 
+            else if (data.type === 'SUDDEN_DEATH') { triggerSuddenDeathLocal(data.ids); }
         });
-
-        socket.on('triggerNextRound', () => {
-            if (!isMpHost && lives > 0 && !gameIsOver) nextRound();
-        });
-
-        socket.on('opponentGameOver', (data) => {
-            matchEndData[data.id] = data; 
-            playersAnsweredThisRound.add(data.id); playersReadyForNextRound.add(data.id);
-            checkAllAnswered(); checkAllReady();
-            if (gameIsOver) checkMatchEnd(); 
-        });
+        socket.on('triggerNextRound', () => { if (!isMpHost && lives > 0 && !gameIsOver) nextRound(); });
+        socket.on('opponentGameOver', (data) => { matchEndData[data.id] = data; playersAnsweredThisRound.add(data.id); playersReadyForNextRound.add(data.id); checkAllAnswered(); checkAllReady(); if (gameIsOver) checkMatchEnd(); });
 
         function checkMatchEnd() {
             if (!isMultiplayer || !gameIsOver || isWinnerScreenShown) return;
             let allDone = lobbyPlayers.length > 0 && lobbyPlayers.every(p => matchEndData[p.id]);
-            
             if (allDone) {
-                let sorted = Object.values(matchEndData).sort((a,b) => b.score - a.score);
-                let topScore = sorted[0].score;
-                let tiedPlayers = sorted.filter(p => p.score === topScore);
-
+                let sorted = Object.values(matchEndData).sort((a,b) => b.score - a.score); let topScore = sorted[0].score; let tiedPlayers = sorted.filter(p => p.score === topScore);
                 if (tiedPlayers.length > 1) {
-                    if (isMpHost) {
-                        let tiedIds = tiedPlayers.map(p => p.id);
-                        socket.emit('teammateAnswered', { type: 'SUDDEN_DEATH', ids: tiedIds, roomCode: currentRoom });
-                        triggerSuddenDeathLocal(tiedIds);
-                    }
+                    if (isMpHost) { let tiedIds = tiedPlayers.map(p => p.id); socket.emit('teammateAnswered', { type: 'SUDDEN_DEATH', ids: tiedIds, roomCode: currentRoom }); triggerSuddenDeathLocal(tiedIds); }
                 } else {
-                    isWinnerScreenShown = true;
-                    let winner = sorted[0];
-                    let amIFirst = (winner.id === socket.id);
-                    
-                    myStats.played++; 
-                    if(amIFirst) myStats.wins++; else myStats.losses++;
-                    
-                    myStats.totalScore = (myStats.totalScore || 0) + score;
-                    if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0;
-                    myStats.modeScores[currentMode] += score;
-                    localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
-                    updateLevelDisplay();
-                    updateDetailedStats();
-                    
-                    showWinnerScreen(winner);
+                    isWinnerScreenShown = true; let winner = sorted[0]; let amIFirst = (winner.id === socket.id);
+                    myStats.played++; if(amIFirst) myStats.wins++; else myStats.losses++;
+                    myStats.totalScore = (myStats.totalScore || 0) + score; if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0; myStats.modeScores[currentMode] += score;
+                    localStorage.setItem('rapquiz_stats', JSON.stringify(myStats)); updateLevelDisplay(); updateDetailedStats(); showWinnerScreen(winner);
                 }
-            } else { 
-                renderMpLeaderboard(); 
-            }
+            } else { renderMpLeaderboard(); }
         }
 
         function backToMenu() { 
-            try {
-                audio.pause(); sfxAudio.pause(); 
-                clearTimeout(precisionTimer); 
-                gameIsOver = true; 
-                cancelMultiplayer(); 
-                document.getElementById('game-screen').style.display = 'none'; 
-                document.getElementById('hl-screen').style.display = 'none'; 
-                document.getElementById('feedback-overlay').style.display = 'none'; 
-                document.getElementById('app-layout').style.display = 'flex'; 
-                resumeMenuMusic();
-            } catch(e) {
-                location.reload(); 
-            }
+            try { audio.pause(); sfxAudio.pause(); clearTimeout(precisionTimer); gameIsOver = true; cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('hl-screen').style.display = 'none'; document.getElementById('feedback-overlay').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; resumeMenuMusic(); } 
+            catch(e) { location.reload(); }
         }
 
         function triggerSuddenDeathLocal(tiedIds) {
-            let amITied = tiedIds.includes(socket.id);
-            sfxAudio.pause(); 
-            
-            tiedIds.forEach(id => delete matchEndData[id]); 
-            
-            let m = document.getElementById('feedback-modal'); m.className = "modal warning"; 
-            document.getElementById('feedback-title').innerText = "💀 SUDDEN DEATH 💀";
-            document.getElementById('feedback-cover').style.display = 'none';
-            document.getElementById('mp-result').style.display = 'none';
-            document.getElementById('feedback-btn').style.display = 'none';
-            
+            let amITied = tiedIds.includes(socket.id); sfxAudio.pause(); tiedIds.forEach(id => delete matchEndData[id]); 
+            let m = document.getElementById('feedback-modal'); m.className = "modal warning"; document.getElementById('feedback-title').innerText = "💀 SUDDEN DEATH 💀"; document.getElementById('feedback-cover').style.display = 'none'; document.getElementById('mp-result').style.display = 'none'; document.getElementById('feedback-btn').style.display = 'none';
             if (amITied) {
-                lives = 1; gameIsOver = false; isWinnerScreenShown = false;
-                document.getElementById('feedback-desc').innerText = "Tie! You get 1 life. Whoever misses next, loses!";
-                
-                playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
-                expectedAnswers = tiedIds.length;
-                
-                if (isMpHost) {
-                    setTimeout(() => {
-                        socket.emit('nextRound', { roomCode: currentRoom });
-                        nextRound();
-                    }, 4000);
-                }
-            } else {
-                document.getElementById('feedback-desc').innerText = "Tie! Finalists are fighting in Sudden Death...";
-            }
-            
-            document.getElementById('feedback-overlay').style.display = 'flex';
-            updateStatsDisplay();
+                lives = 1; gameIsOver = false; isWinnerScreenShown = false; document.getElementById('feedback-desc').innerText = "Tie! You get 1 life. Whoever misses next, loses!";
+                playersAnsweredThisRound.clear(); playersReadyForNextRound.clear(); expectedAnswers = tiedIds.length;
+                if (isMpHost) { setTimeout(() => { socket.emit('nextRound', { roomCode: currentRoom }); nextRound(); }, 4000); }
+            } else { document.getElementById('feedback-desc').innerText = "Tie! Finalists are fighting in Sudden Death..."; }
+            document.getElementById('feedback-overlay').style.display = 'flex'; updateStatsDisplay();
         }
 
-        function playWinnerAnthem() {
-            sfxAudio.pause(); 
-            sfxAudio.src = 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
+        function playWinnerAnthem(url) {
+            sfxAudio.pause(); pauseMenuMusic();
+            if (url && url.startsWith('yt:')) { let vid = url.substring(3); if(ytReady && ytPlayer && ytPlayer.loadVideoById) { ytContext = 'winner'; ytPlayer.setVolume(globalVolume * 100); ytPlayer.loadVideoById(vid); ytPlayer.playVideo(); } } 
+            else if (url) { sfxAudio.src = url; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{}); } 
+            else { sfxAudio.src = 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{}); }
         }
 
         function showWinnerScreen(winner) {
             try {
-                let parts = winner.avatar.split('|Q|');
-                let wAv = parts[0];
-                let wQt = parts.length > 1 ? parts[1] : '';
-
-                let m = document.getElementById('feedback-modal'); m.className = "modal correct"; 
-                document.getElementById('feedback-title').innerText = "🏆 WINNER 🏆";
-                document.getElementById('feedback-desc').innerText = "Playing ultimate theme...";
-                
-                let cov = document.getElementById('feedback-cover');
-                cov.src = wAv; cov.style.display = 'block'; cov.style.borderRadius = '50%';
-                cov.style.width = '160px'; cov.style.height = '160px'; cov.style.border = '4px solid var(--warning)'; cov.style.boxShadow = '0 0 40px rgba(245, 158, 11, 0.8)';
-                
+                let parts = winner.avatar.split('|Q|'); let wAv = parts[0]; let wQt = parts.length > 1 ? parts[1] : '';
+                let m = document.getElementById('feedback-modal'); m.className = "modal correct"; document.getElementById('feedback-title').innerText = "🏆 WINNER 🏆"; document.getElementById('feedback-desc').innerText = "Playing winner's anthem...";
+                let cov = document.getElementById('feedback-cover'); cov.src = wAv; cov.style.display = 'block'; cov.style.borderRadius = '50%'; cov.style.width = '160px'; cov.style.height = '160px'; cov.style.border = '4px solid var(--warning)'; cov.style.boxShadow = '0 0 40px rgba(245, 158, 11, 0.8)';
                 document.getElementById('mp-result').style.display = 'block';
-                document.getElementById('mp-result').innerHTML = `
-                    <h2 style="color:var(--warning); margin:0; font-size:36px; text-transform: uppercase;">${winner.name}</h2>
-                    <p style="color:var(--text-muted); font-style:italic; font-size:14px; margin: 5px 0;">${wQt}</p>
-                    <p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>
-                `;
+                document.getElementById('mp-result').innerHTML = `<h2 style="color:var(--warning); margin:0; font-size:36px; text-transform: uppercase;">${winner.name}</h2><p style="color:var(--text-muted); font-style:italic; font-size:14px; margin: 5px 0;">${wQt}</p><p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>`;
                 
-                playWinnerAnthem();
+                playWinnerAnthem(winner.anthem);
                 document.getElementById('feedback-btn').style.display = 'none'; 
-                
                 setTimeout(() => {
-                    sfxAudio.pause(); 
+                    sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
                     cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
                     document.getElementById('feedback-title').innerText = "📊 FINAL STANDINGS"; document.getElementById('feedback-desc').innerText = "";
-                    renderMpLeaderboard(); 
-                    let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Exit 🏠";
-                    btn.onclick = () => { backToMenu(); };
+                    renderMpLeaderboard(); let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Exit 🏠"; btn.onclick = () => { backToMenu(); };
                 }, 7000);
-            } catch(e) {
-                backToMenu();
-            }
+            } catch(e) { backToMenu(); }
         }
 
         // ==========================================
         // HIGHER / LOWER LOGIK (STREAM BATTLE)
         // ==========================================
-        let hlPool = [];
-        let hlCurrentA = null;
-        let hlCurrentB = null;
-        let hlStreak = 0;
+        let hlPool = []; let hlCurrentA = null; let hlCurrentB = null; let hlStreak = 0;
 
         async function startHigherLowerMode() {
-            document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = "Loading Stream Data...";
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Stream Data...";
             resetGameStats(); currentMode = 'higherlower'; hlStreak = 0;
-            
             let sel = [...megaStars, ...artists2010s, ...soundcloudArtists, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0, 12);
             await Promise.all(sel.map(a => fetchArtistSongs(a)));
+            if (songsPool.length < 5) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); return; }
             
-            if (songsPool.length < 5) {
-                document.getElementById('loading-overlay').style.display = 'none';
-                alert("Error loading songs."); return;
-            }
+            hlPool = smartShuffle(songsPool).map(s => ({ ...s, streams: getTrackEstimatedStreams(s.title, s.artist.name) }));
+            document.getElementById('loading-overlay').style.display = 'none'; pauseMenuMusic();
+            document.getElementById('app-layout').style.display = 'none'; document.getElementById('hl-screen').style.display = 'flex';
             
-            // Verknüpfe Songs mit echten/geschätzten Streams
-            hlPool = smartShuffle(songsPool).map(s => ({
-                ...s,
-                streams: getTrackEstimatedStreams(s.title, s.artist.name)
-            }));
-            
-            document.getElementById('loading-overlay').style.display = 'none';
-            pauseMenuMusic();
-            document.getElementById('app-layout').style.display = 'none';
-            document.getElementById('hl-screen').style.display = 'flex';
-            
-            hlCurrentA = hlPool.pop();
-            hlCurrentB = hlPool.pop();
-            renderHLRound();
+            hlCurrentA = hlPool.pop(); hlCurrentB = hlPool.pop(); renderHLRound();
         }
 
         function renderHLRound() {
             document.getElementById('hl-streak-num').innerText = hlStreak;
-            
-            // CARD A
-            document.getElementById('hl-img-a').src = hlCurrentA.album.cover_medium;
-            document.getElementById('hl-title-a').innerText = hlCurrentA.title;
-            document.getElementById('hl-artist-a').innerText = hlCurrentA.artist.name;
-            document.getElementById('hl-streams-a').innerText = hlCurrentA.streams.toLocaleString('de-DE');
-
-            // CARD B
-            document.getElementById('hl-img-b').src = hlCurrentB.album.cover_medium;
-            document.getElementById('hl-title-b').innerText = hlCurrentB.title;
-            document.getElementById('hl-artist-b').innerText = hlCurrentB.artist.name;
-            
-            document.getElementById('hl-action-box').style.display = 'flex';
-            document.getElementById('hl-result-box').style.display = 'none';
-            document.getElementById('hl-streams-b').innerText = hlCurrentB.streams.toLocaleString('de-DE');
+            document.getElementById('hl-img-a').src = hlCurrentA.album.cover_medium; document.getElementById('hl-title-a').innerText = hlCurrentA.title; document.getElementById('hl-artist-a').innerText = hlCurrentA.artist.name; document.getElementById('hl-streams-a').innerText = hlCurrentA.streams.toLocaleString('de-DE');
+            document.getElementById('hl-img-b').src = hlCurrentB.album.cover_medium; document.getElementById('hl-title-b').innerText = hlCurrentB.title; document.getElementById('hl-artist-b').innerText = hlCurrentB.artist.name;
+            document.getElementById('hl-action-box').style.display = 'flex'; document.getElementById('hl-result-box').style.display = 'none'; document.getElementById('hl-streams-b').innerText = hlCurrentB.streams.toLocaleString('de-DE');
         }
 
         function processHLChoice(choice) {
-            document.getElementById('hl-action-box').style.display = 'none';
-            document.getElementById('hl-result-box').style.display = 'flex';
-            
-            let isHigher = hlCurrentB.streams >= hlCurrentA.streams;
-            let wasCorrect = (choice === 'higher' && isHigher) || (choice === 'lower' && !isHigher);
-
+            document.getElementById('hl-action-box').style.display = 'none'; document.getElementById('hl-result-box').style.display = 'flex';
+            let isHigher = hlCurrentB.streams >= hlCurrentA.streams; let wasCorrect = (choice === 'higher' && isHigher) || (choice === 'lower' && !isHigher);
             if (wasCorrect) {
-                hlStreak++;
-                score += 150;
-                myStats.correctGuesses++;
-                setTimeout(() => {
-                    hlCurrentA = hlCurrentB;
-                    if (hlPool.length === 0) {
-                        triggerGameOver(true);
-                    } else {
-                        hlCurrentB = hlPool.pop();
-                        renderHLRound();
-                    }
-                }, 2000);
+                hlStreak++; score += 150; myStats.correctGuesses++;
+                setTimeout(() => { hlCurrentA = hlCurrentB; if (hlPool.length === 0) { triggerGameOver(true); } else { hlCurrentB = hlPool.pop(); renderHLRound(); } }, 2000);
             } else {
-                myStats.wrongGuesses++;
-                setTimeout(() => {
-                    triggerGameOver(false);
-                }, 2000);
+                myStats.wrongGuesses++; setTimeout(() => { triggerGameOver(false); }, 2000);
             }
             localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
         }
@@ -1424,45 +1062,44 @@
         // GAME LOGIC & PARALLEL FETCH
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
-        
         let currentPlayId = 0; 
+
         function playAudioSnippet(isReplay = false) { 
-            clearTimeout(precisionTimer); 
-            let playId = ++currentPlayId;
-            
+            clearTimeout(precisionTimer); let playId = ++currentPlayId;
             if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
-            
-            audio.volume = globalVolume; 
-            let p = audio.play();
-            if (p !== undefined) {
-                p.then(() => {
-                    if (playId !== currentPlayId) return; 
-                    if (maxPlayTime < 30) {
-                        precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000);
-                    }
-                }).catch(e=>{});
-            }
+            audio.volume = globalVolume; let p = audio.play();
+            if (p !== undefined) { p.then(() => { if (playId !== currentPlayId) return; if (maxPlayTime < 30) { precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000); } }).catch(e=>{}); }
         }
 
-        function readSettings() {
-            let hcToggle = document.getElementById('hardcore-toggle');
-            let artToggle = document.getElementById('artist-toggle');
-            if (hcToggle) isHardcoreMode = hcToggle.checked;
-            if (artToggle) showArtistName = artToggle.checked;
-        }
+        function readSettings() { let hcToggle = document.getElementById('hardcore-toggle'); let artToggle = document.getElementById('artist-toggle'); if (hcToggle) isHardcoreMode = hcToggle.checked; if (artToggle) showArtistName = artToggle.checked; }
 
         async function fetchArtistSongs(artist) {
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 4000); 
                 
-                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=40`, { signal: controller.signal });
+                // DEEP FETCH: Wir holen jetzt die Top 200 anstatt nur 40, um extreme Vielfalt zu garantieren!
+                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=200`, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 
                 let data = await res.json();
                 if (data && data.results) {
                     let valid = data.results.filter(t => t.previewUrl);
-                    let mapped = valid.map(t => ({
+                    
+                    // DUPLIKAT FILTER: Verhindert, dass 3x der gleiche Song (Clean, Explicit, Live) in die Liste kommt
+                    let uniqueTracks = new Map();
+                    for (let t of valid) {
+                        let cleanName = t.trackName.toLowerCase().split('(')[0].split('[')[0].trim();
+                        if (!uniqueTracks.has(cleanName)) { uniqueTracks.set(cleanName, t); }
+                    }
+                    
+                    let uniqueArray = Array.from(uniqueTracks.values());
+                    
+                    // DEEP SHUFFLE: Mischt den 200er Katalog komplett durch
+                    uniqueArray.sort(() => 0.5 - Math.random());
+                    
+                    // Wir ziehen eine zufällige Auswahl (max 40) für das aktuelle Spiel in den Pool
+                    let mapped = uniqueArray.slice(0, 40).map(t => ({
                         id: t.trackId.toString(),
                         title: t.trackName,
                         preview: t.previewUrl,
@@ -1500,8 +1137,7 @@
         async function startMixedMode(mode) {
             readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = "Loading database...";
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading database...";
             resetGameStats(); currentMode = mode; let sel = [];
             
             if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
@@ -1512,64 +1148,35 @@
             
             try {
                 await Promise.all(sel.map(a => fetchArtistSongs(a)));
-                if (songsPool.length < 4) { 
-                    document.getElementById('loading-overlay').style.display = 'none'; 
-                    alert("Network error or Adblocker blocked the songs. Please try again!"); 
-                    return; 
-                }
-                songsPool = smartShuffle(songsPool); 
-                if (isMultiplayer && isMpHost) syncHostData(); 
-                launchGame();
-            } catch (err) {
-                document.getElementById('loading-overlay').style.display = 'none'; 
-                alert("Error loading songs.");
-            }
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker blocked the songs. Please try again!"); return; }
+                songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
+            } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
         }
 
         async function startProgressiveMode() {
             readSettings();
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
             resetGameStats(); currentMode = 'progressive';
             
             try {
                 await Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchArtistSongs(a)));
-                if (songsPool.length < 4) { 
-                    document.getElementById('loading-overlay').style.display = 'none'; 
-                    alert("Network error or Adblocker blocked the songs. Please try again!"); 
-                    return; 
-                }
-                songsPool = smartShuffle(songsPool); 
-                if (isMultiplayer && isMpHost) syncHostData(); 
-                launchGame();
-            } catch (err) {
-                document.getElementById('loading-overlay').style.display = 'none'; 
-                alert("Error loading songs.");
-            }
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker blocked the songs. Please try again!"); return; }
+                songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
+            } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
         }
 
         async function startArtistMode(artist) {
             readSettings();
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').style.display = 'flex'; 
-            document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
             resetGameStats(); currentMode = 'artist';
             
             try {
                 await fetchArtistSongs(artist);
-                if (songsPool.length < 4) { 
-                    document.getElementById('loading-overlay').style.display = 'none'; 
-                    alert("Network error or Adblocker blocked the songs. Please try again!"); 
-                    return; 
-                }
-                songsPool = smartShuffle(songsPool); 
-                if (isMultiplayer && isMpHost) syncHostData(); 
-                launchGame();
-            } catch (err) {
-                document.getElementById('loading-overlay').style.display = 'none'; 
-                alert("Error loading songs.");
-            }
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker blocked the songs. Please try again!"); return; }
+                songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
+            } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
         }
 
         function updateSuggestions() {
@@ -1629,73 +1236,37 @@
             let btn = document.getElementById('feedback-btn'); let res = document.getElementById('mp-result');
 
             if (playersAnsweredThisRound.size >= expectedAnswers) {
-                res.innerHTML = '<span style="color: var(--success); font-weight: 900;">All players guessed!</span>';
-                btn.style.display = 'block'; btn.innerText = 'Next Round ➔';
-                
-                btn.onclick = () => {
-                    playersReadyForNextRound.add(socket.id);
-                    socket.emit('teammateAnswered', { type: 'READY_NEXT', id: socket.id, roomCode: currentRoom });
-                    btn.style.display = 'none'; res.innerHTML = '<span style="color: var(--warning); font-weight: 800;">Waiting for other players...</span>';
-                    checkAllReady();
-                };
-            } else {
-                res.innerHTML = `<span style="color: var(--warning); font-weight: 800;">Waiting for players... (${playersAnsweredThisRound.size}/${expectedAnswers})</span>`;
-                btn.style.display = 'none';
-            }
+                res.innerHTML = '<span style="color: var(--success); font-weight: 900;">All players guessed!</span>'; btn.style.display = 'block'; btn.innerText = 'Next Round ➔';
+                btn.onclick = () => { playersReadyForNextRound.add(socket.id); socket.emit('teammateAnswered', { type: 'READY_NEXT', id: socket.id, roomCode: currentRoom }); btn.style.display = 'none'; res.innerHTML = '<span style="color: var(--warning); font-weight: 800;">Waiting for other players...</span>'; checkAllReady(); };
+            } else { res.innerHTML = `<span style="color: var(--warning); font-weight: 800;">Waiting for players... (${playersAnsweredThisRound.size}/${expectedAnswers})</span>`; btn.style.display = 'none'; }
         }
 
-        function checkAllReady() {
-            if (!isMultiplayer) return;
-            if (playersReadyForNextRound.size >= expectedAnswers) {
-                if (isMpHost) {
-                    socket.emit('nextRound', { roomCode: currentRoom });
-                    if (lives > 0 && !gameIsOver) nextRound();
-                }
-            }
-        }
+        function checkAllReady() { if (!isMultiplayer) return; if (playersReadyForNextRound.size >= expectedAnswers) { if (isMpHost) { socket.emit('nextRound', { roomCode: currentRoom }); if (lives > 0 && !gameIsOver) nextRound(); } } }
 
         function processAnswer(wasCorrect, isSkip = false) {
             if (document.getElementById('feedback-overlay').style.display === 'flex' || gameIsOver) return;
-
             let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover');
             document.getElementById('suggestions-box').style.display = 'none'; 
-            
             let pts = maxPlayTime <= 1 ? 100 : (maxPlayTime <= 4 ? 75 : 50);
 
             if (wasCorrect) {
-                myStats.correctGuesses++;
-                score += pts; maxPlayTime = 30; playAudioSnippet(true); cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
+                myStats.correctGuesses++; score += pts; maxPlayTime = 30; playAudioSnippet(true); cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
                 m.className = "modal correct"; t.innerText = "🔥 CORRECT!"; d.innerText = `+${pts} Points!\n${currentSong.title} - ${currentSong.artist.name}`;
             } else {
-                myStats.wrongGuesses++;
-                cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
-                if (isSkip) { 
-                    score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Points\n${currentSong.title} - ${currentSong.artist.name}`; 
-                } else { 
-                    lives = Math.max(0, lives - 1); 
-                    m.className = "modal wrong"; t.innerText = "❌ WRONG!"; d.innerText = `Lost a life!\n${currentSong.title} - ${currentSong.artist.name}`; 
-                }
+                myStats.wrongGuesses++; cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
+                if (isSkip) { score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Points\n${currentSong.title} - ${currentSong.artist.name}`; } 
+                else { lives = Math.max(0, lives - 1); m.className = "modal wrong"; t.innerText = "❌ WRONG!"; d.innerText = `Lost a life!\n${currentSong.title} - ${currentSong.artist.name}`; }
             }
             
             localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
             
             if (isMultiplayer) {
-                socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
-                document.getElementById('mp-result').style.display = 'block';
-                playersAnsweredThisRound.add(socket.id);
-                socket.emit('teammateAnswered', { type: 'ROUND_ANSWERED', id: socket.id, roomCode: currentRoom });
-                checkAllAnswered();
-            } else {
-                document.getElementById('mp-result').style.display = 'none';
-                let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Next Round ➔"; btn.onclick = nextRound;
-            }
+                socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives }); document.getElementById('mp-result').style.display = 'block';
+                playersAnsweredThisRound.add(socket.id); socket.emit('teammateAnswered', { type: 'ROUND_ANSWERED', id: socket.id, roomCode: currentRoom }); checkAllAnswered();
+            } else { document.getElementById('mp-result').style.display = 'none'; let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Next Round ➔"; btn.onclick = nextRound; }
             
             updateStatsDisplay(); document.getElementById('feedback-overlay').style.display = 'flex';
-            
-            if (lives <= 0) { 
-                document.getElementById('feedback-btn').style.display = 'none'; 
-                setTimeout(() => triggerGameOver(false), 2000); 
-            }
+            if (lives <= 0) { document.getElementById('feedback-btn').style.display = 'none'; setTimeout(() => triggerGameOver(false), 2000); }
         }
 
         function triggerGameOver(victory) {
@@ -1708,104 +1279,43 @@
                     socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
                     let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
                     matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
-                    
                     t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
-                    document.getElementById('mp-result').style.display = 'block'; document.getElementById('mp-result').innerHTML = "Loading live data...";
-                    b.style.display = 'none'; 
-                    document.getElementById('feedback-overlay').style.display = 'flex';
-                    
-                    renderMpLeaderboard(); checkMatchEnd();
+                    document.getElementById('mp-result').style.display = 'block'; document.getElementById('mp-result').innerHTML = "Loading live data..."; b.style.display = 'none'; 
+                    document.getElementById('feedback-overlay').style.display = 'flex'; renderMpLeaderboard(); checkMatchEnd();
                 } else {
                     t.innerText = victory ? "🏆 COMPLETED!" : "💀 GAME OVER"; d.innerText = `Your Score: ${score}`;
-                    
                     myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
                     myStats.totalScore = (myStats.totalScore || 0) + score;
-                    if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0;
-                    myStats.modeScores[currentMode] += score;
-                    localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
-                    
-                    updateLevelDisplay();
-                    updateDetailedStats();
-
-                    b.innerText = "Exit 🏠"; b.style.display = 'block'; 
-                    b.onclick = () => { backToMenu(); };
-                    document.getElementById('feedback-overlay').style.display = 'flex';
+                    if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0; myStats.modeScores[currentMode] += score;
+                    localStorage.setItem('rapquiz_stats', JSON.stringify(myStats)); updateLevelDisplay(); updateDetailedStats();
+                    b.innerText = "Exit 🏠"; b.style.display = 'block'; b.onclick = () => { backToMenu(); }; document.getElementById('feedback-overlay').style.display = 'flex';
                 }
-            } catch(e) {
-                console.error("Game Over Error:", e);
-                backToMenu();
-            }
+            } catch(e) { backToMenu(); }
         }
 
         function updateStatsDisplay() { 
-            const bar = document.getElementById('game-stats-bar');
-            if(!bar) return;
-            
+            const bar = document.getElementById('game-stats-bar'); if(!bar) return;
             try {
                 if(!isMultiplayer) {
-                    bar.innerHTML = `
-                        <div class="team-score-box">
-                            <span class="team-score-title" style="color: white;">Your Score</span>
-                            <span class="team-score-num" style="color: var(--primary);">${score}</span>
-                        </div>
-                        <div style="text-align: center;">
-                            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Lives</div>
-                            <span style="font-size: 20px; letter-spacing: 2px;">${"❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3-lives))}</span>
-                        </div>
-                    `;
+                    bar.innerHTML = `<div class="team-score-box"><span class="team-score-title" style="color: white;">Your Score</span><span class="team-score-num" style="color: var(--primary);">${score}</span></div><div style="text-align: center;"><div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Lives</div><span style="font-size: 20px; letter-spacing: 2px;">${"❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3-lives))}</span></div>`;
                 } else {
                     bar.innerHTML = '';
                     lobbyPlayers.forEach(p => {
-                        const isMe = (p.id === socket.id);
-                        let parts = p.avatar.split('|Q|');
-                        let pAv = parts[0];
-                        let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
-
-                        bar.innerHTML += `
-                            <div class="team-score-box" style="opacity: ${p.lives <= 0 ? '0.4' : '1'}; transition: 0.3s; width: ${100/Math.max(1, lobbyPlayers.length)}%;">
-                                <img src="${pAv}" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid ${isMe ? 'var(--primary)' : 'white'}; margin-bottom: 8px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
-                                <span class="team-score-title" style="color: ${isMe ? 'var(--primary)' : 'white'}; font-size: 14px; font-weight: 900;">${p.name}</span>
-                                <span style="font-size: 9px; color: var(--text-muted); font-style: italic; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${pQt.replace(/"/g, '&quot;')}">${pQt}</span>
-                                <span class="team-score-num" style="font-size: 24px; text-shadow: 0 0 10px rgba(255,255,255,0.2);">${p.score}</span>
-                                <span style="font-size: 14px; margin-top: 5px;">${p.lives > 0 ? "❤️".repeat(Math.max(0, p.lives)) : "💀"}</span>
-                            </div>
-                        `;
+                        const isMe = (p.id === socket.id); let parts = p.avatar.split('|Q|'); let pAv = parts[0]; let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
+                        bar.innerHTML += `<div class="team-score-box" style="opacity: ${p.lives <= 0 ? '0.4' : '1'}; transition: 0.3s; width: ${100/Math.max(1, lobbyPlayers.length)}%;"><img src="${pAv}" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid ${isMe ? 'var(--primary)' : 'white'}; margin-bottom: 8px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5);"><span class="team-score-title" style="color: ${isMe ? 'var(--primary)' : 'white'}; font-size: 14px; font-weight: 900;">${p.name}</span><span style="font-size: 9px; color: var(--text-muted); font-style: italic; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${pQt.replace(/"/g, '&quot;')}">${pQt}</span><span class="team-score-num" style="font-size: 24px; text-shadow: 0 0 10px rgba(255,255,255,0.2);">${p.score}</span><span style="font-size: 14px; margin-top: 5px;">${p.lives > 0 ? "❤️".repeat(Math.max(0, p.lives)) : "💀"}</span></div>`;
                     });
                 }
-            } catch(e) {
-                console.error("Stats Display Error:", e);
-            }
+            } catch(e) {}
         }
 
         function renderMpLeaderboard() {
-            const res = document.getElementById('mp-result');
-            if(!res || !isMultiplayer || isWinnerScreenShown) return;
-            
+            const res = document.getElementById('mp-result'); if(!res || !isMultiplayer || isWinnerScreenShown) return;
             let sorted = [...lobbyPlayers].map(p => { return matchEndData[p.id] ? matchEndData[p.id] : p; }).sort((a,b) => b.score - a.score);
-            
-            let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Standings</h3>';
-            html += '<div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
-            
+            let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Standings</h3><div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
             sorted.forEach((p, index) => {
-                let rankColor = index === 0 ? 'var(--warning)' : (index === 1 ? '#d4d4d8' : '#b45309');
-                if(index > 2) rankColor = 'var(--text-muted)';
-                let isMe = p.id === socket.id;
-                
-                let parts = p.avatar.split('|Q|');
-                let pAv = parts[0];
-                
-                html += `
-                    <div style="display: flex; align-items: center; justify-content: space-between; background: ${isMe ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)'}; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${rankColor};">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-weight: 900; font-size: 16px; color: ${rankColor};">#${index + 1}</span>
-                            <img src="${pAv}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover;">
-                            <span style="font-weight: 700; color: white;">${p.name}</span>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-weight: 900; color: white;">${p.score} Pts</div>
-                        </div>
-                    </div>
-                `;
+                let rankColor = index === 0 ? 'var(--warning)' : (index === 1 ? '#d4d4d8' : '#b45309'); if(index > 2) rankColor = 'var(--text-muted)';
+                let isMe = p.id === socket.id; let parts = p.avatar.split('|Q|'); let pAv = parts[0];
+                html += `<div style="display: flex; align-items: center; justify-content: space-between; background: ${isMe ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)'}; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${rankColor};"><div style="display: flex; align-items: center; gap: 10px;"><span style="font-weight: 900; font-size: 16px; color: ${rankColor};">#${index + 1}</span><img src="${pAv}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover;"><span style="font-weight: 700; color: white;">${p.name}</span></div><div style="text-align: right;"><div style="font-weight: 900; color: white;">${p.score} Pts</div></div></div>`;
             });
             html += '</div>'; res.innerHTML = html;
         }
