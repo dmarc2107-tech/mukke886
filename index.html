@@ -404,8 +404,7 @@
                     <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
                     <div style="text-align: left; flex: 1;">
                         <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
-                        <p id="profile-view-quote" style="margin: 0 0 15px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
-                        <div style="width: 100%; max-width: 400px;">
+                        <div style="width: 100%; max-width: 400px; margin-top: 15px;">
                             <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
                                 <span>Level <span id="profile-level-num">1</span></span>
                                 <span><span id="profile-xp-current">0</span> / 4000 XP</span>
@@ -476,47 +475,13 @@
 
     <script>
         // ==========================================
-        // ARTIST DATA & QUOTES
+        // ARTIST DATA
         // ==========================================
         const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean', 'Bones'];
         const artists2010s = ['Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa', 'Offset', 'Quavo', 'Yeat', 'Central Cee'];
         const legends = ['2Pac', 'The Notorious B.I.G.', 'Eminem', '50 Cent', 'Snoop Dogg', 'Dr. Dre', 'Ice Cube', 'Nas'];
         const megaStars = ['Drake', 'Kendrick Lamar', 'J. Cole', 'Kanye West', 'Post Malone'];
         const allArtists = [...new Set([...soundcloudArtists, ...artists2010s, ...legends, ...megaStars])].sort();
-
-        const artistQuotes = {
-            'XXXTentacion': '"What is real will prosper." - X',
-            'Juice WRLD': '"999. Turn the negative to a positive." - Juice WRLD',
-            'Lil Peep': '"Everything changes with time." - Lil Peep',
-            'Ski Mask the Slump God': '"Water!" - Ski Mask',
-            'Trippie Redd': '"I just wanna be a legend." - Trippie',
-            'Denzel Curry': '"I am the ultimate." - Denzel',
-            'Playboi Carti': '"Wake up, it\'s the first of the month." - Carti',
-            'Lil Uzi Vert': '"I just wanna go to outer space." - Uzi',
-            'Lil Pump': '"Esskeetit!" - Lil Pump',
-            'Chief Keef': '"A lot of people say they want to be famous..." - Sosa',
-            '$uicideboy$': '"G59 until the grave." - $uicideboy$',
-            'Travis Scott': '"I\'m the highest in the room." - Travis Scott',
-            'Migos': '"Rain drop, drop top." - Migos',
-            'Future': '"If you don\'t get it, you just don\'t get it." - Future',
-            'Young Thug': '"Slime Season." - Thugger',
-            '21 Savage': '"I do it for the gang." - 21',
-            'Lil Baby': '"I\'m just tryna be a better me." - Lil Baby',
-            'A$AP Rocky': '"I treat the game like a canvas." - Rocky',
-            'Tyler, The Creator': '"Find your wings." - Tyler',
-            'Mac Miller': '"No matter where life takes me, find me with a smile." - Mac',
-            'Drake': '"Started from the bottom, now we\'re here." - Drake',
-            'Kendrick Lamar': '"If God got us, then we gon\' be alright." - Kendrick',
-            'J. Cole': '"There\'s beauty in the struggle." - J. Cole',
-            'Kanye West': '"I still think I am the greatest." - Ye',
-            'Eminem': '"You only get one shot, do not miss your chance to blow." - Eminem',
-            '2Pac': '"Reality is wrong. Dreams are for real." - 2Pac',
-            'The Notorious B.I.G.': '"Mo money, mo problems." - Biggie',
-            '50 Cent': '"Get rich or die tryin\'." - 50 Cent',
-            'Snoop Dogg': '"Drop it like it\'s hot." - Snoop'
-        };
-
-        function getArtistQuote(name) { return artistQuotes[name] || `"Ready to dominate the game." - ${name}`; }
 
         // ==========================================
         // SYSTEM INIT 
@@ -544,7 +509,7 @@
             }
         } catch(e) {}
 
-        let playerName = ''; let myFavArtist = ''; let myAvatar = ''; let myBgUrl = ''; let myQuote = ''; let isPremium = false; let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
+        let playerName = ''; let myFavArtist = ''; let myAvatar = ''; let myBgUrl = ''; let myQuote = '"Ready to dominate the game."'; let isPremium = false; let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
         
         let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
         let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
@@ -619,10 +584,12 @@
         window.onload = async () => {
             try {
                 let editSel = document.getElementById('edit-fav-artist-select');
-                editSel.innerHTML = ''; 
-                allArtists.forEach(a => { 
-                    let opt = document.createElement('option'); opt.value = a; opt.innerText = a; editSel.appendChild(opt); 
-                }); 
+                if (editSel) {
+                    editSel.innerHTML = ''; 
+                    allArtists.forEach(a => { 
+                        let opt = document.createElement('option'); opt.value = a; opt.innerText = a; editSel.appendChild(opt); 
+                    });
+                }
                 
                 let grid = document.getElementById('artist-grid');
                 grid.innerHTML = '';
@@ -633,7 +600,13 @@
                     grid.appendChild(d); 
                 });
 
-                if (!supabase) return;
+                if (!supabase) {
+                    let errEl = document.getElementById('profile-error');
+                    errEl.innerText = "⚠️ Warnung: Datenbank-Verbindung blockiert. Bitte Adblocker prüfen.";
+                    errEl.style.display = 'block';
+                    document.getElementById('login-btn').disabled = true;
+                    return;
+                }
 
                 const { data: session, error } = await supabase.auth.getSession();
                 if (error) throw error;
@@ -663,7 +636,13 @@
                 btn.disabled = false; 
                 return; 
             }
-            if (!supabase) return;
+            if (!supabase) {
+                err.innerText = "Database connection error."; 
+                err.style.display = 'block'; 
+                btn.innerText = "Login / Register ➔"; 
+                btn.disabled = false; 
+                return; 
+            }
 
             let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
             let { data, error } = await supabase.auth.signInWithPassword({ email: fakeEmail, password: pw });
@@ -671,7 +650,7 @@
             if (error) {
                 let { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email: fakeEmail, password: pw });
                 if (signUpError) {
-                    err.innerText = "Error: Password too weak or server offline."; 
+                    err.innerText = "Error: Password too weak (min 6 chars) or wrong credentials."; 
                     err.style.display = 'block'; 
                     btn.innerText = "Login / Register ➔"; 
                     btn.disabled = false; 
@@ -681,9 +660,8 @@
                 
                 playerName = name;
                 myAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
-                myQuote = '"Ready to dominate the game."';
                 
-                setTimeout(() => saveProfileToDB(), 2000); 
+                await saveProfileToDB(); 
             }
 
             if (data?.user) {
@@ -697,9 +675,7 @@
             
             if (profile) {
                 playerName = profile.username || "Player";
-                myFavArtist = profile.anthem_url ? "Artist" : ""; 
                 myAvatar = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerName}`;
-                myQuote = profile.quote || `"Ready to dominate the game."`;
                 isPremium = profile.is_premium || false;
                 myStats.totalScore = profile.total_score || 0;
             }
@@ -720,7 +696,6 @@
             document.getElementById('app-layout').style.display = 'flex';
             document.getElementById('sidebar-name').innerText = playerName; 
             document.getElementById('profile-view-name').innerText = playerName; 
-            document.getElementById('profile-view-quote').innerText = myQuote; 
             
             updateLevelDisplay();
             updateAllAvatars();
@@ -730,10 +705,12 @@
             if (!supabase) return;
             const { data: session } = await supabase.auth.getSession();
             if (session?.session?.user) {
-                await supabase.from('profiles').update({
+                await supabase.from('profiles').upsert({
+                    id: session.session.user.id,
+                    username: playerName,
                     avatar_url: myAvatar,
                     quote: myQuote
-                }).eq('id', session.session.user.id);
+                });
             }
         }
 
@@ -798,8 +775,6 @@
 
         function updateFavArtist() { 
             myFavArtist = document.getElementById('edit-fav-artist-select').value; 
-            myQuote = getArtistQuote(myFavArtist);
-            document.getElementById('profile-view-quote').innerText = myQuote; 
             loadArtistVisuals(myFavArtist); 
         }
 
