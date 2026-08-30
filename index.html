@@ -787,6 +787,7 @@
             let accounts = JSON.parse(localStorage.getItem('rapquiz_accounts')) || {};
             if(!accounts[playerName]) return;
             
+            if(!accounts[playerName].stats) accounts[playerName].stats = myStats;
             accounts[playerName].stats = myStats;
             accounts[playerName].isPremium = isPremium;
             accounts[playerName].avatar = myAvatar;
@@ -945,15 +946,19 @@
             let err = document.getElementById('profile-error');
             let btn = document.getElementById('login-btn');
             
+            let accounts = JSON.parse(localStorage.getItem('rapquiz_accounts')) || {};
+            
             let name = isAutoLogin ? autoName : document.getElementById('username-input').value.trim(); 
-            let pw = isAutoLogin ? savedPw : document.getElementById('password-input').value.trim(); 
+            let pw = isAutoLogin ? (accounts[name]?.password || "") : document.getElementById('password-input').value.trim(); 
 
-            if (!name || !pw) { if(err) { err.innerText = "Bitte fülle Username und Passwort aus!"; err.style.display = 'block'; } return; }
+            if (!name || !pw) { 
+                if(err) { err.innerText = "Bitte fülle Username und Passwort aus!"; err.style.display = 'block'; } 
+                document.getElementById('profile-overlay').style.display = 'flex';
+                return; 
+            }
 
             if (!isAutoLogin && btn) { btn.innerText = "Lade... ⏳"; btn.disabled = true; }
 
-            // 1. LOKALER SPEICHER (Immer als Basis, damit NIX abstürzt)
-            let accounts = JSON.parse(localStorage.getItem('rapquiz_accounts')) || {};
             let localAccountExists = !!accounts[name];
 
             if (localAccountExists && !isAutoLogin) {
@@ -975,17 +980,16 @@
 
             playerName = name; savedPw = pw;
             
-            // Lade lokale Daten
+            // Lade lokale Daten sicher
             myStats = accounts[playerName].stats || { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: {} };
             isPremium = accounts[playerName].isPremium || false;
-            myAvatar = accounts[playerName].avatar;
-            myBgUrl = accounts[playerName].bgUrl;
-            myFavArtist = accounts[playerName].favArtist;
-            myQuote = accounts[playerName].quote;
-            mySongUrl = accounts[playerName].songUrl;
-            mySongTitle = accounts[playerName].songTitle;
+            myAvatar = accounts[playerName].avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
+            myBgUrl = accounts[playerName].bgUrl || '';
+            myFavArtist = accounts[playerName].favArtist || '';
+            myQuote = accounts[playerName].quote || '';
+            mySongUrl = accounts[playerName].songUrl || '';
+            mySongTitle = accounts[playerName].songTitle || '';
 
-            // 2. CLOUD SYNC (Sicherer Try-Catch Block)
             try {
                 if (supabase) {
                     let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
@@ -999,17 +1003,19 @@
                     if (authData?.user) {
                         let { data: profile } = await supabase.from('profiles').select('*').eq('id', authData.user.id).single();
                         if (profile) {
-                            isPremium = profile.is_premium || isPremium; // Cloud schlägt lokal
+                            isPremium = profile.is_premium || isPremium;
                             myStats.totalScore = Math.max(myStats.totalScore || 0, profile.total_score || 0);
                         }
-                        syncToCloud(); // Push aktuelles Level hoch
+                        syncToCloud(); 
                     }
                 }
             } catch(e) {
                 console.log("Cloud offline, spiele lokal weiter.", e);
             }
 
-            // 3. UI AKTUALISIEREN (Egal ob Cloud geklappt hat oder nicht)
+            // SICHERHEITS-FIX: Verhindern von "undefined" Abstürzen
+            if (!accounts[playerName].stats) accounts[playerName].stats = myStats;
+
             accounts[playerName].isPremium = isPremium;
             accounts[playerName].stats.totalScore = myStats.totalScore;
             
@@ -1038,6 +1044,7 @@
             }
 
             updateAllAvatars(); playMenuMusic(mySongUrl);
+            if (btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
         }
 
         function resetProfile() { localStorage.removeItem('rapquiz_active_user'); location.reload(); }
