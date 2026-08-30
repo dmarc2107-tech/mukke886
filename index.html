@@ -239,6 +239,12 @@
         .paywall-feature { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; text-align: left; }
         .paywall-check { background: #fbbf24; color: black; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; flex-shrink: 0; }
 
+        /* SLIDER CSS */
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(139,92,246,0.8); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
+        input[type=range]:focus { outline: none; }
+
         @media (max-width: 768px) {
             #mobile-menu-btn { display: block; }
             #sidebar { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; z-index: 10; transition: left 0.3s ease; }
@@ -624,24 +630,39 @@
         
         const allArtists = [...new Set([...soundcloudArtists, ...artists2010s, ...legends, ...megaStars, ...fallenLegends])].sort();
 
-        // SPOTIFY BENCHMARKS
+        // ERWEITERTE SPOTIFY BENCHMARKS (Echte Meilensteine)
         const knownStreamBenchmarks = {
             "goosebumps": 2450000000, "sicko mode": 2210000000, "lucid dreams": 2620000000, "all girls are the same": 1820000000,
             "sad!": 2340000000, "jocelyn flores": 2150000000, "star shopping": 1290000000, "falling down": 1120000000,
-            "god's plan": 2480000000, "one dance": 3120000000, "humble.": 2240000000, "money trees": 1780000000,
+            "god's plan": 2480000000, "one dance": 3120000000, "humble": 2240000000, "money trees": 1780000000,
             "sunflower": 3380000000, "rockstar": 3010000000, "without me": 2180000000, "lose yourself": 2140000000,
             "dior": 1480000000, "california love": 780000000, "juicy": 950000000, "in da club": 1650000000,
-            "xo tour llif3": 2100000000, "magnolia": 920000000, "look at me!": 1450000000, "highest in the room": 1680000000,
+            "xo tour llif3": 2100000000, "magnolia": 920000000, "look at me": 1450000000, "highest in the room": 1680000000,
             "mask off": 1790000000, "bank account": 1380000000, "congratulations": 2100000000, "robbery": 1690000000,
-            "swimming pools": 1150000000
+            "swimming pools": 1150000000, "godzilla": 1500000000, "stan": 2000000000, "the real slim shady": 1800000000,
+            "not afraid": 1900000000, "still dre": 1300000000, "changes": 900000000, "ambitionz az a ridah": 850000000,
+            "hypnotize": 800000000, "big poppa": 650000000, "love yourz": 1200000000, "no role modelz": 1500000000,
+            "middle child": 1700000000, "wet dreamz": 1400000000, "praise the lord": 1300000000, "ric flair drip": 1200000000,
+            "bad and boujee": 1400000000, "paris": 1100000000, "circles": 1500000000, "hope": 1300000000,
+            "moonlight": 1900000000, "fuck love": 1500000000
         };
 
+        // SCHLAUER ALGORITHMUS: Basiert auf Artist-Tiers für realistische Fake-Zahlen bei unbekannten Songs
         function getTrackEstimatedStreams(trackTitle, artistName) {
-            let clean = trackTitle.toLowerCase().split('(')[0].split('feat')[0].trim();
-            for(let k in knownStreamBenchmarks) { if (clean.includes(k) || k.includes(clean)) return knownStreamBenchmarks[k]; }
+            let clean = trackTitle.toLowerCase().split('(')[0].split('feat')[0].split('-')[0].trim();
+            for(let k in knownStreamBenchmarks) { if (clean === k || clean.includes(k) || k.includes(clean)) return knownStreamBenchmarks[k]; }
+            
             let hash = 0; let combined = trackTitle + artistName;
             for (let i = 0; i < combined.length; i++) hash = combined.charCodeAt(i) + ((hash << 5) - hash);
-            return (Math.abs(hash % 900) + 100) * 1000000 + Math.abs(hash % 999999);
+            
+            let baseMin = 50; let baseMax = 200;
+            if (megaStars.includes(artistName)) { baseMin = 300; baseMax = 900; }
+            else if (legends.includes(artistName)) { baseMin = 200; baseMax = 600; }
+            else if (fallenLegends.includes(artistName)) { baseMin = 250; baseMax = 800; }
+            else if (artists2010s.includes(artistName)) { baseMin = 150; baseMax = 500; }
+            
+            let randomTier = Math.abs(hash % (baseMax - baseMin)) + baseMin;
+            return randomTier * 1000000 + Math.abs(hash % 999999);
         }
 
         const artistQuotes = {
@@ -1021,7 +1042,7 @@
         }
 
         // ==========================================
-        // HIGHER / LOWER LOGIK (STREAM BATTLE)
+        // HIGHER / LOWER LOGIK (ANTI-DUPLIKAT FIX)
         // ==========================================
         let hlPool = []; let hlCurrentA = null; let hlCurrentB = null; let hlStreak = 0;
 
@@ -1036,7 +1057,12 @@
             document.getElementById('loading-overlay').style.display = 'none'; pauseMenuMusic();
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('hl-screen').style.display = 'flex';
             
-            hlCurrentA = hlPool.pop(); hlCurrentB = hlPool.pop(); renderHLRound();
+            hlCurrentA = hlPool.pop(); 
+            // ANTI-DUPLIKAT: Finde eine Karte, die NICHT vom selben Artist ist wie Karte A
+            let nextIndex = hlPool.findIndex(s => s.artist.name !== hlCurrentA.artist.name);
+            if(nextIndex !== -1) { hlCurrentB = hlPool.splice(nextIndex, 1)[0]; } else { hlCurrentB = hlPool.pop(); }
+            
+            renderHLRound();
         }
 
         function renderHLRound() {
@@ -1051,7 +1077,16 @@
             let isHigher = hlCurrentB.streams >= hlCurrentA.streams; let wasCorrect = (choice === 'higher' && isHigher) || (choice === 'lower' && !isHigher);
             if (wasCorrect) {
                 hlStreak++; score += 150; myStats.correctGuesses++;
-                setTimeout(() => { hlCurrentA = hlCurrentB; if (hlPool.length === 0) { triggerGameOver(true); } else { hlCurrentB = hlPool.pop(); renderHLRound(); } }, 2000);
+                setTimeout(() => { 
+                    hlCurrentA = hlCurrentB; 
+                    if (hlPool.length === 0) { triggerGameOver(true); } 
+                    else { 
+                        // ANTI-DUPLIKAT FÜR DIE NÄCHSTE KARTE
+                        let nextIndex = hlPool.findIndex(s => s.artist.name !== hlCurrentA.artist.name);
+                        if(nextIndex !== -1) { hlCurrentB = hlPool.splice(nextIndex, 1)[0]; } else { hlCurrentB = hlPool.pop(); }
+                        renderHLRound(); 
+                    } 
+                }, 2000);
             } else {
                 myStats.wrongGuesses++; setTimeout(() => { triggerGameOver(false); }, 2000);
             }
@@ -1059,7 +1094,7 @@
         }
 
         // ==========================================
-        // GAME LOGIC & PARALLEL FETCH
+        // GAME LOGIC & DEEP FETCH
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
         let currentPlayId = 0; 
@@ -1078,7 +1113,7 @@
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 4000); 
                 
-                // DEEP FETCH: Wir holen jetzt die Top 200 anstatt nur 40, um extreme Vielfalt zu garantieren!
+                // DEEP FETCH: Holt bis zu 200 Songs pro Artist für maximale Vielfalt!
                 let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=200`, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 
@@ -1086,7 +1121,7 @@
                 if (data && data.results) {
                     let valid = data.results.filter(t => t.previewUrl);
                     
-                    // DUPLIKAT FILTER: Verhindert, dass 3x der gleiche Song (Clean, Explicit, Live) in die Liste kommt
+                    // ANTI-DUPLIKAT: Entfernt Live, Clean und Explicit Doppelungen
                     let uniqueTracks = new Map();
                     for (let t of valid) {
                         let cleanName = t.trackName.toLowerCase().split('(')[0].split('[')[0].trim();
@@ -1094,11 +1129,8 @@
                     }
                     
                     let uniqueArray = Array.from(uniqueTracks.values());
+                    uniqueArray.sort(() => 0.5 - Math.random()); // DEEP SHUFFLE
                     
-                    // DEEP SHUFFLE: Mischt den 200er Katalog komplett durch
-                    uniqueArray.sort(() => 0.5 - Math.random());
-                    
-                    // Wir ziehen eine zufällige Auswahl (max 40) für das aktuelle Spiel in den Pool
                     let mapped = uniqueArray.slice(0, 40).map(t => ({
                         id: t.trackId.toString(),
                         title: t.trackName,
@@ -1236,37 +1268,73 @@
             let btn = document.getElementById('feedback-btn'); let res = document.getElementById('mp-result');
 
             if (playersAnsweredThisRound.size >= expectedAnswers) {
-                res.innerHTML = '<span style="color: var(--success); font-weight: 900;">All players guessed!</span>'; btn.style.display = 'block'; btn.innerText = 'Next Round ➔';
-                btn.onclick = () => { playersReadyForNextRound.add(socket.id); socket.emit('teammateAnswered', { type: 'READY_NEXT', id: socket.id, roomCode: currentRoom }); btn.style.display = 'none'; res.innerHTML = '<span style="color: var(--warning); font-weight: 800;">Waiting for other players...</span>'; checkAllReady(); };
-            } else { res.innerHTML = `<span style="color: var(--warning); font-weight: 800;">Waiting for players... (${playersAnsweredThisRound.size}/${expectedAnswers})</span>`; btn.style.display = 'none'; }
+                res.innerHTML = '<span style="color: var(--success); font-weight: 900;">All players guessed!</span>';
+                btn.style.display = 'block'; btn.innerText = 'Next Round ➔';
+                
+                btn.onclick = () => {
+                    playersReadyForNextRound.add(socket.id);
+                    socket.emit('teammateAnswered', { type: 'READY_NEXT', id: socket.id, roomCode: currentRoom });
+                    btn.style.display = 'none'; res.innerHTML = '<span style="color: var(--warning); font-weight: 800;">Waiting for other players...</span>';
+                    checkAllReady();
+                };
+            } else {
+                res.innerHTML = `<span style="color: var(--warning); font-weight: 800;">Waiting for players... (${playersAnsweredThisRound.size}/${expectedAnswers})</span>`;
+                btn.style.display = 'none';
+            }
         }
 
-        function checkAllReady() { if (!isMultiplayer) return; if (playersReadyForNextRound.size >= expectedAnswers) { if (isMpHost) { socket.emit('nextRound', { roomCode: currentRoom }); if (lives > 0 && !gameIsOver) nextRound(); } } }
+        function checkAllReady() {
+            if (!isMultiplayer) return;
+            if (playersReadyForNextRound.size >= expectedAnswers) {
+                if (isMpHost) {
+                    socket.emit('nextRound', { roomCode: currentRoom });
+                    if (lives > 0 && !gameIsOver) nextRound();
+                }
+            }
+        }
 
         function processAnswer(wasCorrect, isSkip = false) {
             if (document.getElementById('feedback-overlay').style.display === 'flex' || gameIsOver) return;
+
             let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover');
             document.getElementById('suggestions-box').style.display = 'none'; 
+            
             let pts = maxPlayTime <= 1 ? 100 : (maxPlayTime <= 4 ? 75 : 50);
 
             if (wasCorrect) {
-                myStats.correctGuesses++; score += pts; maxPlayTime = 30; playAudioSnippet(true); cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
+                myStats.correctGuesses++;
+                score += pts; maxPlayTime = 30; playAudioSnippet(true); cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
                 m.className = "modal correct"; t.innerText = "🔥 CORRECT!"; d.innerText = `+${pts} Points!\n${currentSong.title} - ${currentSong.artist.name}`;
             } else {
-                myStats.wrongGuesses++; cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
-                if (isSkip) { score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Points\n${currentSong.title} - ${currentSong.artist.name}`; } 
-                else { lives = Math.max(0, lives - 1); m.className = "modal wrong"; t.innerText = "❌ WRONG!"; d.innerText = `Lost a life!\n${currentSong.title} - ${currentSong.artist.name}`; }
+                myStats.wrongGuesses++;
+                cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
+                if (isSkip) { 
+                    score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Points\n${currentSong.title} - ${currentSong.artist.name}`; 
+                } else { 
+                    lives = Math.max(0, lives - 1); 
+                    m.className = "modal wrong"; t.innerText = "❌ WRONG!"; d.innerText = `Lost a life!\n${currentSong.title} - ${currentSong.artist.name}`; 
+                }
             }
             
             localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
             
             if (isMultiplayer) {
-                socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives }); document.getElementById('mp-result').style.display = 'block';
-                playersAnsweredThisRound.add(socket.id); socket.emit('teammateAnswered', { type: 'ROUND_ANSWERED', id: socket.id, roomCode: currentRoom }); checkAllAnswered();
-            } else { document.getElementById('mp-result').style.display = 'none'; let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Next Round ➔"; btn.onclick = nextRound; }
+                socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
+                document.getElementById('mp-result').style.display = 'block';
+                playersAnsweredThisRound.add(socket.id);
+                socket.emit('teammateAnswered', { type: 'ROUND_ANSWERED', id: socket.id, roomCode: currentRoom });
+                checkAllAnswered();
+            } else {
+                document.getElementById('mp-result').style.display = 'none';
+                let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Next Round ➔"; btn.onclick = nextRound;
+            }
             
             updateStatsDisplay(); document.getElementById('feedback-overlay').style.display = 'flex';
-            if (lives <= 0) { document.getElementById('feedback-btn').style.display = 'none'; setTimeout(() => triggerGameOver(false), 2000); }
+            
+            if (lives <= 0) { 
+                document.getElementById('feedback-btn').style.display = 'none'; 
+                setTimeout(() => triggerGameOver(false), 2000); 
+            }
         }
 
         function triggerGameOver(victory) {
@@ -1279,43 +1347,103 @@
                     socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
                     let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
                     matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
+                    
                     t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
-                    document.getElementById('mp-result').style.display = 'block'; document.getElementById('mp-result').innerHTML = "Loading live data..."; b.style.display = 'none'; 
-                    document.getElementById('feedback-overlay').style.display = 'flex'; renderMpLeaderboard(); checkMatchEnd();
+                    document.getElementById('mp-result').style.display = 'block'; document.getElementById('mp-result').innerHTML = "Loading live data...";
+                    b.style.display = 'none'; 
+                    document.getElementById('feedback-overlay').style.display = 'flex';
+                    
+                    renderMpLeaderboard(); checkMatchEnd();
                 } else {
                     t.innerText = victory ? "🏆 COMPLETED!" : "💀 GAME OVER"; d.innerText = `Your Score: ${score}`;
+                    
                     myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
                     myStats.totalScore = (myStats.totalScore || 0) + score;
-                    if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0; myStats.modeScores[currentMode] += score;
-                    localStorage.setItem('rapquiz_stats', JSON.stringify(myStats)); updateLevelDisplay(); updateDetailedStats();
-                    b.innerText = "Exit 🏠"; b.style.display = 'block'; b.onclick = () => { backToMenu(); }; document.getElementById('feedback-overlay').style.display = 'flex';
+                    if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0;
+                    myStats.modeScores[currentMode] += score;
+                    localStorage.setItem('rapquiz_stats', JSON.stringify(myStats));
+                    updateLevelDisplay();
+                    updateDetailedStats();
+
+                    b.innerText = "Exit 🏠"; b.style.display = 'block'; 
+                    b.onclick = () => { backToMenu(); };
+                    document.getElementById('feedback-overlay').style.display = 'flex';
                 }
-            } catch(e) { backToMenu(); }
+            } catch(e) {
+                console.error("Game Over Error:", e);
+                backToMenu();
+            }
         }
 
         function updateStatsDisplay() { 
-            const bar = document.getElementById('game-stats-bar'); if(!bar) return;
+            const bar = document.getElementById('game-stats-bar');
+            if(!bar) return;
+            
             try {
                 if(!isMultiplayer) {
-                    bar.innerHTML = `<div class="team-score-box"><span class="team-score-title" style="color: white;">Your Score</span><span class="team-score-num" style="color: var(--primary);">${score}</span></div><div style="text-align: center;"><div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Lives</div><span style="font-size: 20px; letter-spacing: 2px;">${"❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3-lives))}</span></div>`;
+                    bar.innerHTML = `
+                        <div class="team-score-box">
+                            <span class="team-score-title" style="color: white;">Your Score</span>
+                            <span class="team-score-num" style="color: var(--primary);">${score}</span>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Lives</div>
+                            <span style="font-size: 20px; letter-spacing: 2px;">${"❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3-lives))}</span>
+                        </div>
+                    `;
                 } else {
                     bar.innerHTML = '';
                     lobbyPlayers.forEach(p => {
-                        const isMe = (p.id === socket.id); let parts = p.avatar.split('|Q|'); let pAv = parts[0]; let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
-                        bar.innerHTML += `<div class="team-score-box" style="opacity: ${p.lives <= 0 ? '0.4' : '1'}; transition: 0.3s; width: ${100/Math.max(1, lobbyPlayers.length)}%;"><img src="${pAv}" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid ${isMe ? 'var(--primary)' : 'white'}; margin-bottom: 8px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5);"><span class="team-score-title" style="color: ${isMe ? 'var(--primary)' : 'white'}; font-size: 14px; font-weight: 900;">${p.name}</span><span style="font-size: 9px; color: var(--text-muted); font-style: italic; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${pQt.replace(/"/g, '&quot;')}">${pQt}</span><span class="team-score-num" style="font-size: 24px; text-shadow: 0 0 10px rgba(255,255,255,0.2);">${p.score}</span><span style="font-size: 14px; margin-top: 5px;">${p.lives > 0 ? "❤️".repeat(Math.max(0, p.lives)) : "💀"}</span></div>`;
+                        const isMe = (p.id === socket.id);
+                        let parts = p.avatar.split('|Q|');
+                        let pAv = parts[0];
+                        let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
+
+                        bar.innerHTML += `
+                            <div class="team-score-box" style="opacity: ${p.lives <= 0 ? '0.4' : '1'}; transition: 0.3s; width: ${100/Math.max(1, lobbyPlayers.length)}%;">
+                                <img src="${pAv}" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid ${isMe ? 'var(--primary)' : 'white'}; margin-bottom: 8px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">
+                                <span class="team-score-title" style="color: ${isMe ? 'var(--primary)' : 'white'}; font-size: 14px; font-weight: 900;">${p.name}</span>
+                                <span style="font-size: 9px; color: var(--text-muted); font-style: italic; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${pQt.replace(/"/g, '&quot;')}">${pQt}</span>
+                                <span class="team-score-num" style="font-size: 24px; text-shadow: 0 0 10px rgba(255,255,255,0.2);">${p.score}</span>
+                                <span style="font-size: 14px; margin-top: 5px;">${p.lives > 0 ? "❤️".repeat(Math.max(0, p.lives)) : "💀"}</span>
+                            </div>
+                        `;
                     });
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error("Stats Display Error:", e);
+            }
         }
 
         function renderMpLeaderboard() {
-            const res = document.getElementById('mp-result'); if(!res || !isMultiplayer || isWinnerScreenShown) return;
+            const res = document.getElementById('mp-result');
+            if(!res || !isMultiplayer || isWinnerScreenShown) return;
+            
             let sorted = [...lobbyPlayers].map(p => { return matchEndData[p.id] ? matchEndData[p.id] : p; }).sort((a,b) => b.score - a.score);
-            let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Standings</h3><div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
+            
+            let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Standings</h3>';
+            html += '<div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
+            
             sorted.forEach((p, index) => {
-                let rankColor = index === 0 ? 'var(--warning)' : (index === 1 ? '#d4d4d8' : '#b45309'); if(index > 2) rankColor = 'var(--text-muted)';
-                let isMe = p.id === socket.id; let parts = p.avatar.split('|Q|'); let pAv = parts[0];
-                html += `<div style="display: flex; align-items: center; justify-content: space-between; background: ${isMe ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)'}; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${rankColor};"><div style="display: flex; align-items: center; gap: 10px;"><span style="font-weight: 900; font-size: 16px; color: ${rankColor};">#${index + 1}</span><img src="${pAv}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover;"><span style="font-weight: 700; color: white;">${p.name}</span></div><div style="text-align: right;"><div style="font-weight: 900; color: white;">${p.score} Pts</div></div></div>`;
+                let rankColor = index === 0 ? 'var(--warning)' : (index === 1 ? '#d4d4d8' : '#b45309');
+                if(index > 2) rankColor = 'var(--text-muted)';
+                let isMe = p.id === socket.id;
+                
+                let parts = p.avatar.split('|Q|');
+                let pAv = parts[0];
+                
+                html += `
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: ${isMe ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)'}; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${rankColor};">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-weight: 900; font-size: 16px; color: ${rankColor};">#${index + 1}</span>
+                            <img src="${pAv}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover;">
+                            <span style="font-weight: 700; color: white;">${p.name}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 900; color: white;">${p.score} Pts</div>
+                        </div>
+                    </div>
+                `;
             });
             html += '</div>'; res.innerHTML = html;
         }
