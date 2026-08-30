@@ -233,23 +233,18 @@
     <img id="app-background" src="" alt="">
     <div class="scanlines"></div>
 
-    <!-- PROFIL SETUP OVERLAY (Super Clean UI - Ohne Anthem) -->
+    <!-- PROFIL SETUP OVERLAY (Super Clean UI - Ohne Dropdowns!) -->
     <div id="profile-overlay" class="overlay" style="display: flex;">
         <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
             <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
             <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login or create your cloud profile.</p>
             
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <input type="text" id="username-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="👤 Username" autocomplete="off">
                 <input type="password" id="password-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="🔑 Password">
             </div>
             
-            <div id="artist-select-container" style="text-align: left; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);">
-                <label style="display: block; font-size: 11px; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px;">Choose your Avatar / Artist</label>
-                <select id="fav-artist-select" class="ea-input" style="margin-bottom: 0; padding: 15px;"></select>
-            </div>
-            
-            <button id="login-btn" class="btn-action" onclick="handleProfileLogin()">Login / Register ➔</button>
+            <button id="login-btn" class="btn-action" onclick="handleProfileLogin()" style="margin-top: 15px;">Login / Register ➔</button>
             <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
         </div>
     </div>
@@ -549,7 +544,7 @@
             }
         } catch(e) {}
 
-        let playerName = ''; let myFavArtist = ''; let myAvatar = 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; let myBgUrl = ''; let myQuote = ''; let isPremium = false; let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
+        let playerName = ''; let myFavArtist = ''; let myAvatar = ''; let myBgUrl = ''; let myQuote = ''; let isPremium = false; let myStats = { played: 0, wins: 0, losses: 0, totalScore: 0 };
         
         let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
         let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
@@ -623,13 +618,11 @@
         // ==========================================
         window.onload = async () => {
             try {
-                let selects = [document.getElementById('fav-artist-select'), document.getElementById('edit-fav-artist-select')];
-                selects.forEach(sel => { 
-                    sel.innerHTML = ''; 
-                    allArtists.forEach(a => { 
-                        let opt = document.createElement('option'); opt.value = a; opt.innerText = a; sel.appendChild(opt); 
-                    }); 
-                });
+                let editSel = document.getElementById('edit-fav-artist-select');
+                editSel.innerHTML = ''; 
+                allArtists.forEach(a => { 
+                    let opt = document.createElement('option'); opt.value = a; opt.innerText = a; editSel.appendChild(opt); 
+                }); 
                 
                 let grid = document.getElementById('artist-grid');
                 grid.innerHTML = '';
@@ -686,9 +679,9 @@
                 }
                 data = signUpData;
                 
-                myFavArtist = document.getElementById('fav-artist-select').value; 
-                myQuote = getArtistQuote(myFavArtist);
                 playerName = name;
+                myAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
+                myQuote = '"Ready to dominate the game."';
                 
                 setTimeout(() => saveProfileToDB(), 2000); 
             }
@@ -703,10 +696,10 @@
             let { data: profile, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
             
             if (profile) {
-                playerName = profile.username;
-                myFavArtist = profile.anthem_url ? "Artist" : document.getElementById('fav-artist-select').value; 
-                myAvatar = profile.avatar_url;
-                myQuote = profile.quote || "Ready to dominate!";
+                playerName = profile.username || "Player";
+                myFavArtist = profile.anthem_url ? "Artist" : ""; 
+                myAvatar = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${playerName}`;
+                myQuote = profile.quote || `"Ready to dominate the game."`;
                 isPremium = profile.is_premium || false;
                 myStats.totalScore = profile.total_score || 0;
             }
@@ -979,7 +972,7 @@
             updateStatsDisplay();
         }
 
-        function playWinnerAnthem(url) {
+        function playWinnerAnthem() {
             sfxAudio.pause(); 
             sfxAudio.src = 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{});
         }
@@ -1004,7 +997,7 @@
                 <p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>
             `;
             
-            playWinnerAnthem(winner.anthem);
+            playWinnerAnthem();
             document.getElementById('feedback-btn').style.display = 'none'; 
             
             setTimeout(() => {
@@ -1255,7 +1248,7 @@
             
             if (isMultiplayer) {
                 socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
-                let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
+                let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: '', roomCode: currentRoom };
                 matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
                 
                 t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
@@ -1270,7 +1263,6 @@
                 myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
                 updateDbScore(score);
 
-                if (!victory && score < 500) { sfxAudio.src = "roddy.mp3"; sfxAudio.play().catch(e=>{}); }
                 b.innerText = "Exit 🏠"; b.style.display = 'block'; b.onclick = () => { sfxAudio.pause(); document.getElementById('feedback-overlay').style.display = 'none'; backToMenu(); };
                 document.getElementById('feedback-overlay').style.display = 'flex';
             }
