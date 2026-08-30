@@ -332,11 +332,11 @@
                 <div class="settings-bar">
                     <div class="settings-group">
                         <span class="settings-label">Hardcore (Typing)</span>
-                        <label class="switch"><input type="checkbox" id="hardcore-toggle" onchange="toggleHardcoreMode()"><span class="slider red"></span></label>
+                        <label class="switch"><input type="checkbox" id="hardcore-toggle" onchange="readSettings()"><span class="slider red"></span></label>
                     </div>
                     <div class="settings-group">
                         <span class="settings-label">Show Artist</span>
-                        <label class="switch"><input type="checkbox" id="artist-toggle" onchange="toggleArtistName()" checked><span class="slider green"></span></label>
+                        <label class="switch"><input type="checkbox" id="artist-toggle" onchange="readSettings()" checked><span class="slider green"></span></label>
                     </div>
                 </div>
 
@@ -425,7 +425,6 @@
                         <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
                         <p id="profile-view-quote" style="margin: 0 0 15px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
                         
-                        <!-- DIE HYMNE WIRD HIER ANGEZEIGT -->
                         <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Anthem: <span id="profile-view-hymn" style="color: white;">None</span></p>
                         
                         <div style="width: 100%; max-width: 400px;">
@@ -1166,6 +1165,14 @@
             }
         }
 
+        // DYNAMISCHES AUSLESEN DER SETTINGS BEIM SPIELSTART
+        function readSettings() {
+            let hcToggle = document.getElementById('hardcore-toggle');
+            let artToggle = document.getElementById('artist-toggle');
+            if (hcToggle) isHardcoreMode = hcToggle.checked;
+            if (artToggle) showArtistName = artToggle.checked;
+        }
+
         async function fetchArtistSongs(artist) {
             try {
                 const controller = new AbortController();
@@ -1199,12 +1206,13 @@
         }
 
         function syncHostData() {
+            readSettings(); // Settings vor Multiplayer-Sync nochmal 100% sicherstellen
             let safePool = songsPool.map(s => ({ id: s.id, title: s.title, preview: s.preview, artist: { name: s.artist.name }, album: { cover_medium: s.album.cover_medium } })).slice(0, 100);
             socket.emit('syncRoundData', { roomCode: currentRoom, songs: safePool, mode: currentMode, hardcore: isHardcoreMode, showArtist: showArtistName });
         }
 
         function launchGame() {
-            pauseMenuMusic(); // DER FIX: Schaltet die Hymne aus, wenn das Spiel startet!
+            pauseMenuMusic(); 
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
             if(isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
@@ -1212,6 +1220,7 @@
         }
 
         async function startMixedMode(mode) {
+            readSettings(); // Liest den Button-Status millisekundengenau aus!
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
             document.getElementById('loading-overlay').style.display = 'flex'; 
             document.getElementById('loading-text').innerText = "Loading database...";
@@ -1239,6 +1248,7 @@
         }
 
         async function startProgressiveMode() {
+            readSettings(); // Liest den Button-Status millisekundengenau aus!
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
             document.getElementById('loading-overlay').style.display = 'flex'; 
             document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
@@ -1261,6 +1271,7 @@
         }
 
         async function startArtistMode(artist) {
+            readSettings(); // Liest den Button-Status millisekundengenau aus!
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
             document.getElementById('loading-overlay').style.display = 'flex'; 
             document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
