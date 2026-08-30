@@ -540,7 +540,7 @@
         </main>
     </div>
 
-    <!-- STANDARD GAME SCREEN -->
+    <!-- GAME SCREEN -->
     <div id="game-screen">
         <div class="game-inner">
             <div class="stats-bar" id="game-stats-bar"></div>
@@ -1038,7 +1038,7 @@
         }
 
         // ==========================================
-        // HIGHER / LOWER LOGIK (ANTI-DUPLIKAT & AUDIO FIX)
+        // HIGHER / LOWER LOGIK
         // ==========================================
         let hlPool = []; let hlCurrentA = null; let hlCurrentB = null; let hlStreak = 0; let hlRecentArtists = [];
 
@@ -1046,7 +1046,6 @@
             document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Stream Data...";
             resetGameStats(); currentMode = 'higherlower'; hlStreak = 0; hlRecentArtists = [];
             
-            // 15 statt 12 Artists für mehr Puffer
             let sel = [...megaStars, ...artists2010s, ...soundcloudArtists, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0, 15);
             await Promise.all(sel.map(a => fetchArtistSongs(a)));
             
@@ -1056,9 +1055,7 @@
             document.getElementById('loading-overlay').style.display = 'none'; pauseMenuMusic();
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('hl-screen').style.display = 'flex';
             
-            hlCurrentA = hlPool.pop(); 
-            hlRecentArtists.push(hlCurrentA.artist.name);
-
+            hlCurrentA = hlPool.pop(); hlRecentArtists.push(hlCurrentA.artist.name);
             let nextIndex = hlPool.findIndex(s => !hlRecentArtists.includes(s.artist.name));
             if(nextIndex !== -1) { hlCurrentB = hlPool.splice(nextIndex, 1)[0]; } else { hlCurrentB = hlPool.pop(); }
             hlRecentArtists.push(hlCurrentB.artist.name);
@@ -1069,23 +1066,13 @@
         function renderHLRound() {
             document.getElementById('hl-streak-num').innerText = hlStreak;
             
-            // CARD A
             document.getElementById('hl-img-a').src = hlCurrentA.album.cover_medium; document.getElementById('hl-title-a').innerText = hlCurrentA.title; document.getElementById('hl-artist-a').innerText = hlCurrentA.artist.name; document.getElementById('hl-streams-a').innerText = hlCurrentA.streams.toLocaleString('en-US');
             
-            // CARD B
             document.getElementById('hl-img-b').src = hlCurrentB.album.cover_medium; document.getElementById('hl-title-b').innerText = hlCurrentB.title; document.getElementById('hl-artist-b').innerText = hlCurrentB.artist.name;
-            
             document.getElementById('hl-action-box').style.display = 'flex'; document.getElementById('hl-result-box').style.display = 'none'; document.getElementById('hl-streams-b').innerText = hlCurrentB.streams.toLocaleString('en-US');
 
-            // AUDIO PLAYBACK FÜR SONG B (Rechte Seite)
-            audio.pause();
-            clearTimeout(precisionTimer);
-            if (hlCurrentB.preview) {
-                audio.src = hlCurrentB.preview;
-                audio.volume = globalVolume;
-                audio.loop = true;
-                audio.play().catch(e=>{});
-            }
+            audio.pause(); clearTimeout(precisionTimer);
+            if (hlCurrentB.preview) { audio.src = hlCurrentB.preview; audio.volume = globalVolume; audio.play().catch(e=>{}); }
         }
 
         function processHLChoice(choice) {
@@ -1099,13 +1086,9 @@
                     hlCurrentA = hlCurrentB; 
                     if (hlPool.length === 0) { triggerGameOver(true); } 
                     else { 
-                        // ANTI-DUPLIKAT (Memory: Letzte 8 Artists)
                         let nextIndex = hlPool.findIndex(s => !hlRecentArtists.includes(s.artist.name));
                         if(nextIndex !== -1) { hlCurrentB = hlPool.splice(nextIndex, 1)[0]; } else { hlCurrentB = hlPool.pop(); }
-                        
-                        hlRecentArtists.push(hlCurrentB.artist.name);
-                        if (hlRecentArtists.length > 8) hlRecentArtists.shift(); // Nur die letzten 8 merken
-                        
+                        hlRecentArtists.push(hlCurrentB.artist.name); if (hlRecentArtists.length > 8) hlRecentArtists.shift();
                         renderHLRound(); 
                     } 
                 }, 2000);
@@ -1116,7 +1099,7 @@
         }
 
         // ==========================================
-        // GAME LOGIC & DEEP FETCH (ANTI-TRASH FILTER)
+        // GAME LOGIC & DEEP FETCH
         // ==========================================
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
         let currentPlayId = 0; 
@@ -1124,7 +1107,7 @@
         function playAudioSnippet(isReplay = false) { 
             clearTimeout(precisionTimer); let playId = ++currentPlayId;
             if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
-            audio.volume = globalVolume; audio.loop = false; let p = audio.play();
+            audio.volume = globalVolume; let p = audio.play();
             if (p !== undefined) { p.then(() => { if (playId !== currentPlayId) return; if (maxPlayTime < 30) { precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000); } }).catch(e=>{}); }
         }
 
@@ -1134,7 +1117,6 @@
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 4000); 
-                
                 let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=200`, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 
@@ -1143,45 +1125,27 @@
                     const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok'];
                     let valid = data.results.filter(t => {
                         if (!t.previewUrl) return false;
-                        
-                        let trackNameLower = t.trackName.toLowerCase();
-                        let artistNameLower = t.artistName.toLowerCase();
-                        let searchArtistLower = artist.toLowerCase();
-
+                        let trackNameLower = t.trackName.toLowerCase(); let artistNameLower = t.artistName.toLowerCase(); let searchArtistLower = artist.toLowerCase();
                         if (!artistNameLower.includes(searchArtistLower)) return false;
-
-                        for (let term of forbidden) {
-                            if (trackNameLower.includes(term) || artistNameLower.includes(term)) { return false; }
-                        }
+                        for (let term of forbidden) { if (trackNameLower.includes(term) || artistNameLower.includes(term)) { return false; } }
                         return true;
                     });
                     
                     let uniqueTracks = new Map();
-                    for (let t of valid) {
-                        let cleanName = t.trackName.toLowerCase().split('(')[0].split('[')[0].trim();
-                        if (!uniqueTracks.has(cleanName)) { uniqueTracks.set(cleanName, t); }
-                    }
+                    for (let t of valid) { let cleanName = t.trackName.toLowerCase().split('(')[0].split('[')[0].trim(); if (!uniqueTracks.has(cleanName)) { uniqueTracks.set(cleanName, t); } }
                     
-                    let uniqueArray = Array.from(uniqueTracks.values());
-                    uniqueArray.sort(() => 0.5 - Math.random());
-                    
+                    let uniqueArray = Array.from(uniqueTracks.values()); uniqueArray.sort(() => 0.5 - Math.random());
                     let mapped = uniqueArray.slice(0, 40).map(t => ({
-                        id: t.trackId.toString(),
-                        title: t.trackName,
-                        preview: t.previewUrl,
-                        artist: { name: t.artistName },
-                        album: { cover_medium: t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '500x500bb') : '' }
+                        id: t.trackId.toString(), title: t.trackName, preview: t.previewUrl, artist: { name: t.artistName }, album: { cover_medium: t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '500x500bb') : '' }
                     }));
                     songsPool = songsPool.concat(mapped);
                 }
-            } catch (e) {
-                console.warn("API Error for", artist, e);
-            }
+            } catch (e) {}
         }
 
         function resetGameStats() {
             songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
-            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); audio.loop = false;
+            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); 
             let box = document.getElementById('suggestions-box'); if(box) box.style.display = 'none'; 
             let res = document.getElementById('mp-result'); if(res) res.style.display = 'none';
         }
@@ -1289,6 +1253,8 @@
                     b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
                 });
             }
+            
+            audio.src = currentSong.preview; 
             playAudioSnippet(false);
         }
 
