@@ -145,6 +145,7 @@
         .card-highlight { border-color: rgba(139,92,246,0.5); }
         .card-sc { border-color: rgba(255,85,0,0.5); }
         .card-gold { border-color: rgba(245,158,11,0.5); }
+        .card-fallen { border-color: rgba(255,255,255,0.5); }
 
         .artist-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
         .artist-tile { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; color: white; backdrop-filter: blur(5px); }
@@ -254,7 +255,7 @@
     <div id="profile-overlay" class="overlay">
         <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
             <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
-            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login or create your cloud profile.</p>
+            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login or create your local profile.</p>
             
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <input type="text" id="username-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="👤 Username" autocomplete="off">
@@ -277,6 +278,10 @@
                 <div class="paywall-feature">
                     <div class="paywall-check">✓</div>
                     <span style="color: white; font-weight: 600; font-size: 15px;">Online Multiplayer (2-4 Players)</span>
+                </div>
+                <div class="paywall-feature">
+                    <div class="paywall-check">✓</div>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Fallen Legends Mode (Tupac, X, Juice...)</span>
                 </div>
                 <div class="paywall-feature">
                     <div class="paywall-check">✓</div>
@@ -370,6 +375,11 @@
 
                 <div class="section-title">Premium Categories <span style="font-size:12px; color:var(--warning); vertical-align: middle;">VIP</span></div>
                 <div class="cards-grid">
+                    <div class="ea-card locked-card card-fallen" onclick="checkPremiumAndStart('fallen')">
+                        <div class="ea-card-icon">🕊️</div>
+                        <div class="ea-card-title">Fallen Legends <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
+                        <div class="ea-card-desc">Tupac, Biggie, Juice WRLD, X & more.</div>
+                    </div>
                     <div class="ea-card locked-card" onclick="checkPremiumAndStart('2010s')">
                         <div class="ea-card-icon">📅</div>
                         <div class="ea-card-title">2010-2020 Rap <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
@@ -425,6 +435,7 @@
                         <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
                         <p id="profile-view-quote" style="margin: 0 0 15px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
                         
+                        <!-- DIE HYMNE WIRD HIER ANGEZEIGT -->
                         <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Anthem: <span id="profile-view-hymn" style="color: white;">None</span></p>
                         
                         <div style="width: 100%; max-width: 400px;">
@@ -523,11 +534,14 @@
         // ==========================================
         // ARTIST DATA
         // ==========================================
+        const fallenLegends = ['2Pac', 'The Notorious B.I.G.', 'XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Mac Miller', 'Pop Smoke', 'King Von', 'Takeoff', 'Nipsey Hussle', 'Eazy-E', 'MF DOOM'];
         const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean', 'Bones'];
         const artists2010s = ['Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa', 'Offset', 'Quavo', 'Yeat', 'Central Cee'];
         const legends = ['2Pac', 'The Notorious B.I.G.', 'Eminem', '50 Cent', 'Snoop Dogg', 'Dr. Dre', 'Ice Cube', 'Nas'];
         const megaStars = ['Drake', 'Kendrick Lamar', 'J. Cole', 'Kanye West', 'Post Malone'];
-        const allArtists = [...new Set([...soundcloudArtists, ...artists2010s, ...legends, ...megaStars])].sort();
+        
+        // Alle Artists zusammenfügen (inklusive der Fallen Legends für die Dropdown-Auswahl)
+        const allArtists = [...new Set([...soundcloudArtists, ...artists2010s, ...legends, ...megaStars, ...fallenLegends])].sort();
 
         const artistQuotes = {
             'XXXTentacion': '"What is real will prosper." - X',
@@ -558,7 +572,8 @@
             '2Pac': '"Reality is wrong. Dreams are for real." - 2Pac',
             'The Notorious B.I.G.': '"Mo money, mo problems." - Biggie',
             '50 Cent': '"Get rich or die tryin\'." - 50 Cent',
-            'Snoop Dogg': '"Drop it like it\'s hot." - Snoop'
+            'Snoop Dogg': '"Drop it like it\'s hot." - Snoop',
+            'Pop Smoke': '"Woo!" - Pop Smoke'
         };
 
         function getArtistQuote(name) { return artistQuotes[name] || `"Ready to dominate the game." - ${name}`; }
@@ -1212,7 +1227,7 @@
         }
 
         function launchGame() {
-            pauseMenuMusic(); 
+            pauseMenuMusic(); // DER FIX: Schaltet die Hymne aus, wenn das Spiel startet!
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
             if(isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
@@ -1226,10 +1241,11 @@
             document.getElementById('loading-text').innerText = "Loading database...";
             resetGameStats(); currentMode = mode; let sel = [];
             
-            if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars].sort(()=>0.5-Math.random()).slice(0,8);
+            if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === 'soundcloud') sel = [...soundcloudArtists].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === '2010s') sel = [...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === 'megahits') sel = [...megaStars, ...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
+            if (mode === 'fallen') sel = [...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
             
             try {
                 await Promise.all(sel.map(a => fetchArtistSongs(a)));
