@@ -247,7 +247,7 @@
                 errDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:#ef4444;color:white;padding:20px;border-radius:10px;z-index:999999;font-family:sans-serif;font-weight:bold;box-shadow:0 10px 30px rgba(0,0,0,0.8);';
                 document.body.appendChild(errDiv);
             }
-            errDiv.innerHTML = `🚨 Unerwarteter Absturz verhindert!<br><br>Fehler: ${message} (Zeile ${lineno})<br><br><button onclick='localStorage.clear();location.reload();' style='padding:10px 20px;background:white;color:black;border:none;border-radius:8px;font-weight:bold;cursor:pointer;'>Klick hier für einen Hard-Reset</button>`;
+            errDiv.innerHTML = `🚨 Unexpected crash prevented!<br><br>Error: ${message} (Line ${lineno})<br><br><button onclick='localStorage.clear();location.reload();' style='padding:10px 20px;background:white;color:black;border:none;border-radius:8px;font-weight:bold;cursor:pointer;'>Click here for a hard reset</button>`;
         };
     </script>
 
@@ -261,7 +261,7 @@
     <div id="profile-overlay" class="overlay" style="display: flex;">
         <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
             <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
-            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login oder lokalen Account erstellen.</p>
+            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login or create a local account.</p>
             
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <input type="text" id="username-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="👤 Username" autocomplete="off">
@@ -272,7 +272,7 @@
             <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
             
             <div style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                <button onclick="localStorage.clear(); location.reload();" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s;">🛠️ Speicher-Reset (behebt Fehler)</button>
+                <button onclick="localStorage.clear(); location.reload();" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s;">🛠️ Storage Reset (fixes errors)</button>
             </div>
         </div>
     </div>
@@ -353,14 +353,14 @@
                             <span class="settings-label">Hardcore (Typing)</span>
                             <label class="switch"><input type="checkbox" id="hardcore-toggle" onchange="readSettings()"><span class="slider red"></span></label>
                         </div>
-                        <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">(Tippe den Songnamen selbst ein)</span>
+                        <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">(Type the song title yourself)</span>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 5px;">
                         <div class="settings-group">
                             <span class="settings-label">Show Artist</span>
                             <label class="switch"><input type="checkbox" id="artist-toggle" onchange="readSettings()" checked><span class="slider green"></span></label>
                         </div>
-                        <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">(Blendet den Künstlernamen im Spiel ein/aus)</span>
+                        <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">(Toggles the artist name in-game)</span>
                     </div>
                 </div>
 
@@ -426,14 +426,14 @@
                 <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
                     <div class="ea-card" style="border-color: var(--primary); justify-content: flex-start;">
                         <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; letter-spacing: 1px;">🌍 PUBLIC MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Spiele sofort gegen einen zufälligen Gegner auf der Welt (1v1).</p>
+                        <p style="font-size: 13px; color: var(--text-muted);">Play instantly against a random opponent worldwide (1v1).</p>
                         <div id="random-match-ui" style="text-align: center; margin-top: 10px;">
-                            <button class="btn-action" style="background: var(--primary); margin-bottom: 20px;" onclick="startRandomMatchmaking()">Gegner Suchen 🔍</button>
+                            <button class="btn-action" style="background: var(--primary); margin-bottom: 20px;" onclick="startRandomMatchmaking()">Find Opponent 🔍</button>
                         </div>
                     </div>
                     <div class="ea-card" style="border-color: var(--success); justify-content: flex-start;">
                         <h3 style="margin-top: 0; color: var(--success); font-weight: 800; letter-spacing: 1px;">🏠 HOST MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Erstelle eine private Lobby für 2 bis 4 Freunde.</p>
+                        <p style="font-size: 13px; color: var(--text-muted);">Create a private lobby for 2 to 4 friends.</p>
                         <button class="btn-action" style="background: var(--success); margin-bottom: 20px;" onclick="createRoom()">Generate Code</button>
                         <div style="text-align: center;">
                             <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Your Room Code:</span>
@@ -442,7 +442,7 @@
                     </div>
                     <div class="ea-card" style="justify-content: flex-start;">
                         <h3 style="margin-top: 0; color: white; font-weight: 800; letter-spacing: 1px;">🤝 JOIN MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Gib hier den 4-stelligen Code von deinem Freund ein.</p>
+                        <p style="font-size: 13px; color: var(--text-muted);">Enter your friend's 4-digit code here.</p>
                         <input type="number" id="join-code-input" class="ea-input" style="letter-spacing: 5px; font-size: 24px; text-align: center;" placeholder="CODE">
                         <button class="btn-action" onclick="joinRoom()">Join</button>
                     </div>
@@ -629,7 +629,7 @@
 
     <!-- LOADING & FEEDBACK OVERLAYS -->
     <div id="loading-overlay" class="overlay" style="display: none;">
-        <div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Please Wait...</h2></div>
+        <div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading... ⏳</h2></div>
     </div>
     <div id="feedback-overlay" class="overlay" style="display: none;">
         <div id="feedback-modal" class="modal">
@@ -647,7 +647,7 @@
                 let val = localStorage.getItem(key);
                 return val ? JSON.parse(val) : fallback;
             } catch(e) {
-                console.error("Speicher repariert für: " + key);
+                console.error("Storage repaired for: " + key);
                 localStorage.removeItem(key);
                 return fallback;
             }
@@ -1010,18 +1010,18 @@
                 let pw = isAutoLogin ? (accounts[name]?.password || "") : document.getElementById('password-input').value.trim(); 
 
                 if (!name || !pw) { 
-                    if(err) { err.innerText = "Bitte fülle Username und Passwort aus!"; err.style.display = 'block'; } 
+                    if(err) { err.innerText = "Please enter a username and password!"; err.style.display = 'block'; } 
                     document.getElementById('profile-overlay').style.display = 'flex';
                     return; 
                 }
 
-                if (!isAutoLogin && btn) { btn.innerText = "Lade... ⏳"; btn.disabled = true; }
+                if (!isAutoLogin && btn) { btn.innerText = "Loading... ⏳"; btn.disabled = true; }
 
                 let localAccountExists = !!accounts[name];
 
                 if (localAccountExists && !isAutoLogin) {
                     if (accounts[name].password !== pw) { 
-                        if(err) { err.innerText = "Falsches Passwort!"; err.style.display = 'block'; } 
+                        if(err) { err.innerText = "Wrong password!"; err.style.display = 'block'; } 
                         if(btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
                         return; 
                     }
@@ -1077,7 +1077,7 @@
                         }
                     }
                 } catch(e) {
-                    console.log("Cloud offline, spiele lokal weiter.", e);
+                    console.log("Cloud offline, playing locally.", e);
                 }
 
                 if (!accounts[playerName]) accounts[playerName] = {};
@@ -1117,7 +1117,7 @@
             } catch (error) {
                 console.error("Login Error:", error);
                 document.getElementById('profile-overlay').style.display = 'flex';
-                if(err) { err.innerText = "Ein Fehler ist aufgetreten. Bitte auf Reset klicken."; err.style.display = 'block'; }
+                if(err) { err.innerText = "An error occurred. Please click Reset."; err.style.display = 'block'; }
                 if (btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
             }
         }
@@ -1170,8 +1170,8 @@
 
         function startRandomMatchmaking() {
             isSearching = true; isMultiplayer = true; socket.emit('findRandomMatch', { name: playerName, avatar: encodeAvatarAndQuote() });
-            document.getElementById('random-match-ui').innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; gap:10px;"><div class="loader" style="width:30px; height:30px; border-top-color: var(--primary); margin: 0;"></div><span style="color:var(--primary); font-weight:bold; font-size:14px;">Suche Gegner in der Queue...</span><button onclick="cancelRandomMatchmaking()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:5px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">Abbrechen</button></div>`;
-            document.getElementById('mp-status').innerText = 'Suche nach public Match...';
+            document.getElementById('random-match-ui').innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; gap:10px;"><div class="loader" style="width:30px; height:30px; border-top-color: var(--primary); margin: 0;"></div><span style="color:var(--primary); font-weight:bold; font-size:14px;">Searching for opponent in queue...</span><button onclick="cancelRandomMatchmaking()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:5px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">Cancel</button></div>`;
+            document.getElementById('mp-status').innerText = 'Searching for public match...';
         }
 
         function cancelRandomMatchmaking() {
@@ -1180,13 +1180,13 @@
 
         function resetRandomMatchUI() {
             let el = document.getElementById('random-match-ui');
-            if(el) { el.innerHTML = `<button class="btn-action" style="background: var(--primary); margin-bottom: 20px;" onclick="startRandomMatchmaking()">Gegner Suchen 🔍</button>`; }
+            if(el) { el.innerHTML = `<button class="btn-action" style="background: var(--primary); margin-bottom: 20px;" onclick="startRandomMatchmaking()">Find Opponent 🔍</button>`; }
         }
 
         socket.on('randomMatchFound', (data) => {
             isSearching = false; currentRoom = data.roomCode; isMpHost = (socket.id === data.hostId); lobbyPlayers = data.players;
             resetRandomMatchUI(); renderLobbyPlayers();
-            let statusEl = document.getElementById('mp-status'); statusEl.innerHTML = `🟢 Match gefunden! Startet in 3 Sekunden...`; statusEl.style.color = 'var(--success)';
+            let statusEl = document.getElementById('mp-status'); statusEl.innerHTML = `🟢 Match found! Starting in 3 seconds...`; statusEl.style.color = 'var(--success)';
             if(isMpHost) { setTimeout(() => { if(currentRoom === data.roomCode) { startMixedMode('all'); } }, 3000); }
         });
 
@@ -1479,7 +1479,7 @@
             
             try {
                 await Promise.all(sel.map(a => fetchArtistSongs(a)));
-                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error oder Werbeblocker. Bitte nochmal probieren!"); return; }
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker. Please try again!"); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
             } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
         }
