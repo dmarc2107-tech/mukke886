@@ -402,12 +402,9 @@
                 <div class="artist-list" id="artist-grid"></div>
             </div>
 
-            <!-- NEUER MULTIPLAYER TAB MIT MATCHMAKING -->
             <div id="multiplayer-tab" class="tab-content">
                 <div class="section-title">Online Multiplayer</div>
                 <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-                    
-                    <!-- NEU: Random Matchmaking -->
                     <div class="ea-card" style="border-color: var(--primary); justify-content: flex-start;">
                         <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; letter-spacing: 1px;">🌍 PUBLIC MATCH</h3>
                         <p style="font-size: 13px; color: var(--text-muted);">Spiele sofort gegen einen zufälligen Gegner auf der Welt (1v1).</p>
@@ -415,8 +412,6 @@
                             <button class="btn-action" style="background: var(--primary); margin-bottom: 20px;" onclick="startRandomMatchmaking()">Gegner Suchen 🔍</button>
                         </div>
                     </div>
-
-                    <!-- Host Match -->
                     <div class="ea-card" style="border-color: var(--success); justify-content: flex-start;">
                         <h3 style="margin-top: 0; color: var(--success); font-weight: 800; letter-spacing: 1px;">🏠 HOST MATCH</h3>
                         <p style="font-size: 13px; color: var(--text-muted);">Erstelle eine private Lobby für 2 bis 4 Freunde.</p>
@@ -426,8 +421,6 @@
                             <h2 id="room-code-display" style="margin: 0; font-size: 40px; letter-spacing: 8px; color: white;">----</h2>
                         </div>
                     </div>
-
-                    <!-- Join Match -->
                     <div class="ea-card" style="justify-content: flex-start;">
                         <h3 style="margin-top: 0; color: white; font-weight: 800; letter-spacing: 1px;">🤝 JOIN MATCH</h3>
                         <p style="font-size: 13px; color: var(--text-muted);">Gib hier den 4-stelligen Code von deinem Freund ein.</p>
@@ -447,6 +440,21 @@
 
             <div id="profile-tab" class="tab-content">
                 <div class="section-title">My Club</div>
+                
+                <!-- VIP KÄSTEN GANZ NACH OBEN VERSCHOBEN -->
+                <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
+                    <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
+                </div>
+
+                <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 Redeem Gumroad License</h3>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="e.g. A7X9-B2M4-99PL-Q1ZS">
+                        <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Verify</button>
+                    </div>
+                </div>
+
                 <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
                     <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
                     <div style="text-align: left; flex: 1;">
@@ -498,19 +506,6 @@
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">Mode Mastery (Points per Mode)</h3>
                     <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px;">Earn points to unlock Bronze 🥉, Silver 🥈, Gold 🥇, and Champion 🏆 ranks in each mode!</p>
                     <div id="mode-stats-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;"></div>
-                </div>
-
-                <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
-                    <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
-                </div>
-
-                <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 Redeem Gumroad License</h3>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="e.g. A7X9-B2M4-99PL-Q1ZS">
-                        <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Verify</button>
-                    </div>
                 </div>
 
                 <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
@@ -705,7 +700,7 @@
         
         let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = '';
         let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
-        let isSearching = false; // NEU: Für die Warteschlange
+        let isSearching = false; 
 
         let ytPlayer; let ytReady = false; let ytContext = 'menu';
 
@@ -1111,75 +1106,32 @@
 
         function encodeAvatarAndQuote() { return myAvatar + '|Q|' + myQuote; }
 
-        // ==========================================
-        // NEU: MATCHMAKING LOGIK
-        // ==========================================
         function startRandomMatchmaking() {
-            isSearching = true;
-            isMultiplayer = true;
-            socket.emit('findRandomMatch', { name: playerName, avatar: encodeAvatarAndQuote() });
-            
-            document.getElementById('random-match-ui').innerHTML = `
-                <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
-                    <div class="loader" style="width:30px; height:30px; border-top-color: var(--primary); margin: 0;"></div>
-                    <span style="color:var(--primary); font-weight:bold; font-size:14px;">Suche Gegner in der Queue...</span>
-                    <button onclick="cancelRandomMatchmaking()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:5px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">Abbrechen</button>
-                </div>
-            `;
+            isSearching = true; isMultiplayer = true; socket.emit('findRandomMatch', { name: playerName, avatar: encodeAvatarAndQuote() });
+            document.getElementById('random-match-ui').innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; gap:10px;"><div class="loader" style="width:30px; height:30px; border-top-color: var(--primary); margin: 0;"></div><span style="color:var(--primary); font-weight:bold; font-size:14px;">Suche Gegner in der Queue...</span><button onclick="cancelRandomMatchmaking()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:5px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">Abbrechen</button></div>`;
             document.getElementById('mp-status').innerText = 'Suche nach public Match...';
         }
 
         function cancelRandomMatchmaking() {
-            isSearching = false;
-            isMultiplayer = false;
-            socket.emit('cancelMatchmaking');
-            resetRandomMatchUI();
-            document.getElementById('mp-status').innerText = 'Not connected';
+            isSearching = false; isMultiplayer = false; socket.emit('cancelMatchmaking'); resetRandomMatchUI(); document.getElementById('mp-status').innerText = 'Not connected';
         }
 
         function resetRandomMatchUI() {
             let el = document.getElementById('random-match-ui');
-            if(el) {
-                el.innerHTML = `<button class="btn-action" style="background: var(--primary); margin-bottom: 20px;" onclick="startRandomMatchmaking()">Gegner Suchen 🔍</button>`;
-            }
+            if(el) { el.innerHTML = `<button class="btn-action" style="background: var(--primary); margin-bottom: 20px;" onclick="startRandomMatchmaking()">Gegner Suchen 🔍</button>`; }
         }
 
         socket.on('randomMatchFound', (data) => {
-            isSearching = false;
-            currentRoom = data.roomCode;
-            isMpHost = (socket.id === data.hostId);
-            lobbyPlayers = data.players;
-            
-            resetRandomMatchUI();
-            renderLobbyPlayers();
-            
-            let statusEl = document.getElementById('mp-status');
-            statusEl.innerHTML = `🟢 Match gefunden! Startet in 3 Sekunden...`;
-            statusEl.style.color = 'var(--success)';
-            
-            // Host startet automatisch das Match, damit niemand ewig in der Random-Lobby warten muss
-            if(isMpHost) {
-                setTimeout(() => {
-                    if(currentRoom === data.roomCode) { // Sicherheitscheck falls abgebrochen
-                        startMixedMode('all'); 
-                    }
-                }, 3000);
-            }
+            isSearching = false; currentRoom = data.roomCode; isMpHost = (socket.id === data.hostId); lobbyPlayers = data.players;
+            resetRandomMatchUI(); renderLobbyPlayers();
+            let statusEl = document.getElementById('mp-status'); statusEl.innerHTML = `🟢 Match gefunden! Startet in 3 Sekunden...`; statusEl.style.color = 'var(--success)';
+            if(isMpHost) { setTimeout(() => { if(currentRoom === data.roomCode) { startMixedMode('all'); } }, 3000); }
         });
 
-        // ==========================================
-        // ALTE LOBBY LOGIK
-        // ==========================================
         function createRoom() { isMultiplayer = true; isMpHost = true; socket.emit('createRoom', { name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Connecting...'; }
         function joinRoom() { let c = document.getElementById('join-code-input').value; if(c) { isMultiplayer = true; isMpHost = false; socket.emit('joinRoom', { code: c, name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Joining...'; } }
         
-        function cancelMultiplayer() { 
-            isMultiplayer = false; 
-            isMpHost = false; 
-            currentRoom = ''; 
-            if(isSearching) cancelRandomMatchmaking();
-            switchTab('play-tab', document.getElementById('nav-play')); 
-        }
+        function cancelMultiplayer() { isMultiplayer = false; isMpHost = false; currentRoom = ''; if(isSearching) cancelRandomMatchmaking(); switchTab('play-tab', document.getElementById('nav-play')); }
 
         socket.on('roomCreated', (code) => { currentRoom = code; document.getElementById('room-code-display').innerText = code; });
         socket.on('joinedSuccess', (data) => { currentRoom = data.roomCode; document.getElementById('room-code-display').innerText = data.roomCode; });
@@ -1217,19 +1169,47 @@
         socket.on('gameReady', (code) => { if(!isMpHost) { document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading game data from host..."; } });
         socket.on('receiveRoundData', (data) => { resetGameStats(); songsPool = data.songs; currentMode = data.mode; isHardcoreMode = data.hardcore; showArtistName = data.showArtist; document.getElementById('hardcore-toggle').checked = isHardcoreMode; document.getElementById('artist-toggle').checked = showArtistName; isMultiplayer = true; document.getElementById('loading-overlay').style.display = 'none'; launchGame(); });
         socket.on('updateAllStats', (players) => { lobbyPlayers = players; if(!isWinnerScreenShown) updateStatsDisplay(); if(gameIsOver) renderMpLeaderboard(); });
+        
         socket.on('teammateAnswered', (data) => {
             if (data.type === 'ROUND_ANSWERED') { playersAnsweredThisRound.add(data.id); checkAllAnswered(); } 
             else if (data.type === 'READY_NEXT') { playersReadyForNextRound.add(data.id); checkAllReady(); } 
             else if (data.type === 'SUDDEN_DEATH') { triggerSuddenDeathLocal(data.ids); }
         });
+        
         socket.on('triggerNextRound', () => { if (!isMpHost && lives > 0 && !gameIsOver) nextRound(); });
-        socket.on('opponentGameOver', (data) => { matchEndData[data.id] = data; playersAnsweredThisRound.add(data.id); playersReadyForNextRound.add(data.id); checkAllAnswered(); checkAllReady(); if (gameIsOver) checkMatchEnd(); });
+        
+        // INSTANT-WIN ÜBERPRÜFUNG WENN GEGNER STIRBT
+        socket.on('opponentGameOver', (data) => { 
+            matchEndData[data.id] = data; 
+            playersAnsweredThisRound.add(data.id); 
+            playersReadyForNextRound.add(data.id); 
+
+            // Prüfen: Bin ich der einzige, der noch lebt?
+            let aliveOpponents = lobbyPlayers.filter(p => p.id !== socket.id && !matchEndData[p.id]);
+            
+            if (aliveOpponents.length === 0 && !gameIsOver) {
+                // Ich bin der Letzte! Sofort den Win triggern.
+                triggerGameOver(true);
+            } else {
+                checkAllAnswered(); 
+                checkAllReady(); 
+                if (gameIsOver) checkMatchEnd(); 
+            }
+        });
 
         function checkMatchEnd() {
             if (!isMultiplayer || !gameIsOver || isWinnerScreenShown) return;
             let allDone = lobbyPlayers.length > 0 && lobbyPlayers.every(p => matchEndData[p.id]);
             if (allDone) {
-                let sorted = Object.values(matchEndData).sort((a,b) => b.score - a.score); let topScore = sorted[0].score; let tiedPlayers = sorted.filter(p => p.score === topScore);
+                // Bei Instant-Death System zählen die restlichen Leben am meisten, dann der Score
+                let sorted = Object.values(matchEndData).sort((a,b) => {
+                    if (b.lives !== a.lives) return b.lives - a.lives;
+                    return b.score - a.score;
+                });
+                
+                let topScore = sorted[0].score; let topLives = sorted[0].lives;
+                let tiedPlayers = sorted.filter(p => p.score === topScore && p.lives === topLives);
+                
                 if (tiedPlayers.length > 1) {
                     if (isMpHost) { let tiedIds = tiedPlayers.map(p => p.id); socket.emit('teammateAnswered', { type: 'SUDDEN_DEATH', ids: tiedIds, roomCode: currentRoom }); triggerSuddenDeathLocal(tiedIds); }
                 } else {
@@ -1366,7 +1346,6 @@
                     
                     let valid = data.results.filter(t => {
                         if (!t.previewUrl) return false;
-                        
                         let trackNameLower = t.trackName.toLowerCase(); 
                         let artistNameLower = t.artistName.toLowerCase(); 
                         let searchArtistLower = artist.toLowerCase();
@@ -1374,15 +1353,9 @@
                         let isLeadArtist = artistNameLower === searchArtistLower || 
                                            artistNameLower.startsWith(searchArtistLower + " ") || 
                                            artistNameLower.startsWith(searchArtistLower + ",");
-                                           
                         if (!isLeadArtist) return false;
 
-                        for (let term of forbidden) { 
-                            if (trackNameLower.includes(term) || artistNameLower.includes(term)) { 
-                                return false; 
-                            } 
-                        }
-                        
+                        for (let term of forbidden) { if (trackNameLower.includes(term) || artistNameLower.includes(term)) { return false; } }
                         return true;
                     });
                     
@@ -1433,7 +1406,7 @@
             
             try {
                 await Promise.all(sel.map(a => fetchArtistSongs(a)));
-                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker blocked the songs. Please try again!"); return; }
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error oder Werbeblocker. Bitte nochmal probieren!"); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
             } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
         }
@@ -1446,7 +1419,7 @@
             
             try {
                 await Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchArtistSongs(a)));
-                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker blocked the songs. Please try again!"); return; }
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error!"); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
             } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
         }
@@ -1459,7 +1432,7 @@
             
             try {
                 await fetchArtistSongs(artist);
-                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker blocked the songs. Please try again!"); return; }
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error!"); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
             } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
         }
@@ -1598,7 +1571,7 @@
                 
                 if (isMultiplayer) {
                     socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
-                    let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
+                    let myData = { id: socket.id, score: score, lives: lives, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
                     matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
                     
                     t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
@@ -1670,7 +1643,10 @@
             const res = document.getElementById('mp-result');
             if(!res || !isMultiplayer || isWinnerScreenShown) return;
             
-            let sorted = [...lobbyPlayers].map(p => { return matchEndData[p.id] ? matchEndData[p.id] : p; }).sort((a,b) => b.score - a.score);
+            let sorted = [...lobbyPlayers].map(p => { return matchEndData[p.id] ? matchEndData[p.id] : p; }).sort((a,b) => {
+                if (b.lives !== a.lives) return b.lives - a.lives;
+                return b.score - a.score;
+            });
             
             let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Standings</h3>';
             html += '<div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
