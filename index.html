@@ -402,21 +402,35 @@
                 <div class="artist-list" id="artist-grid"></div>
             </div>
 
+            <!-- NEUER MULTIPLAYER TAB MIT MATCHMAKING -->
             <div id="multiplayer-tab" class="tab-content">
-                <div class="section-title">Online Multiplayer (2-4 Players)</div>
-                <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                <div class="section-title">Online Multiplayer</div>
+                <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                    
+                    <!-- NEU: Random Matchmaking -->
+                    <div class="ea-card" style="border-color: var(--primary); justify-content: flex-start;">
+                        <h3 style="margin-top: 0; color: var(--primary); font-weight: 800; letter-spacing: 1px;">🌍 PUBLIC MATCH</h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">Spiele sofort gegen einen zufälligen Gegner auf der Welt (1v1).</p>
+                        <div id="random-match-ui" style="text-align: center; margin-top: 10px;">
+                            <button class="btn-action" style="background: var(--primary); margin-bottom: 20px;" onclick="startRandomMatchmaking()">Gegner Suchen 🔍</button>
+                        </div>
+                    </div>
+
+                    <!-- Host Match -->
                     <div class="ea-card" style="border-color: var(--success); justify-content: flex-start;">
-                        <h3 style="margin-top: 0; color: var(--success); font-weight: 800; letter-spacing: 1px;">HOST MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Create a lobby for 2 to 4 players.</p>
+                        <h3 style="margin-top: 0; color: var(--success); font-weight: 800; letter-spacing: 1px;">🏠 HOST MATCH</h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">Erstelle eine private Lobby für 2 bis 4 Freunde.</p>
                         <button class="btn-action" style="background: var(--success); margin-bottom: 20px;" onclick="createRoom()">Generate Code</button>
                         <div style="text-align: center;">
                             <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Your Room Code:</span>
                             <h2 id="room-code-display" style="margin: 0; font-size: 40px; letter-spacing: 8px; color: white;">----</h2>
                         </div>
                     </div>
+
+                    <!-- Join Match -->
                     <div class="ea-card" style="justify-content: flex-start;">
-                        <h3 style="margin-top: 0; color: white; font-weight: 800; letter-spacing: 1px;">JOIN MATCH</h3>
-                        <p style="font-size: 13px; color: var(--text-muted);">Enter your friend's 4-digit code.</p>
+                        <h3 style="margin-top: 0; color: white; font-weight: 800; letter-spacing: 1px;">🤝 JOIN MATCH</h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">Gib hier den 4-stelligen Code von deinem Freund ein.</p>
                         <input type="number" id="join-code-input" class="ea-input" style="letter-spacing: 5px; font-size: 24px; text-align: center;" placeholder="CODE">
                         <button class="btn-action" onclick="joinRoom()">Join</button>
                     </div>
@@ -691,6 +705,7 @@
         
         let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = '';
         let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
+        let isSearching = false; // NEU: Für die Warteschlange
 
         let ytPlayer; let ytReady = false; let ytContext = 'menu';
 
@@ -1096,9 +1111,75 @@
 
         function encodeAvatarAndQuote() { return myAvatar + '|Q|' + myQuote; }
 
+        // ==========================================
+        // NEU: MATCHMAKING LOGIK
+        // ==========================================
+        function startRandomMatchmaking() {
+            isSearching = true;
+            isMultiplayer = true;
+            socket.emit('findRandomMatch', { name: playerName, avatar: encodeAvatarAndQuote() });
+            
+            document.getElementById('random-match-ui').innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                    <div class="loader" style="width:30px; height:30px; border-top-color: var(--primary); margin: 0;"></div>
+                    <span style="color:var(--primary); font-weight:bold; font-size:14px;">Suche Gegner in der Queue...</span>
+                    <button onclick="cancelRandomMatchmaking()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:5px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">Abbrechen</button>
+                </div>
+            `;
+            document.getElementById('mp-status').innerText = 'Suche nach public Match...';
+        }
+
+        function cancelRandomMatchmaking() {
+            isSearching = false;
+            isMultiplayer = false;
+            socket.emit('cancelMatchmaking');
+            resetRandomMatchUI();
+            document.getElementById('mp-status').innerText = 'Not connected';
+        }
+
+        function resetRandomMatchUI() {
+            let el = document.getElementById('random-match-ui');
+            if(el) {
+                el.innerHTML = `<button class="btn-action" style="background: var(--primary); margin-bottom: 20px;" onclick="startRandomMatchmaking()">Gegner Suchen 🔍</button>`;
+            }
+        }
+
+        socket.on('randomMatchFound', (data) => {
+            isSearching = false;
+            currentRoom = data.roomCode;
+            isMpHost = (socket.id === data.hostId);
+            lobbyPlayers = data.players;
+            
+            resetRandomMatchUI();
+            renderLobbyPlayers();
+            
+            let statusEl = document.getElementById('mp-status');
+            statusEl.innerHTML = `🟢 Match gefunden! Startet in 3 Sekunden...`;
+            statusEl.style.color = 'var(--success)';
+            
+            // Host startet automatisch das Match, damit niemand ewig in der Random-Lobby warten muss
+            if(isMpHost) {
+                setTimeout(() => {
+                    if(currentRoom === data.roomCode) { // Sicherheitscheck falls abgebrochen
+                        startMixedMode('all'); 
+                    }
+                }, 3000);
+            }
+        });
+
+        // ==========================================
+        // ALTE LOBBY LOGIK
+        // ==========================================
         function createRoom() { isMultiplayer = true; isMpHost = true; socket.emit('createRoom', { name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Connecting...'; }
         function joinRoom() { let c = document.getElementById('join-code-input').value; if(c) { isMultiplayer = true; isMpHost = false; socket.emit('joinRoom', { code: c, name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Joining...'; } }
-        function cancelMultiplayer() { isMultiplayer = false; isMpHost = false; currentRoom = ''; switchTab('play-tab', document.getElementById('nav-play')); }
+        
+        function cancelMultiplayer() { 
+            isMultiplayer = false; 
+            isMpHost = false; 
+            currentRoom = ''; 
+            if(isSearching) cancelRandomMatchmaking();
+            switchTab('play-tab', document.getElementById('nav-play')); 
+        }
 
         socket.on('roomCreated', (code) => { currentRoom = code; document.getElementById('room-code-display').innerText = code; });
         socket.on('joinedSuccess', (data) => { currentRoom = data.roomCode; document.getElementById('room-code-display').innerText = data.roomCode; });
@@ -1106,7 +1187,7 @@
         
         socket.on('lobbyUpdate', (players) => { 
             lobbyPlayers = players; renderLobbyPlayers();
-            if(currentRoom) {
+            if(currentRoom && !isSearching) {
                 let statusEl = document.getElementById('mp-status');
                 if(isMpHost) {
                     if(players.length >= 2) { statusEl.innerHTML = `🟢 Ready! You can now choose a mode<br>in the left menu to start.`; statusEl.style.color = 'var(--success)'; } 
@@ -1281,7 +1362,6 @@
                 
                 let data = await res.json();
                 if (data && data.results) {
-                    // STRENGER FILTER GEGEN REMIXE, INSTRUMENTALS UND NO-NAMES
                     const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout'];
                     
                     let valid = data.results.filter(t => {
@@ -1291,14 +1371,12 @@
                         let artistNameLower = t.artistName.toLowerCase(); 
                         let searchArtistLower = artist.toLowerCase();
 
-                        // 1. Zwingend: Der gesuchte Künstler MUSS der Lead-Artist sein (verhindert Sampler & Producer die nur "feat." im Namen haben)
                         let isLeadArtist = artistNameLower === searchArtistLower || 
                                            artistNameLower.startsWith(searchArtistLower + " ") || 
                                            artistNameLower.startsWith(searchArtistLower + ",");
                                            
                         if (!isLeadArtist) return false;
 
-                        // 2. Trash-Wörter blockieren
                         for (let term of forbidden) { 
                             if (trackNameLower.includes(term) || artistNameLower.includes(term)) { 
                                 return false; 
