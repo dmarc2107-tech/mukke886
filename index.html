@@ -895,27 +895,44 @@
         let searchTimeout = null;
         function handleAnthemInput() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { searchMenuSong(); }, 500); }
 
-        async function searchMenuSong() {
+        // NEU: DEEZER HYMNEN-SUCHE FÜR UNZENSIERTE SONGS
+        function searchMenuSong() {
             let q = document.getElementById('edit-song-search-input').value.trim(); let sel = document.getElementById('edit-menu-song-select');
             if(!q) { sel.style.display = 'none'; return; }
             let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
             if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = `<option value="yt:${vid}" data-title="YouTube Track">▶️ YouTube Video (${vid})</option>`; sel.style.display = 'block'; return; }
-            try {
-                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=10`);
-                let data = await res.json();
+            
+            const cb = 'deezer_anthem_' + Date.now();
+            window[cb] = function(res) {
                 sel.innerHTML = '';
-                if (data && data.results && data.results.length > 0) {
-                    let valid = data.results.filter(t => t.previewUrl);
+                if (res && res.data && res.data.length > 0) {
+                    let valid = res.data.filter(t => t.preview);
                     if (valid.length > 0) {
                         sel.innerHTML = '<option value="">🎵 Choose your Anthem...</option>';
+                        
+                        // Zwingt Explicit Tracks nach ganz oben in der Liste
+                        valid.sort((a,b) => (b.explicit_lyrics ? 1 : 0) - (a.explicit_lyrics ? 1 : 0));
+                        
+                        let seen = new Set();
                         valid.forEach(t => {
-                            let opt = document.createElement('option'); opt.value = t.previewUrl; opt.innerText = `${t.artistName} - ${t.trackName}`; opt.setAttribute('data-title', `${t.artistName} - ${t.trackName}`); sel.appendChild(opt);
+                            let key = t.title.toLowerCase() + t.artist.name.toLowerCase();
+                            if(!seen.has(key)){
+                                seen.add(key);
+                                let opt = document.createElement('option'); 
+                                opt.value = t.preview; 
+                                opt.innerText = `${t.artist.name} - ${t.title} ${t.explicit_lyrics ? '(E)' : ''}`; 
+                                opt.setAttribute('data-title', `${t.artist.name} - ${t.title}`); 
+                                sel.appendChild(opt);
+                            }
                         });
                         sel.style.display = 'block'; return;
                     }
                 }
                 sel.innerHTML = '<option value="">❌ No songs found</option>'; sel.style.display = 'block';
-            } catch(e) {}
+            };
+            const s = document.createElement('script'); 
+            s.src = `https://api.deezer.com/search?q="${encodeURIComponent(q)}"&limit=20&output=jsonp&callback=${cb}`; 
+            document.head.appendChild(s);
         }
 
         function updateFavSong() {
@@ -1351,56 +1368,59 @@
 
         function readSettings() { let hcToggle = document.getElementById('hardcore-toggle'); let artToggle = document.getElementById('artist-toggle'); if (hcToggle) isHardcoreMode = hcToggle.checked; if (artToggle) showArtistName = artToggle.checked; }
 
-        async function fetchArtistSongs(artist) {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000); 
-                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=200&explicit=Yes`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                
-                let data = await res.json();
-                if (data && data.results) {
-                    const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout', 'radio edit', 'clean'];
-                    
-                    let valid = data.results.filter(t => {
-                        if (!t.previewUrl) return false;
+        // NEU: SPIEL-SUCHE ÜBER DEEZER FÜR UNZENSIERTE SONGS
+        function fetchArtistSongs(artist) {
+            return new Promise((resolve) => {
+                const cb = 'deezer_game_' + Date.now() + Math.floor(Math.random() * 10000);
+                window[cb] = function(res) {
+                    if (res && res.data && res.data.length > 0) {
+                        const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout', 'radio edit', 'clean'];
                         
-                        let trackNameLower = t.trackName.toLowerCase(); 
-                        let artistNameLower = t.artistName.toLowerCase(); 
-                        let searchArtistLower = artist.toLowerCase();
+                        let valid = res.data.filter(t => {
+                            if (!t.preview) return false;
+                            
+                            let trackNameLower = t.title.toLowerCase(); 
+                            let artistNameLower = t.artist.name.toLowerCase(); 
+                            let searchArtistLower = artist.toLowerCase();
 
-                        let isLeadArtist = artistNameLower === searchArtistLower || 
-                                           artistNameLower.startsWith(searchArtistLower + " ") || 
-                                           artistNameLower.startsWith(searchArtistLower + ",");
-                        if (!isLeadArtist) return false;
+                            let isLeadArtist = artistNameLower === searchArtistLower || 
+                                               artistNameLower.startsWith(searchArtistLower + " ") || 
+                                               artistNameLower.startsWith(searchArtistLower + ",");
+                            if (!isLeadArtist) return false;
 
-                        for (let term of forbidden) { if (trackNameLower.includes(term) || artistNameLower.includes(term)) { return false; } }
+                            for (let term of forbidden) { if (trackNameLower.includes(term) || artistNameLower.includes(term)) { return false; } }
+                            
+                            return true;
+                        });
                         
-                        return true;
-                    });
-                    
-                    let uniqueTracks = new Map();
-                    for (let t of valid) { 
-                        let cleanName = t.trackName.toLowerCase().split('(')[0].split('[')[0].trim(); 
-                        
-                        // Speichere den Song, ODER überschreibe ihn, falls die neue Version "explicit" ist und die alte nicht.
-                        if (!uniqueTracks.has(cleanName)) { 
-                            uniqueTracks.set(cleanName, t); 
-                        } else {
-                            let existing = uniqueTracks.get(cleanName);
-                            if (t.trackExplicitness === 'explicit' && existing.trackExplicitness !== 'explicit') {
-                                uniqueTracks.set(cleanName, t);
+                        let uniqueTracks = new Map();
+                        for (let t of valid) { 
+                            let cleanName = t.title.toLowerCase().split('(')[0].split('[')[0].trim(); 
+                            
+                            if (!uniqueTracks.has(cleanName)) { 
+                                uniqueTracks.set(cleanName, t); 
+                            } else {
+                                let existing = uniqueTracks.get(cleanName);
+                                // Zwingt den Ersatz durch die explizite Version
+                                if (t.explicit_lyrics === true && existing.explicit_lyrics !== true) {
+                                    uniqueTracks.set(cleanName, t);
+                                }
                             }
                         }
+                        
+                        let uniqueArray = Array.from(uniqueTracks.values()).sort(() => 0.5 - Math.random());
+                        let mapped = uniqueArray.slice(0, 40).map(t => ({
+                            id: t.id.toString(), title: t.title, preview: t.preview, artist: { name: t.artist.name }, album: { cover_medium: t.album.cover_xl || t.album.cover_medium || '' }
+                        }));
+                        songsPool = songsPool.concat(mapped);
                     }
-                    
-                    let uniqueArray = Array.from(uniqueTracks.values()); uniqueArray.sort(() => 0.5 - Math.random());
-                    let mapped = uniqueArray.slice(0, 40).map(t => ({
-                        id: t.trackId.toString(), title: t.trackName, preview: t.previewUrl, artist: { name: t.artistName }, album: { cover_medium: t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '500x500bb') : '' }
-                    }));
-                    songsPool = songsPool.concat(mapped);
-                }
-            } catch (e) { console.warn("API Error for", artist, e); }
+                    resolve();
+                };
+                const s = document.createElement('script'); 
+                s.src = `https://api.deezer.com/search?q=artist:"${encodeURIComponent(artist)}"&limit=100&output=jsonp&callback=${cb}`; 
+                document.head.appendChild(s);
+                setTimeout(() => resolve(), 5000); 
+            });
         }
 
         function resetGameStats() {
