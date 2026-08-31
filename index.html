@@ -320,7 +320,8 @@
             <div class="nav-menu">
                 <div id="nav-play" class="nav-item active" onclick="switchTab('play-tab', this)">🎮 Play</div>
                 <div id="nav-mp" class="nav-item" onclick="switchTab('multiplayer-tab', this)">⚔️ Online (2-4) <span class="lock-icon" style="font-size:10px; color:var(--warning);">🔒 VIP</span></div>
-                <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 My Club</div>
+                <div id="nav-stats" class="nav-item" onclick="switchTab('stats-tab', this)">📊 Stats</div>
+                <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 Profile</div>
             </div>
             <div class="sidebar-footer">
                 <button id="music-toggle-btn-sidebar" onclick="toggleMenuMusic()" style="background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 700; width: 80%; margin: 0 auto; display: block;">🔇 Music Off</button>
@@ -408,6 +409,7 @@
                 <div class="artist-list" id="artist-grid"></div>
             </div>
 
+            <!-- MULTIPLAYER TAB -->
             <div id="multiplayer-tab" class="tab-content">
                 <div class="section-title">Online Multiplayer</div>
                 <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
@@ -444,22 +446,48 @@
                 </div>
             </div>
 
-            <div id="profile-tab" class="tab-content">
-                <div class="section-title">My Club</div>
-                
-                <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
-                    <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
-                </div>
-
-                <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 Redeem Gumroad License</h3>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="e.g. A7X9-B2M4-99PL-Q1ZS">
-                        <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Verify</button>
+            <!-- NEUER STATS & HISTORY TAB -->
+            <div id="stats-tab" class="tab-content">
+                <div class="section-title">Career Stats</div>
+                <div class="cards-grid">
+                    <div class="ea-card" style="align-items: center; justify-content: center; min-height: 100px;">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 800;">Matches Played</div>
+                        <div id="stat-played" style="font-size: 32px; font-weight: 900; color: white;">0</div>
+                    </div>
+                    <div class="ea-card" style="align-items: center; justify-content: center; min-height: 100px; border-color: rgba(16,185,129,0.5);">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 800;">Wins</div>
+                        <div id="stat-wins" style="font-size: 32px; font-weight: 900; color: var(--success);">0</div>
+                    </div>
+                    <div class="ea-card" style="align-items: center; justify-content: center; min-height: 100px; border-color: rgba(239,68,68,0.5);">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 800;">Losses</div>
+                        <div id="stat-losses" style="font-size: 32px; font-weight: 900; color: var(--danger);">0</div>
                     </div>
                 </div>
 
+                <div class="section-title" style="margin-top: 40px;">Detailed Accuracy</div>
+                <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div class="ea-card" style="min-height: 100px;">
+                        <div style="font-size: 12px; color: var(--success); font-weight: 800;">Songs Correct</div>
+                        <div id="stat-songs-correct" style="font-size: 28px; font-weight: 900; color: white;">0</div>
+                    </div>
+                    <div class="ea-card" style="min-height: 100px;">
+                        <div style="font-size: 12px; color: var(--danger); font-weight: 800;">Songs Wrong / Skipped</div>
+                        <div id="stat-songs-wrong" style="font-size: 28px; font-weight: 900; color: white;">0</div>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left; margin-bottom: 30px;">
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">Mode Mastery (Points per Mode)</h3>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px;">Earn points to unlock Bronze 🥉, Silver 🥈, Gold 🥇, and Champion 🏆 ranks in each mode!</p>
+                    <div id="mode-stats-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <!-- AUFGERÄUMTER PROFILE TAB -->
+            <div id="profile-tab" class="tab-content">
+                <div class="section-title">My Profile</div>
+                
+                <!-- Profil Header (Ganz Oben) -->
                 <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
                     <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
                     <div style="text-align: left; flex: 1;">
@@ -480,39 +508,21 @@
                     </div>
                 </div>
 
-                <div class="cards-grid">
-                    <div class="ea-card" style="align-items: center; justify-content: center; min-height: 100px;">
-                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 800;">Matches Played</div>
-                        <div id="stat-played" style="font-size: 32px; font-weight: 900; color: white;">0</div>
-                    </div>
-                    <div class="ea-card" style="align-items: center; justify-content: center; min-height: 100px; border-color: rgba(16,185,129,0.5);">
-                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 800;">Wins</div>
-                        <div id="stat-wins" style="font-size: 32px; font-weight: 900; color: var(--success);">0</div>
-                    </div>
-                    <div class="ea-card" style="align-items: center; justify-content: center; min-height: 100px; border-color: rgba(239,68,68,0.5);">
-                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 800;">Losses</div>
-                        <div id="stat-losses" style="font-size: 32px; font-weight: 900; color: var(--danger);">0</div>
+                <!-- VIP Kästen direkt darunter, unübersehbar -->
+                <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
+                    <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
+                </div>
+
+                <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 Redeem Gumroad License</h3>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="e.g. A7X9-B2M4-99PL-Q1ZS">
+                        <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Verify</button>
                     </div>
                 </div>
 
-                <div class="section-title" style="margin-top: 40px;">Detailed Stats & Trophies</div>
-                <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                    <div class="ea-card" style="min-height: 100px;">
-                        <div style="font-size: 12px; color: var(--success); font-weight: 800;">Songs Correct</div>
-                        <div id="stat-songs-correct" style="font-size: 28px; font-weight: 900; color: white;">0</div>
-                    </div>
-                    <div class="ea-card" style="min-height: 100px;">
-                        <div style="font-size: 12px; color: var(--danger); font-weight: 800;">Songs Wrong / Skipped</div>
-                        <div id="stat-songs-wrong" style="font-size: 28px; font-weight: 900; color: white;">0</div>
-                    </div>
-                </div>
-                
-                <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left; margin-bottom: 30px;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">Mode Mastery (Points per Mode)</h3>
-                    <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px;">Earn points to unlock Bronze 🥉, Silver 🥈, Gold 🥇, and Champion 🏆 ranks in each mode!</p>
-                    <div id="mode-stats-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;"></div>
-                </div>
-
+                <!-- Anpassungs-Optionen prominent in der Mitte -->
                 <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Change Artist (Avatar & Background)</h3>
                     <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 20px;" onchange="updateFavArtist()"></select>
@@ -857,11 +867,17 @@
 
         function switchTab(tabId, el) {
             if (tabId === 'multiplayer-tab' && !isPremium) { document.getElementById('premium-overlay').style.display = 'flex'; return; }
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); 
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
-            if(tabId === 'profile-tab') { 
-                document.getElementById('stat-played').innerText = myStats.played; document.getElementById('stat-wins').innerText = myStats.wins; document.getElementById('stat-losses').innerText = myStats.losses; 
-                updateLevelDisplay(); updateDetailedStats();
+            
+            if(tabId === 'profile-tab' || tabId === 'stats-tab') { 
+                document.getElementById('stat-played').innerText = myStats.played; 
+                document.getElementById('stat-wins').innerText = myStats.wins; 
+                document.getElementById('stat-losses').innerText = myStats.losses; 
+                updateLevelDisplay(); 
+                updateDetailedStats();
             }
             if (window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active'); }
         }
@@ -895,7 +911,6 @@
         let searchTimeout = null;
         function handleAnthemInput() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { searchMenuSong(); }, 500); }
 
-        // NEU: DEEZER HYMNEN-SUCHE FÜR UNZENSIERTE SONGS
         function searchMenuSong() {
             let q = document.getElementById('edit-song-search-input').value.trim(); let sel = document.getElementById('edit-menu-song-select');
             if(!q) { sel.style.display = 'none'; return; }
@@ -909,10 +924,7 @@
                     let valid = res.data.filter(t => t.preview);
                     if (valid.length > 0) {
                         sel.innerHTML = '<option value="">🎵 Choose your Anthem...</option>';
-                        
-                        // Zwingt Explicit Tracks nach ganz oben in der Liste
                         valid.sort((a,b) => (b.explicit_lyrics ? 1 : 0) - (a.explicit_lyrics ? 1 : 0));
-                        
                         let seen = new Set();
                         valid.forEach(t => {
                             let key = t.title.toLowerCase() + t.artist.name.toLowerCase();
@@ -1368,7 +1380,6 @@
 
         function readSettings() { let hcToggle = document.getElementById('hardcore-toggle'); let artToggle = document.getElementById('artist-toggle'); if (hcToggle) isHardcoreMode = hcToggle.checked; if (artToggle) showArtistName = artToggle.checked; }
 
-        // NEU: SPIEL-SUCHE ÜBER DEEZER FÜR UNZENSIERTE SONGS
         function fetchArtistSongs(artist) {
             return new Promise((resolve) => {
                 const cb = 'deezer_game_' + Date.now() + Math.floor(Math.random() * 10000);
@@ -1401,7 +1412,6 @@
                                 uniqueTracks.set(cleanName, t); 
                             } else {
                                 let existing = uniqueTracks.get(cleanName);
-                                // Zwingt den Ersatz durch die explizite Version
                                 if (t.explicit_lyrics === true && existing.explicit_lyrics !== true) {
                                     uniqueTracks.set(cleanName, t);
                                 }
