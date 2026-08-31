@@ -517,6 +517,7 @@
         </main>
     </div>
 
+    <!-- GAME SCREEN -->
     <div id="game-screen">
         <div class="game-inner">
             <div class="stats-bar" id="game-stats-bar"></div>
@@ -536,6 +537,7 @@
         </div>
     </div>
 
+    <!-- HIGHER LOWER MODE SCREEN -->
     <div id="hl-screen">
         <div class="hl-inner">
             <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 20px;">
@@ -579,6 +581,7 @@
         </div>
     </div>
 
+    <!-- LOADING & FEEDBACK OVERLAYS -->
     <div id="loading-overlay" class="overlay" style="display: none;">
         <div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Please Wait...</h2></div>
     </div>
@@ -782,9 +785,6 @@
             accounts[playerName].bgUrl = myBgUrl;
             
             localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
-            
-            // DAS FEHLTE: Sofort in die Cloud pushen bei JEDER lokalen Änderung!
-            syncToCloud();
         }
 
         function updateLevelDisplay() {
@@ -1001,23 +1001,23 @@
                                     }
                                 }
                             }
+                            syncToCloud(); 
                         }
                     }
                 } catch(e) {
                     console.log("Cloud offline, spiele lokal weiter.", e);
                 }
 
-                localStorage.setItem('rapquiz_active_user', playerName);
-                
-                // DAS HIER IST NEU: Zentrales Speichern und Syncen NACH dem Login!
-                saveAccountData();
+                if (!accounts[playerName]) accounts[playerName] = {};
+                if (!accounts[playerName].stats) accounts[playerName].stats = myStats;
 
-                // DOM erzwingen sofort upzudaten
-                document.getElementById('stat-played').innerText = myStats.played || 0;
-                document.getElementById('stat-wins').innerText = myStats.wins || 0;
-                document.getElementById('stat-losses').innerText = myStats.losses || 0;
-                updateLevelDisplay(); 
-                updateDetailedStats();
+                accounts[playerName].isPremium = isPremium;
+                accounts[playerName].stats.totalScore = myStats.totalScore;
+                
+                localStorage.setItem('rapquiz_active_user', playerName);
+                localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
+
+                updateLevelDisplay(); updateDetailedStats();
                 
                 document.getElementById('app-layout').style.display = 'flex';
                 document.getElementById('profile-overlay').style.display = 'none'; 
@@ -1078,12 +1078,12 @@
                 
                 let data = await res.json();
                 if (data.success && !data.purchase.refunded) {
-                    isPremium = true; saveAccountData(); 
+                    isPremium = true; saveAccountData(); syncToCloud();
                     alert("🎉 SUCCESS! License verified. You are now a Lifetime VIP!"); location.reload();
                 } else { alert("❌ Invalid or refunded code."); }
             } catch (e) {
                 if(code.length >= 10 && code.includes('-')) {
-                    isPremium = true; saveAccountData(); 
+                    isPremium = true; saveAccountData(); syncToCloud();
                     alert("🎉 SUCCESS! (Fallback Verification) You are now a Lifetime VIP!"); location.reload();
                 } else {
                     alert("❌ API Error. Check your connection or format.");
@@ -1155,7 +1155,7 @@
                     isWinnerScreenShown = true; let winner = sorted[0]; let amIFirst = (winner.id === socket.id);
                     myStats.played++; if(amIFirst) myStats.wins++; else myStats.losses++;
                     myStats.totalScore = (myStats.totalScore || 0) + score; if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0; myStats.modeScores[currentMode] += score;
-                    saveAccountData(); updateLevelDisplay(); updateDetailedStats(); showWinnerScreen(winner);
+                    saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats(); showWinnerScreen(winner);
                 }
             } else { renderMpLeaderboard(); }
         }
@@ -1281,12 +1281,30 @@
                 
                 let data = await res.json();
                 if (data && data.results) {
-                    const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok'];
+                    // STRENGER FILTER GEGEN REMIXE, INSTRUMENTALS UND NO-NAMES
+                    const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout'];
+                    
                     let valid = data.results.filter(t => {
                         if (!t.previewUrl) return false;
-                        let trackNameLower = t.trackName.toLowerCase(); let artistNameLower = t.artistName.toLowerCase(); let searchArtistLower = artist.toLowerCase();
-                        if (!artistNameLower.includes(searchArtistLower)) return false;
-                        for (let term of forbidden) { if (trackNameLower.includes(term) || artistNameLower.includes(term)) { return false; } }
+                        
+                        let trackNameLower = t.trackName.toLowerCase(); 
+                        let artistNameLower = t.artistName.toLowerCase(); 
+                        let searchArtistLower = artist.toLowerCase();
+
+                        // 1. Zwingend: Der gesuchte Künstler MUSS der Lead-Artist sein (verhindert Sampler & Producer die nur "feat." im Namen haben)
+                        let isLeadArtist = artistNameLower === searchArtistLower || 
+                                           artistNameLower.startsWith(searchArtistLower + " ") || 
+                                           artistNameLower.startsWith(searchArtistLower + ",");
+                                           
+                        if (!isLeadArtist) return false;
+
+                        // 2. Trash-Wörter blockieren
+                        for (let term of forbidden) { 
+                            if (trackNameLower.includes(term) || artistNameLower.includes(term)) { 
+                                return false; 
+                            } 
+                        }
+                        
                         return true;
                     });
                     
@@ -1518,7 +1536,7 @@
                     myStats.totalScore = (myStats.totalScore || 0) + score;
                     if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0;
                     myStats.modeScores[currentMode] += score;
-                    saveAccountData(); updateLevelDisplay(); updateDetailedStats();
+                    saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats();
 
                     b.innerText = "Exit 🏠"; b.style.display = 'block'; 
                     b.onclick = () => { backToMenu(); };
