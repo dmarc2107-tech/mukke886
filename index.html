@@ -534,7 +534,6 @@
     <!-- GAME SCREEN -->
     <div id="game-screen">
         <div class="game-inner">
-            <!-- INGAME LAUTSTÄRKE REGLER -->
             <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 15px;">
                 <span style="font-size:14px;">🔉</span>
                 <input type="range" id="volume-slider-game" min="0" max="1" step="0.05" oninput="changeVolume(this.value)" style="width: 100px;">
@@ -563,7 +562,6 @@
             <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 20px;">
                 <button onclick="backToMenu()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--surface-border); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer;">🏠 Quit</button>
                 
-                <!-- INGAME LAUTSTÄRKE REGLER -->
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size:14px;">🔉</span>
                     <input type="range" id="volume-slider-hl" min="0" max="1" step="0.05" oninput="changeVolume(this.value)" style="width: 100px;">
@@ -1357,15 +1355,16 @@
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 4000); 
-                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=200`, { signal: controller.signal });
+                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=200&explicit=Yes`, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 
                 let data = await res.json();
                 if (data && data.results) {
-                    const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout'];
+                    const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout', 'radio edit', 'clean'];
                     
                     let valid = data.results.filter(t => {
                         if (!t.previewUrl) return false;
+                        
                         let trackNameLower = t.trackName.toLowerCase(); 
                         let artistNameLower = t.artistName.toLowerCase(); 
                         let searchArtistLower = artist.toLowerCase();
@@ -1376,11 +1375,24 @@
                         if (!isLeadArtist) return false;
 
                         for (let term of forbidden) { if (trackNameLower.includes(term) || artistNameLower.includes(term)) { return false; } }
+                        
                         return true;
                     });
                     
                     let uniqueTracks = new Map();
-                    for (let t of valid) { let cleanName = t.trackName.toLowerCase().split('(')[0].split('[')[0].trim(); if (!uniqueTracks.has(cleanName)) { uniqueTracks.set(cleanName, t); } }
+                    for (let t of valid) { 
+                        let cleanName = t.trackName.toLowerCase().split('(')[0].split('[')[0].trim(); 
+                        
+                        // Speichere den Song, ODER überschreibe ihn, falls die neue Version "explicit" ist und die alte nicht.
+                        if (!uniqueTracks.has(cleanName)) { 
+                            uniqueTracks.set(cleanName, t); 
+                        } else {
+                            let existing = uniqueTracks.get(cleanName);
+                            if (t.trackExplicitness === 'explicit' && existing.trackExplicitness !== 'explicit') {
+                                uniqueTracks.set(cleanName, t);
+                            }
+                        }
+                    }
                     
                     let uniqueArray = Array.from(uniqueTracks.values()); uniqueArray.sort(() => 0.5 - Math.random());
                     let mapped = uniqueArray.slice(0, 40).map(t => ({
