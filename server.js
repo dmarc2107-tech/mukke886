@@ -5,7 +5,7 @@ const { Server } = require('socket.io');
 const app = express();
 
 app.get('/', (req, res) => {
-    res.send('✅ Der Rap Quiz Multiplayer-Server (2v2 Ready) läuft einwandfrei!');
+    res.send('✅ Der Rap Quiz Multiplayer-Server (inkl. Random Matchmaking) läuft einwandfrei!');
 });
 
 const server = http.createServer(app);
@@ -17,11 +17,58 @@ const io = new Server(server, {
 });
 
 const rooms = {};
+let matchmakingQueue = []; // 🔥 DIE NEUE WARTESCHLANGE
 
 io.on('connection', (socket) => {
     console.log('Ein Spieler ist online:', socket.id);
 
-    // 1. Host erstellt eine Lobby
+    // ==========================================
+    // 1. NEU: MATCHMAKING (RANDOM DUOS)
+    // ==========================================
+    socket.on('findRandomMatch', (userData) => {
+        // Sicherstellen, dass der Spieler nicht doppelt in der Schlange steht
+        matchmakingQueue = matchmakingQueue.filter(p => p.socket.id !== socket.id);
+
+        if (matchmakingQueue.length > 0) {
+            // 🎯 Ein Gegner wartet bereits! Match zusammenstellen.
+            const opponent = matchmakingQueue.shift(); // Holt den ersten aus der Schlange
+            
+            // Unsichtbaren Code generieren
+            const roomCode = 'RANDOM_' + Math.floor(Math.random() * 1000000);
+
+            // Beide in den neuen Raum setzen
+            socket.join(roomCode);
+            opponent.socket.join(roomCode);
+
+            rooms[roomCode] = {
+                host: opponent.socket.id, // Der, der schon wartete, wird "Host" (generiert die Songs)
+                players: [
+                    { id: opponent.socket.id, name: opponent.userData.name, avatar: opponent.userData.avatar, score: 0, lives: 3 },
+                    { id: socket.id, name: userData.name, avatar: userData.avatar, score: 0, lives: 3 }
+                ]
+            };
+
+            // Beiden Spielern das Signal geben, dass ein Match gefunden wurde!
+            io.to(roomCode).emit('randomMatchFound', { 
+                roomCode: roomCode, 
+                hostId: opponent.socket.id, 
+                players: rooms[roomCode].players 
+            });
+
+        } else {
+            // ⏳ Keiner da? Ab in die Warteschlange.
+            matchmakingQueue.push({ socket: socket, userData: userData });
+        }
+    });
+
+    // Falls der Spieler die Suche abbricht
+    socket.on('cancelMatchmaking', () => {
+        matchmakingQueue = matchmakingQueue.filter(p => p.socket.id !== socket.id);
+    });
+
+    // ==========================================
+    // 2. ALTES SYSTEM (PRIVATE LOBBYS)
+    // ==========================================
     socket.on('createRoom', (userData) => {
         const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
         socket.join(roomCode);
@@ -35,7 +82,6 @@ io.on('connection', (socket) => {
         io.to(roomCode).emit('lobbyUpdate', rooms[roomCode].players);
     });
 
-    // 2. Spieler tritt bei (Max 4 Spieler)
     socket.on('joinRoom', (data) => {
         const room = rooms[data.code];
         if (room && room.players.length < 4) {
@@ -49,17 +95,14 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 3. Host startet das Spiel
     socket.on('startGame', (code) => {
         io.to(code).emit('gameReady', code);
     });
 
-    // 4. Host sendet die Songs
     socket.on('syncRoundData', (data) => {
         socket.to(data.roomCode).emit('receiveRoundData', data);
     });
 
-    // 5. Punkte-Updates & Leben synchronisieren
     socket.on('syncStats', (data) => {
         const room = rooms[data.roomCode];
         if(room) {
@@ -69,7 +112,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 6. Tag-Team Synchronisation (Partner zieht nach)
     socket.on('teammateAnswered', (data) => {
         socket.to(data.roomCode).emit('teammateAnswered', data);
     });
@@ -78,12 +120,14 @@ io.on('connection', (socket) => {
         socket.to(data.roomCode).emit('triggerNextRound', data);
     });
 
-    // 7. Team stirbt oder Spielende
     socket.on('gameOver', (data) => {
         socket.to(data.roomCode).emit('opponentGameOver', data);
     });
 
     socket.on('disconnect', () => {
+        // WICHTIG: Aus der Warteschlange löschen, falls er beim Suchen die Seite schließt
+        matchmakingQueue = matchmakingQueue.filter(p => p.socket.id !== socket.id);
+
         for (let code in rooms) {
             let r = rooms[code];
             let idx = r.players.findIndex(p => p.id === socket.id);
