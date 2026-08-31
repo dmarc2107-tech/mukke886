@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapmusik Guessr</title>
     
-    <!-- Supabase SDK for Cloud Database -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Socket.io for 2-4 Player Multiplayer -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     
     <style>
@@ -33,7 +31,6 @@
             margin: 0; padding: 0; user-select: none; overflow: hidden; width: 100vw; height: 100vh;
         }
 
-        /* --- DYNAMIC ARTIST BACKGROUND --- */
         #app-background {
             position: fixed; top: -2%; left: -2%; width: 104%; height: 104%;
             background-size: cover; background-position: center 20%;
@@ -59,7 +56,6 @@
 
         h1 { color: var(--text); font-size: 40px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 25px rgba(0,0,0,0.8); }
 
-        /* --- LAYOUT & MOBILE UI --- */
         #app-layout { display: none; width: 100%; height: 100%; flex-direction: row; }
 
         #mobile-menu-btn {
@@ -305,7 +301,6 @@
         </div>
     </div>
 
-    <!-- MAIN APP LAYOUT -->
     <div id="app-layout">
         <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Menu</button>
         <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
@@ -407,7 +402,6 @@
                 <div class="artist-list" id="artist-grid"></div>
             </div>
 
-            <!-- MULTIPLAYER TAB -->
             <div id="multiplayer-tab" class="tab-content">
                 <div class="section-title">Online Multiplayer (2-4 Players)</div>
                 <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
@@ -437,7 +431,6 @@
                 </div>
             </div>
 
-            <!-- PROFILE TAB -->
             <div id="profile-tab" class="tab-content">
                 <div class="section-title">My Club</div>
                 <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
@@ -524,7 +517,6 @@
         </main>
     </div>
 
-    <!-- GAME SCREEN -->
     <div id="game-screen">
         <div class="game-inner">
             <div class="stats-bar" id="game-stats-bar"></div>
@@ -544,7 +536,6 @@
         </div>
     </div>
 
-    <!-- HIGHER LOWER MODE SCREEN -->
     <div id="hl-screen">
         <div class="hl-inner">
             <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 20px;">
@@ -588,7 +579,6 @@
         </div>
     </div>
 
-    <!-- LOADING & FEEDBACK OVERLAYS -->
     <div id="loading-overlay" class="overlay" style="display: none;">
         <div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Please Wait...</h2></div>
     </div>
@@ -766,7 +756,12 @@
                         id: session.session.user.id,
                         username: playerName,
                         is_premium: isPremium,
-                        total_score: myStats.totalScore || 0
+                        avatar_url: myAvatar,
+                        quote: myQuote,
+                        fav_artist: myFavArtist,
+                        song_url: mySongUrl,
+                        song_title: mySongTitle,
+                        stats: myStats
                     });
                 }
             } catch(e) { console.log("Cloud sync skipped", e); }
@@ -787,6 +782,9 @@
             accounts[playerName].bgUrl = myBgUrl;
             
             localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
+            
+            // DAS FEHLTE: Sofort in die Cloud pushen bei JEDER lokalen Änderung!
+            syncToCloud();
         }
 
         function updateLevelDisplay() {
@@ -991,25 +989,35 @@
                             let { data: profile } = await dbClient.from('profiles').select('*').eq('id', authData.user.id).single();
                             if (profile) {
                                 isPremium = profile.is_premium || isPremium;
-                                myStats.totalScore = Math.max(myStats.totalScore || 0, profile.total_score || 0);
+                                if (profile.avatar_url) myAvatar = profile.avatar_url;
+                                if (profile.quote) myQuote = profile.quote;
+                                if (profile.fav_artist) myFavArtist = profile.fav_artist;
+                                if (profile.song_url) mySongUrl = profile.song_url;
+                                if (profile.song_title) mySongTitle = profile.song_title;
+                                
+                                if (profile.stats && Object.keys(profile.stats).length > 0) {
+                                    if ((profile.stats.totalScore || 0) >= (myStats.totalScore || 0)) {
+                                        myStats = profile.stats;
+                                    }
+                                }
                             }
-                            syncToCloud(); 
                         }
                     }
                 } catch(e) {
                     console.log("Cloud offline, spiele lokal weiter.", e);
                 }
 
-                if (!accounts[playerName]) accounts[playerName] = {};
-                if (!accounts[playerName].stats) accounts[playerName].stats = myStats;
-
-                accounts[playerName].isPremium = isPremium;
-                accounts[playerName].stats.totalScore = myStats.totalScore;
-                
                 localStorage.setItem('rapquiz_active_user', playerName);
-                localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
+                
+                // DAS HIER IST NEU: Zentrales Speichern und Syncen NACH dem Login!
+                saveAccountData();
 
-                updateLevelDisplay(); updateDetailedStats();
+                // DOM erzwingen sofort upzudaten
+                document.getElementById('stat-played').innerText = myStats.played || 0;
+                document.getElementById('stat-wins').innerText = myStats.wins || 0;
+                document.getElementById('stat-losses').innerText = myStats.losses || 0;
+                updateLevelDisplay(); 
+                updateDetailedStats();
                 
                 document.getElementById('app-layout').style.display = 'flex';
                 document.getElementById('profile-overlay').style.display = 'none'; 
@@ -1070,12 +1078,12 @@
                 
                 let data = await res.json();
                 if (data.success && !data.purchase.refunded) {
-                    isPremium = true; saveAccountData(); syncToCloud();
+                    isPremium = true; saveAccountData(); 
                     alert("🎉 SUCCESS! License verified. You are now a Lifetime VIP!"); location.reload();
                 } else { alert("❌ Invalid or refunded code."); }
             } catch (e) {
                 if(code.length >= 10 && code.includes('-')) {
-                    isPremium = true; saveAccountData(); syncToCloud();
+                    isPremium = true; saveAccountData(); 
                     alert("🎉 SUCCESS! (Fallback Verification) You are now a Lifetime VIP!"); location.reload();
                 } else {
                     alert("❌ API Error. Check your connection or format.");
@@ -1147,7 +1155,7 @@
                     isWinnerScreenShown = true; let winner = sorted[0]; let amIFirst = (winner.id === socket.id);
                     myStats.played++; if(amIFirst) myStats.wins++; else myStats.losses++;
                     myStats.totalScore = (myStats.totalScore || 0) + score; if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0; myStats.modeScores[currentMode] += score;
-                    saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats(); showWinnerScreen(winner);
+                    saveAccountData(); updateLevelDisplay(); updateDetailedStats(); showWinnerScreen(winner);
                 }
             } else { renderMpLeaderboard(); }
         }
@@ -1510,7 +1518,7 @@
                     myStats.totalScore = (myStats.totalScore || 0) + score;
                     if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0;
                     myStats.modeScores[currentMode] += score;
-                    saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats();
+                    saveAccountData(); updateLevelDisplay(); updateDetailedStats();
 
                     b.innerText = "Exit 🏠"; b.style.display = 'block'; 
                     b.onclick = () => { backToMenu(); };
