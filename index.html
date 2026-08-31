@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapmusik Guessr</title>
     
-    <!-- Supabase SDK for Cloud Database -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Socket.io for 2-4 Player Multiplayer -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     
     <style>
@@ -33,7 +31,6 @@
             margin: 0; padding: 0; user-select: none; overflow: hidden; width: 100vw; height: 100vh;
         }
 
-        /* --- DYNAMIC ARTIST BACKGROUND --- */
         #app-background {
             position: fixed; top: -2%; left: -2%; width: 104%; height: 104%;
             background-size: cover; background-position: center 20%;
@@ -59,7 +56,6 @@
 
         h1 { color: var(--text); font-size: 40px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 25px rgba(0,0,0,0.8); }
 
-        /* --- LAYOUT & MOBILE UI --- */
         #app-layout { display: none; width: 100%; height: 100%; flex-direction: row; }
 
         #mobile-menu-btn {
@@ -100,42 +96,18 @@
 
         .section-title { font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; border-bottom: 2px solid var(--surface-border); padding-bottom: 10px; color: white; text-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between; }
 
-        /* --- BANNER DESIGN --- */
-        .banner-container { 
-            display: flex; align-items: center; gap: 25px; padding: 25px; 
-            border-radius: 16px; border: 2px solid var(--primary); 
-            background: linear-gradient(135deg, rgba(20,20,25,0.9), rgba(139,92,246,0.15)); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 40px; 
-        }
-        .banner-img { 
-            width: 140px; height: 140px; border-radius: 16px; object-fit: cover; 
-            border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 8px 20px rgba(0,0,0,0.5); flex-shrink: 0; 
-        }
+        .banner-container { display: flex; align-items: center; gap: 25px; padding: 25px; border-radius: 16px; border: 2px solid var(--primary); background: linear-gradient(135deg, rgba(20,20,25,0.9), rgba(139,92,246,0.15)); box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 40px; }
+        .banner-img { width: 140px; height: 140px; border-radius: 16px; object-fit: cover; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 8px 20px rgba(0,0,0,0.5); flex-shrink: 0; }
         .banner-text-box { text-align: left; }
         .banner-subtitle { margin: 0 0 5px 0; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 2px; }
         .banner-title { margin: 0; color: white; text-transform: uppercase; font-size: 32px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 15px rgba(139,92,246,0.8); }
 
-        /* --- CARDS & UI --- */
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 40px; }
         
-        .ea-card {
-            background: var(--surface); 
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--surface-border);
-            border-top: 1px solid rgba(255,255,255,0.25);
-            border-radius: 16px; padding: 25px; cursor: pointer; transition: 0.3s; text-align: left;
-            display: flex; flex-direction: column; justify-content: flex-end; min-height: 140px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            position: relative; overflow: hidden;
-        }
+        .ea-card { background: var(--surface); backdrop-filter: blur(12px); border: 1px solid var(--surface-border); border-top: 1px solid rgba(255,255,255,0.25); border-radius: 16px; padding: 25px; cursor: pointer; transition: 0.3s; text-align: left; display: flex; flex-direction: column; justify-content: flex-end; min-height: 140px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); position: relative; overflow: hidden; }
         .ea-card:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(139, 92, 246, 0.25); }
         
-        .locked-card::after {
-            content: "🔒 PREMIUM"; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; font-weight: 900; color: var(--warning); text-transform: uppercase; letter-spacing: 2px;
-            opacity: 0.9; transition: 0.3s;
-        }
+        .locked-card::after { content: "🔒 PREMIUM"; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: var(--warning); text-transform: uppercase; letter-spacing: 2px; opacity: 0.9; transition: 0.3s; }
         .locked-card:hover::after { opacity: 1; font-size: 22px; }
 
         .ea-card-icon { font-size: 32px; margin-bottom: 10px; }
@@ -164,10 +136,8 @@
         input:checked + .slider.green { background-color: var(--success); border-color: var(--success); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* --- UI EINGABEFELDER --- */
         .ea-input { width: 100%; padding: 16px; background: rgba(0,0,0,0.7); border: 1px solid var(--surface-border); color: white; border-radius: 12px; font-size: 15px; font-weight: 600; box-sizing: border-box; margin-bottom: 15px; transition: 0.3s; backdrop-filter: blur(5px); }
         .ea-input:focus { outline: none; border-color: var(--primary); background: rgba(0,0,0,0.9); box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); }
-        
         select.ea-input { text-align: left; cursor: pointer; color: white !important; background-color: #141419 !important; }
         select.ea-input option { background-color: #141419 !important; color: #ffffff !important; padding: 12px; font-weight: 600; font-family: 'Poppins', sans-serif;}
 
@@ -176,7 +146,6 @@
         .btn-gold { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); border: 1px solid #fcd34d; }
         .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245, 158, 11, 0.6); }
 
-        /* --- GAME SCREEN --- */
         #game-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(20px); z-index: 100; flex-direction: column; justify-content: center; align-items: center; }
         .game-inner { width: 100%; max-width: 600px; padding: 20px; box-sizing: border-box; position: relative; }
 
@@ -202,7 +171,6 @@
         .suggestion-item { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 14px; font-weight: 700; color: white;}
         .suggestion-item:hover { background: var(--primary); }
 
-        /* --- HIGHER LOWER MODE SCREEN --- */
         #hl-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(25px); z-index: 100; flex-direction: column; justify-content: center; align-items: center; }
         .hl-inner { width: 100%; max-width: 900px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
         .hl-cards-container { display: flex; width: 100%; gap: 20px; justify-content: center; align-items: stretch; margin-top: 20px; }
@@ -216,7 +184,6 @@
         .btn-hl.lower { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 5px 15px rgba(239,68,68,0.4); }
         .btn-hl:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
-        /* --- OVERLAYS & MODALS --- */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: rgba(15, 15, 18, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 480px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -234,12 +201,10 @@
 
         .loader { border: 4px solid rgba(255,255,255,0.05); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
         
-        /* PAYWALL MODAL */
         .paywall-modal { border: 2px solid #fbbf24; background: linear-gradient(180deg, #18181b 0%, #09090b 100%); box-shadow: 0 0 50px rgba(245, 158, 11, 0.2); }
         .paywall-feature { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; text-align: left; }
         .paywall-check { background: #fbbf24; color: black; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; flex-shrink: 0; }
 
-        /* SLIDER CSS */
         input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(139,92,246,0.8); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 2px; }
@@ -262,7 +227,6 @@
 </head>
 <body>
 
-    <!-- Globale Fehlererkennung gegen den Blackscreen -->
     <script>
         window.onerror = function(message, source, lineno, colno, error) {
             let errDiv = document.getElementById('fatal-error-box');
@@ -283,7 +247,6 @@
 
     <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
 
-    <!-- PROFIL SETUP OVERLAY -->
     <div id="profile-overlay" class="overlay" style="display: flex;">
         <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
             <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
@@ -303,7 +266,6 @@
         </div>
     </div>
 
-    <!-- PREMIUM PAYWALL OVERLAY -->
     <div id="premium-overlay" class="overlay" style="display: none;">
         <div class="modal paywall-modal">
             <div style="font-size: 50px; margin-bottom: 10px;">👑</div>
