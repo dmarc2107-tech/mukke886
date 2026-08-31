@@ -336,13 +336,19 @@
         <main id="main-content">
             <div id="play-tab" class="tab-content active">
                 <div class="settings-bar">
-                    <div class="settings-group">
-                        <span class="settings-label">Hardcore (Typing)</span>
-                        <label class="switch"><input type="checkbox" id="hardcore-toggle" onchange="readSettings()"><span class="slider red"></span></label>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <div class="settings-group">
+                            <span class="settings-label">Hardcore (Typing)</span>
+                            <label class="switch"><input type="checkbox" id="hardcore-toggle" onchange="readSettings()"><span class="slider red"></span></label>
+                        </div>
+                        <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">(Tippe den Songnamen selbst ein)</span>
                     </div>
-                    <div class="settings-group">
-                        <span class="settings-label">Show Artist</span>
-                        <label class="switch"><input type="checkbox" id="artist-toggle" onchange="readSettings()" checked><span class="slider green"></span></label>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <div class="settings-group">
+                            <span class="settings-label">Show Artist</span>
+                            <label class="switch"><input type="checkbox" id="artist-toggle" onchange="readSettings()" checked><span class="slider green"></span></label>
+                        </div>
+                        <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">(Blendet den Künstlernamen im Spiel ein/aus)</span>
                     </div>
                 </div>
 
@@ -441,7 +447,6 @@
             <div id="profile-tab" class="tab-content">
                 <div class="section-title">My Club</div>
                 
-                <!-- VIP KÄSTEN GANZ NACH OBEN VERSCHOBEN -->
                 <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
                     <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
@@ -529,6 +534,12 @@
     <!-- GAME SCREEN -->
     <div id="game-screen">
         <div class="game-inner">
+            <!-- INGAME LAUTSTÄRKE REGLER -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 15px;">
+                <span style="font-size:14px;">🔉</span>
+                <input type="range" id="volume-slider-game" min="0" max="1" step="0.05" oninput="changeVolume(this.value)" style="width: 100px;">
+            </div>
+
             <div class="stats-bar" id="game-stats-bar"></div>
             <div class="visualizer"><div class="visualizer-inner">🎵</div></div>
             <div class="game-controls">
@@ -551,6 +562,13 @@
         <div class="hl-inner">
             <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 20px;">
                 <button onclick="backToMenu()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--surface-border); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer;">🏠 Quit</button>
+                
+                <!-- INGAME LAUTSTÄRKE REGLER -->
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size:14px;">🔉</span>
+                    <input type="range" id="volume-slider-hl" min="0" max="1" step="0.05" oninput="changeVolume(this.value)" style="width: 100px;">
+                </div>
+
                 <div style="text-align: right;">
                     <span style="font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Current Streak</span>
                     <h2 id="hl-streak-num" style="margin: 0; font-size: 28px; color: var(--warning);">0</h2>
@@ -725,6 +743,10 @@
             try { localStorage.setItem('rapquiz_volume', globalVolume); } catch(e){}
             menuAudio.volume = globalVolume * 0.4; audio.volume = globalVolume; sfxAudio.volume = globalVolume;
             if(ytReady && ytPlayer && ytPlayer.setVolume) { let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100; ytPlayer.setVolume(globalVolume * vol); }
+            
+            ['volume-slider', 'volume-slider-game', 'volume-slider-hl'].forEach(id => {
+                let el = document.getElementById(id); if (el && el.value !== val) el.value = val;
+            });
         }
 
         function playMenuMusic(url) {
@@ -922,7 +944,9 @@
         }
 
         window.onload = () => {
-            let volSlider = document.getElementById('volume-slider'); if(volSlider) volSlider.value = globalVolume;
+            ['volume-slider', 'volume-slider-game', 'volume-slider-hl'].forEach(id => {
+                let el = document.getElementById(id); if(el) el.value = globalVolume;
+            });
             
             let editSel = document.getElementById('edit-fav-artist-select');
             if (editSel) { editSel.innerHTML = ''; allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; editSel.appendChild(opt); }); }
@@ -1178,17 +1202,14 @@
         
         socket.on('triggerNextRound', () => { if (!isMpHost && lives > 0 && !gameIsOver) nextRound(); });
         
-        // INSTANT-WIN ÜBERPRÜFUNG WENN GEGNER STIRBT
         socket.on('opponentGameOver', (data) => { 
             matchEndData[data.id] = data; 
             playersAnsweredThisRound.add(data.id); 
             playersReadyForNextRound.add(data.id); 
 
-            // Prüfen: Bin ich der einzige, der noch lebt?
             let aliveOpponents = lobbyPlayers.filter(p => p.id !== socket.id && !matchEndData[p.id]);
             
             if (aliveOpponents.length === 0 && !gameIsOver) {
-                // Ich bin der Letzte! Sofort den Win triggern.
                 triggerGameOver(true);
             } else {
                 checkAllAnswered(); 
@@ -1201,7 +1222,6 @@
             if (!isMultiplayer || !gameIsOver || isWinnerScreenShown) return;
             let allDone = lobbyPlayers.length > 0 && lobbyPlayers.every(p => matchEndData[p.id]);
             if (allDone) {
-                // Bei Instant-Death System zählen die restlichen Leben am meisten, dann der Score
                 let sorted = Object.values(matchEndData).sort((a,b) => {
                     if (b.lives !== a.lives) return b.lives - a.lives;
                     return b.score - a.score;
