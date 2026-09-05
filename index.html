@@ -658,7 +658,6 @@
         }
 
         const fallenLegends = ['2Pac', 'The Notorious B.I.G.', 'XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Mac Miller', 'Pop Smoke', 'King Von', 'Takeoff', 'Nipsey Hussle', 'Eazy-E', 'MF DOOM'];
-        // BONES HIER ENTFERNT:
         const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean'];
         const artists2010s = ['Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa', 'Offset', 'Quavo', 'Yeat', 'Central Cee'];
         const legends = ['2Pac', 'The Notorious B.I.G.', 'Eminem', '50 Cent', 'Snoop Dogg', 'Dr. Dre', 'Ice Cube', 'Nas'];
@@ -733,7 +732,7 @@
         let myQuote = localStorage.getItem('rapquiz_quote') || (myFavArtist ? getArtistQuote(myFavArtist) : '"Ready to dominate the game."');
         
         let isPremium = localStorage.getItem('rapquiz_premium') === 'true';
-        const IS_TEMPORARILY_FREE = true; // Setze dies auf false, um die Paywall wieder zu aktivieren
+        const IS_TEMPORARILY_FREE = true; 
 
         let mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || ''; 
         let mySongTitle = localStorage.getItem('rapquiz_menu_song_title') || '';
@@ -744,10 +743,22 @@
         
         let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
         let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
+        let nextAudio = new Audio(); nextAudio.crossOrigin = "anonymous"; // FÜR PRELOADING
         
         let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = '';
         let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
         let isSearching = false; 
+
+        // Tasten-Shortcut für "Next Round"
+        document.addEventListener('keydown', (e) => {
+            let feedbackOpen = document.getElementById('feedback-overlay').style.display === 'flex';
+            if (feedbackOpen && e.key === 'Enter') {
+                let btn = document.getElementById('feedback-btn');
+                if (btn && window.getComputedStyle(btn).display !== 'none') {
+                    btn.click(); 
+                }
+            }
+        });
 
         let ytPlayer; let ytReady = false; let ytContext = 'menu';
 
@@ -901,6 +912,14 @@
                 updateDetailedStats();
             }
             if (window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active'); }
+
+            // Google AdSense Refresh
+            try {
+                let uninitializedAds = document.querySelectorAll('.adsbygoogle:empty');
+                if (uninitializedAds.length > 0 && !(isPremium || IS_TEMPORARILY_FREE)) {
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                }
+            } catch (e) {}
         }
 
         function checkPremiumAndStart(mode) {
@@ -912,15 +931,19 @@
         }
 
         function loadArtistVisuals(artistName) {
-            if (!artistName) return; const cb = 'deezer_vis_' + Date.now();
+            if (!artistName) return; 
+            const cb = 'deezer_vis_' + Date.now() + Math.floor(Math.random() * 100000);
             window[cb] = function(res) {
+                let scriptEl = document.getElementById(cb); if(scriptEl) scriptEl.remove(); delete window[cb]; // RAM freigeben
                 if (res && res.data && res.data.length > 0) {
                     myBgUrl = res.data[0].picture_xl; myAvatar = res.data[0].picture_medium;
                     saveAccountData();
                     document.getElementById('app-background').src = myBgUrl; updateAllAvatars();
                 }
             };
-            const s = document.createElement('script'); s.src = `https://api.deezer.com/search/artist?q="${encodeURIComponent(artistName)}"&limit=1&output=jsonp&callback=${cb}`; document.head.appendChild(s);
+            const s = document.createElement('script'); s.id = cb;
+            s.src = `https://api.deezer.com/search/artist?q="${encodeURIComponent(artistName)}"&limit=1&output=jsonp&callback=${cb}`; 
+            document.head.appendChild(s);
         }
 
         function updateAllAvatars() { 
@@ -938,8 +961,9 @@
             let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
             if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = `<option value="yt:${vid}" data-title="YouTube Track">▶️ YouTube Video (${vid})</option>`; sel.style.display = 'block'; return; }
             
-            const cb = 'deezer_anthem_' + Date.now();
+            const cb = 'deezer_anthem_' + Date.now() + Math.floor(Math.random() * 100000);
             window[cb] = function(res) {
+                let scriptEl = document.getElementById(cb); if(scriptEl) scriptEl.remove(); delete window[cb]; // RAM freigeben
                 sel.innerHTML = '';
                 if (res && res.data && res.data.length > 0) {
                     let valid = res.data.filter(t => t.preview);
@@ -963,7 +987,7 @@
                 }
                 sel.innerHTML = '<option value="">❌ No songs found</option>'; sel.style.display = 'block';
             };
-            const s = document.createElement('script'); 
+            const s = document.createElement('script'); s.id = cb;
             s.src = `https://api.deezer.com/search?q="${encodeURIComponent(q)}"&limit=20&output=jsonp&callback=${cb}`; 
             document.head.appendChild(s);
         }
@@ -1470,8 +1494,9 @@
 
         function fetchArtistSongs(artist) {
             return new Promise((resolve) => {
-                const cb = 'deezer_game_' + Date.now() + Math.floor(Math.random() * 10000);
+                const cb = 'deezer_game_' + Date.now() + Math.floor(Math.random() * 100000);
                 window[cb] = function(res) {
+                    let scriptEl = document.getElementById(cb); if(scriptEl) scriptEl.remove(); delete window[cb]; // RAM freigeben
                     if (res && res.data && res.data.length > 0) {
                         const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout', 'radio edit', 'clean'];
                         const blacklistedArtists = ['bones', 'bones uk'];
@@ -1483,7 +1508,6 @@
                             let artistNameLower = t.artist.name.toLowerCase(); 
                             let searchArtistLower = artist.toLowerCase();
 
-                            // HARTER BLACKLIST-FILTER:
                             if (blacklistedArtists.includes(artistNameLower) || artistNameLower.includes('bones uk') || artistNameLower === 'bones') return false;
                             if (blacklistedArtists.includes(searchArtistLower)) return false;
 
@@ -1519,7 +1543,7 @@
                     }
                     resolve();
                 };
-                const s = document.createElement('script'); 
+                const s = document.createElement('script'); s.id = cb; 
                 s.src = `https://api.deezer.com/search?q=artist:"${encodeURIComponent(artist)}"&limit=100&output=jsonp&callback=${cb}`; 
                 document.head.appendChild(s);
                 setTimeout(() => resolve(), 5000); 
@@ -1620,6 +1644,12 @@
             let unp = songsPool.filter(s => !playedSongIds.has(s.id));
             if (unp.length === 0) { triggerGameOver(true); return; }
             currentSong = unp[0]; playedSongIds.add(currentSong.id);
+            
+            // NEU: Audio Preloading für den nächsten Song
+            if (unp.length > 1) {
+                nextAudio.src = unp[1].preview;
+                nextAudio.load();
+            }
 
             if (currentMode === 'progressive') {
                 let times = [0.1, 1, 2, 5, 10]; maxPlayTime = times[Math.min(playedSongIds.size - 1, 4)];
@@ -1647,7 +1677,13 @@
         function replaySnippet() { playAudioSnippet(true); }
         function addTime() { if (maxPlayTime < 10) { maxPlayTime += 3; if(maxPlayTime>10)maxPlayTime=10; document.getElementById('add-time-btn').innerText = `+3s (${maxPlayTime.toFixed(1)}s)`; playAudioSnippet(true); } }
         function skipSong() { processAnswer(false, true); }
-        function checkTextInput() { let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); let c = currentSong.title.toLowerCase().split('(')[0].split(' feat')[0].replace(/[^a-z0-9]/g, ''); processAnswer(v === c || (v.length >= 4 && c.includes(v))); }
+        
+        // BUGFIX: Besseres Splitten von "feat." und "ft."
+        function checkTextInput() { 
+            let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); 
+            let c = currentSong.title.toLowerCase().split(/\s+fe?a?t\.?\s+/i)[0].split('(')[0].split('[')[0].replace(/[^a-z0-9]/g, ''); 
+            processAnswer(v === c || (v.length >= 4 && c.includes(v))); 
+        }
 
         function checkAllAnswered() {
             if (!isMultiplayer) return;
