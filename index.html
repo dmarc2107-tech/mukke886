@@ -658,7 +658,8 @@
         }
 
         const fallenLegends = ['2Pac', 'The Notorious B.I.G.', 'XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Mac Miller', 'Pop Smoke', 'King Von', 'Takeoff', 'Nipsey Hussle', 'Eazy-E', 'MF DOOM'];
-        const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean', 'Bones'];
+        // BONES HIER ENTFERNT:
+        const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean'];
         const artists2010s = ['Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa', 'Offset', 'Quavo', 'Yeat', 'Central Cee'];
         const legends = ['2Pac', 'The Notorious B.I.G.', 'Eminem', '50 Cent', 'Snoop Dogg', 'Dr. Dre', 'Ice Cube', 'Nas'];
         const megaStars = ['Drake', 'Kendrick Lamar', 'J. Cole', 'Kanye West', 'Post Malone'];
@@ -688,7 +689,6 @@
             for (let i = 0; i < combined.length; i++) hash = combined.charCodeAt(i) + ((hash << 5) - hash);
             let baseMin = 50; let baseMax = 200;
             
-            // NEU: Grenzen erhöht, damit mehr Tracks beim harten "Mega Hits"-Filter > 500.000.000 generieren.
             if (megaStars.includes(artistName)) { baseMin = 500; baseMax = 2500; }
             else if (legends.includes(artistName)) { baseMin = 200; baseMax = 800; }
             else if (fallenLegends.includes(artistName)) { baseMin = 250; baseMax = 1000; }
@@ -1474,6 +1474,7 @@
                 window[cb] = function(res) {
                     if (res && res.data && res.data.length > 0) {
                         const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout', 'radio edit', 'clean'];
+                        const blacklistedArtists = ['bones', 'bones uk'];
                         
                         let valid = res.data.filter(t => {
                             if (!t.preview) return false;
@@ -1481,6 +1482,10 @@
                             let trackNameLower = t.title.toLowerCase(); 
                             let artistNameLower = t.artist.name.toLowerCase(); 
                             let searchArtistLower = artist.toLowerCase();
+
+                            // HARTER BLACKLIST-FILTER:
+                            if (blacklistedArtists.includes(artistNameLower) || artistNameLower.includes('bones uk') || artistNameLower === 'bones') return false;
+                            if (blacklistedArtists.includes(searchArtistLower)) return false;
 
                             let isLeadArtist = artistNameLower === searchArtistLower || 
                                                artistNameLower.startsWith(searchArtistLower + " ") || 
