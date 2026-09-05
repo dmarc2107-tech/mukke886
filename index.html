@@ -456,7 +456,8 @@
                     <div id="lobby-players-container" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px;">
                         <span style="color: var(--text-muted); font-size: 14px;">No one here yet...</span>
                     </div>
-                    <p id="mp-status" style="color: var(--warning); font-weight: 800; margin: 0; font-size: 16px; text-transform: uppercase;">Not connected</p>
+                    <p id="mp-status" style="color: var(--warning); font-weight: 800; margin: 0 0 15px 0; font-size: 16px; text-transform: uppercase;">Not connected</p>
+                    <button id="leave-lobby-btn" class="btn-action" style="background: var(--danger); width: auto; padding: 10px 20px; display: none; margin: 0 auto;" onclick="cancelMultiplayer()">Lobby verlassen 🚪</button>
                 </div>
             </div>
 
@@ -686,10 +687,13 @@
             let hash = 0; let combined = trackTitle + artistName;
             for (let i = 0; i < combined.length; i++) hash = combined.charCodeAt(i) + ((hash << 5) - hash);
             let baseMin = 50; let baseMax = 200;
-            if (megaStars.includes(artistName)) { baseMin = 300; baseMax = 900; }
-            else if (legends.includes(artistName)) { baseMin = 200; baseMax = 600; }
-            else if (fallenLegends.includes(artistName)) { baseMin = 250; baseMax = 800; }
-            else if (artists2010s.includes(artistName)) { baseMin = 150; baseMax = 500; }
+            
+            // NEU: Grenzen erhöht, damit mehr Tracks beim harten "Mega Hits"-Filter > 500.000.000 generieren.
+            if (megaStars.includes(artistName)) { baseMin = 500; baseMax = 2500; }
+            else if (legends.includes(artistName)) { baseMin = 200; baseMax = 800; }
+            else if (fallenLegends.includes(artistName)) { baseMin = 250; baseMax = 1000; }
+            else if (artists2010s.includes(artistName)) { baseMin = 150; baseMax = 800; }
+            
             let randomTier = Math.abs(hash % (baseMax - baseMin)) + baseMin;
             return randomTier * 1000000 + Math.abs(hash % 999999);
         }
@@ -1183,7 +1187,11 @@
         }
 
         function cancelRandomMatchmaking() {
-            isSearching = false; isMultiplayer = false; socket.emit('cancelMatchmaking'); resetRandomMatchUI(); document.getElementById('mp-status').innerText = 'Not connected';
+            try { if(currentRoom) socket.emit('leaveRoom', currentRoom); } catch(e){}
+            isSearching = false; isMultiplayer = false; isMpHost = false; currentRoom = ''; lobbyPlayers = [];
+            socket.emit('cancelMatchmaking'); resetRandomMatchUI(); 
+            document.getElementById('mp-status').innerText = 'Not connected';
+            document.getElementById('mp-status').style.color = 'var(--warning)';
         }
 
         function resetRandomMatchUI() {
@@ -1194,6 +1202,10 @@
         socket.on('randomMatchFound', (data) => {
             isSearching = false; currentRoom = data.roomCode; isMpHost = (socket.id === data.hostId); lobbyPlayers = data.players;
             resetRandomMatchUI(); renderLobbyPlayers();
+            
+            let leaveBtn = document.getElementById('leave-lobby-btn');
+            if(leaveBtn) leaveBtn.style.display = 'block';
+            
             let statusEl = document.getElementById('mp-status'); statusEl.innerHTML = `🟢 Match found! Starting in 3 seconds...`; statusEl.style.color = 'var(--success)';
             if(isMpHost) { setTimeout(() => { if(currentRoom === data.roomCode) { startMixedMode('all'); } }, 3000); }
         });
@@ -1201,10 +1213,39 @@
         function createRoom() { isMultiplayer = true; isMpHost = true; socket.emit('createRoom', { name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Connecting...'; }
         function joinRoom() { let c = document.getElementById('join-code-input').value; if(c) { isMultiplayer = true; isMpHost = false; socket.emit('joinRoom', { code: c, name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Joining...'; } }
         
-        function cancelMultiplayer() { isMultiplayer = false; isMpHost = false; currentRoom = ''; if(isSearching) cancelRandomMatchmaking(); switchTab('play-tab', document.getElementById('nav-play')); }
+        function cancelMultiplayer() { 
+            try { if(currentRoom) socket.emit('leaveRoom', currentRoom); } catch(e){} 
+            isMultiplayer = false; 
+            isMpHost = false; 
+            currentRoom = ''; 
+            lobbyPlayers = [];
+            if(isSearching) cancelRandomMatchmaking(); 
+            
+            document.getElementById('mp-status').innerText = 'Not connected';
+            document.getElementById('mp-status').style.color = 'var(--warning)';
+            document.getElementById('room-code-display').innerText = '----';
+            document.getElementById('lobby-players-container').innerHTML = '<span style="color: var(--text-muted); font-size: 14px;">No one here yet...</span>';
+            
+            let leaveBtn = document.getElementById('leave-lobby-btn');
+            if(leaveBtn) leaveBtn.style.display = 'none';
+            
+            switchTab('play-tab', document.getElementById('nav-play')); 
+        }
 
-        socket.on('roomCreated', (code) => { currentRoom = code; document.getElementById('room-code-display').innerText = code; });
-        socket.on('joinedSuccess', (data) => { currentRoom = data.roomCode; document.getElementById('room-code-display').innerText = data.roomCode; });
+        socket.on('roomCreated', (code) => { 
+            currentRoom = code; 
+            document.getElementById('room-code-display').innerText = code; 
+            let leaveBtn = document.getElementById('leave-lobby-btn');
+            if(leaveBtn) leaveBtn.style.display = 'block';
+        });
+
+        socket.on('joinedSuccess', (data) => { 
+            currentRoom = data.roomCode; 
+            document.getElementById('room-code-display').innerText = data.roomCode; 
+            let leaveBtn = document.getElementById('leave-lobby-btn');
+            if(leaveBtn) leaveBtn.style.display = 'block';
+        });
+
         socket.on('errorMsg', (msg) => { alert(msg); cancelMultiplayer(); });
         
         socket.on('lobbyUpdate', (players) => { 
@@ -1288,7 +1329,35 @@
         }
 
         function backToMenu() { 
-            try { audio.pause(); sfxAudio.pause(); clearTimeout(precisionTimer); gameIsOver = true; cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('hl-screen').style.display = 'none'; document.getElementById('feedback-overlay').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; resumeMenuMusic(); } 
+            try { 
+                audio.pause(); sfxAudio.pause(); clearTimeout(precisionTimer); 
+                
+                document.getElementById('game-screen').style.display = 'none'; 
+                document.getElementById('hl-screen').style.display = 'none'; 
+                document.getElementById('feedback-overlay').style.display = 'none'; 
+                document.getElementById('app-layout').style.display = 'flex'; 
+                resumeMenuMusic(); 
+
+                if (isMultiplayer) {
+                    resetGameStats(); 
+                    gameIsOver = true; 
+                    
+                    switchTab('multiplayer-tab', document.getElementById('nav-mp'));
+                    
+                    let statusEl = document.getElementById('mp-status');
+                    if (isMpHost) {
+                        statusEl.innerHTML = `🟢 Ready! You can now choose a mode<br>in the left menu to start.`; 
+                        statusEl.style.color = 'var(--success)';
+                    } else {
+                        statusEl.innerText = `🟢 In lobby (${Math.max(1, lobbyPlayers.length)}/4). Waiting for host to start...`; 
+                        statusEl.style.color = 'var(--success)';
+                    }
+                } else {
+                    gameIsOver = true;
+                    cancelMultiplayer(); 
+                    switchTab('play-tab', document.getElementById('nav-play'));
+                }
+            } 
             catch(e) { location.reload(); }
         }
 
@@ -1482,12 +1551,17 @@
             if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === 'soundcloud') sel = [...soundcloudArtists].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === '2010s') sel = [...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
-            if (mode === 'megahits') sel = [...megaStars, ...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
+            if (mode === 'megahits') sel = [...megaStars, ...artists2010s].sort(()=>0.5-Math.random()).slice(0,10);
             if (mode === 'fallen') sel = [...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
             
             try {
                 await Promise.all(sel.map(a => fetchArtistSongs(a)));
-                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker. Please try again!"); return; }
+                
+                if (mode === 'megahits') {
+                    songsPool = songsPool.filter(s => getTrackEstimatedStreams(s.title, s.artist.name) >= 500000000);
+                }
+                
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or not enough 500M+ songs found. Please try again!"); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
             } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
         }
