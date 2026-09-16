@@ -350,7 +350,6 @@
         
         let audio = new Audio(); audio.crossOrigin = "anonymous"; audio.volume = globalVolume;
         let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous"; sfxAudio.volume = globalVolume;
-        let nextAudio = new Audio(); nextAudio.crossOrigin = "anonymous"; 
         
         let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = '';
         let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
@@ -1244,6 +1243,19 @@
             box.style.display = 'block';
         }
 
+        let currentPlayId = 0; 
+        let maxPlayTime = 1; 
+        let precisionTimer = null; 
+        let playedSongIds = new Set();
+        let currentSong = null;
+
+        function playAudioSnippet(isReplay = false) { 
+            clearTimeout(precisionTimer); let playId = ++currentPlayId;
+            if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
+            audio.volume = globalVolume; audio.loop = false; let p = audio.play();
+            if (p !== undefined) { p.then(() => { if (playId !== currentPlayId) return; if (maxPlayTime < 30) { precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000); } }).catch(e=>{}); }
+        }
+
         function nextRound() {
             document.getElementById('feedback-overlay').style.display = 'none'; audio.pause(); clearTimeout(precisionTimer); document.getElementById('suggestions-box').style.display = 'none';
             
@@ -1253,11 +1265,6 @@
             let unp = songsPool.filter(s => !playedSongIds.has(s.id));
             if (unp.length === 0) { triggerGameOver(true); return; }
             currentSong = unp[0]; playedSongIds.add(currentSong.id);
-            
-            if (unp.length > 1) {
-                nextAudio.src = unp[1].preview;
-                nextAudio.load();
-            }
 
             if (currentMode === 'progressive') {
                 let times = [0.1, 1, 2, 5, 10]; maxPlayTime = times[Math.min(playedSongIds.size - 1, 4)];
