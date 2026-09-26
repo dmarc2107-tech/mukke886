@@ -255,7 +255,9 @@
             errDiv.innerHTML = `🚨 Unexpected crash prevented!<br><br>Error: ${message} (Line ${lineno})<br><br><button onclick='localStorage.clear();location.reload();' style='padding:10px 20px;background:white;color:black;border:none;border-radius:8px;font-weight:bold;cursor:pointer;'>Click here for a hard reset</button>`;
         };
 
-        // SICHERHEITS-HELPER GEGEN FATALE TRACKING-CRASHES
+        // GLOABALER COUNTER FÜR SICHERE JSONP-CALLBACKS
+        let globalDeezerCbCounter = 0;
+
         function safeGetItem(key, fallback = '') {
             try { return localStorage.getItem(key) || fallback; }
             catch(e) { return fallback; }
@@ -345,7 +347,8 @@
         let myFavArtist = safeGetItem('rapquiz_fav_artist'); 
         let myAvatar = safeGetItem('rapquiz_avatar', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'); 
         let myBgUrl = safeGetItem('rapquiz_bg_url');
-        let myQuote = safeGetItem('rapquiz_quote', (myFavArtist ? getArtistQuote(myFavArtist) : '"Ready to dominate the game."'));
+        let myQuote = safeGetItem('rapquiz_quote');
+        if(!myQuote) { myQuote = myFavArtist ? getArtistQuote(myFavArtist) : '"Ready to dominate the game."'; }
         
         let isPremium = safeGetItem('rapquiz_premium') === 'true';
         const IS_TEMPORARILY_FREE = true; 
@@ -365,8 +368,8 @@
         let isSearching = false; 
 
         document.addEventListener('keydown', (e) => {
-            let feedbackOpen = document.getElementById('feedback-overlay').style.display === 'flex';
-            if (feedbackOpen && e.key === 'Enter') {
+            let overlay = document.getElementById('feedback-overlay');
+            if (overlay && window.getComputedStyle(overlay).display === 'flex' && e.key === 'Enter') {
                 let btn = document.getElementById('feedback-btn');
                 if (btn && window.getComputedStyle(btn).display !== 'none') {
                     btn.click(); 
@@ -440,7 +443,7 @@
             if (!dbClient || !playerName) return;
             try {
                 const { data: session } = await dbClient.auth.getSession();
-                if (session?.session?.user) {
+                if (session && session.session && session.session.user) {
                     await dbClient.from('profiles').upsert({
                         id: session.session.user.id,
                         username: playerName,
@@ -548,8 +551,6 @@
                 else { startMixedMode(mode); }
             } else { document.getElementById('premium-overlay').style.display = 'flex'; }
         }
-
-        let globalDeezerCbCounter = 0; // Globale ID Zuweisung für sichere API Calls
 
         function loadArtistVisuals(artistName) {
             if (!artistName) return; 
@@ -681,7 +682,12 @@
                 let accounts = safeReadJSON('rapquiz_accounts', {});
                 
                 let name = isAutoLogin ? autoName : document.getElementById('username-input').value.trim(); 
-                let pw = isAutoLogin ? (accounts[name]?.password || "") : document.getElementById('password-input').value.trim(); 
+                
+                let localAccountExists = !!accounts[name];
+                let pw = document.getElementById('password-input').value.trim(); 
+                if (isAutoLogin && localAccountExists && accounts[name].password) {
+                    pw = accounts[name].password;
+                }
 
                 if (!name || !pw) { 
                     if(err) { err.innerText = "Please enter a username and password!"; err.style.display = 'block'; } 
@@ -690,8 +696,6 @@
                 }
 
                 if (!isAutoLogin && btn) { btn.innerText = "Loading... ⏳"; btn.disabled = true; }
-
-                let localAccountExists = !!accounts[name];
 
                 if (localAccountExists && !isAutoLogin) {
                     if (accounts[name].password !== pw) { 
@@ -728,10 +732,10 @@
                         
                         if (authError) {
                             let { data: regData, error: regError } = await dbClient.auth.signUp({ email: fakeEmail, password: pw });
-                            if (regData?.user) authData = regData;
+                            if (regData && regData.user) authData = regData;
                         }
 
-                        if (authData?.user) {
+                        if (authData && authData.user) {
                             let { data: profile } = await dbClient.from('profiles').select('*').eq('id', authData.user.id).single();
                             if (profile) {
                                 isPremium = profile.is_premium || isPremium;
@@ -785,8 +789,10 @@
                     let badge = document.getElementById('premium-badge'); if(badge && isPremium) badge.style.display = 'inline-block'; 
                     let buy = document.getElementById('vip-buy-section'); if(buy) buy.style.display = 'none'; 
                     let redeem = document.getElementById('vip-redeem-section'); if(redeem) redeem.style.display = 'none';
-                    document.querySelectorAll('.locked-card').forEach(el => el.classList.remove('locked-card'));
-                    document.querySelectorAll('.lock-icon').forEach(icon => icon.style.display = 'none');
+                    let lockedCards = document.querySelectorAll('.locked-card');
+                    for (let i = 0; i < lockedCards.length; i++) { lockedCards[i].classList.remove('locked-card'); }
+                    let lockIcons = document.querySelectorAll('.lock-icon');
+                    for (let i = 0; i < lockIcons.length; i++) { lockIcons[i].style.display = 'none'; }
                 }
 
                 updateAllAvatars(); playMenuMusic(mySongUrl);
@@ -1065,21 +1071,27 @@
 
         let hlPool = []; let hlCurrentA = null; let hlCurrentB = null; let hlStreak = 0; let hlRecentArtists = [];
 
-        // BESSERES ERROR HANDLING OHNE ALERT-BLOCKADE
         function showNetworkError() {
             document.getElementById('loading-overlay').style.display = 'flex';
             document.getElementById('loading-overlay').innerHTML = `
                 <div class="loading-container">
                     <h2 style="color: var(--danger); margin-top: 0;">❌ Error</h2>
-                    <p style="font-size:13px; color:var(--text-muted);">Verbindung zur Musik-Datenbank blockiert oder fehlgeschlagen (ggf. Adblocker).</p>
-                    <p style="font-size:13px; color:white; font-weight:bold;">Bitte versuche es noch einmal oder deaktiviere Tracking-Blocker.</p>
+                    <p style="font-size:13px; color:var(--text-muted);">Es konnten nicht genug Songs geladen werden (evtl. blockiert durch Adblocker oder Timeout).</p>
                     <button onclick="location.reload()" class="btn-action" style="margin-top:15px; width:100%;">Neu laden 🔄</button>
                 </div>
             `;
+            // Fallback für Browser, die das div nicht zeichnen
+            setTimeout(() => {
+                if (document.getElementById('loading-overlay').style.display === 'flex' && document.querySelectorAll('.loading-container').length === 0) {
+                    alert("Netzwerkfehler! Konnte Songs nicht laden.");
+                    location.reload();
+                }
+            }, 1000);
         }
 
         async function startHigherLowerMode() {
-            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Stream Data...";
+            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading Stream Data... ⏳</h2></div>`;
+            document.getElementById('loading-overlay').style.display = 'flex'; 
             resetGameStats(); currentMode = 'higherlower'; hlStreak = 0; hlRecentArtists = [];
             
             let sel = [...megaStars, ...artists2010s, ...soundcloudArtists, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0, 15);
@@ -1136,8 +1148,7 @@
 
         function fetchArtistSongs(artist) {
             return new Promise((resolve) => {
-                let globalCbCounter = 0;
-                const cb = 'deezer_game_' + Date.now() + '_' + (++globalCbCounter) + Math.floor(Math.random() * 100000);
+                const cb = 'deezer_game_' + Date.now() + '_' + (++globalDeezerCbCounter);
                 let isResolved = false;
                 
                 let fallbackTimer = setTimeout(() => {
@@ -1240,9 +1251,8 @@
             readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
             
-            // Standard Loader wiederherstellen falls er überschrieben wurde
-            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading... ⏳</h2></div>`;
-            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading database...";
+            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading database... ⏳</h2></div>`;
+            document.getElementById('loading-overlay').style.display = 'flex'; 
             
             resetGameStats(); currentMode = mode; let sel = [];
             
@@ -1271,8 +1281,8 @@
         async function startProgressiveMode() {
             readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading... ⏳</h2></div>`;
-            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
+            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading Progressive Mode... ⏳</h2></div>`;
+            document.getElementById('loading-overlay').style.display = 'flex'; 
             resetGameStats(); currentMode = 'progressive';
             
             try {
@@ -1285,8 +1295,8 @@
         async function startArtistMode(artist) {
             readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading... ⏳</h2></div>`;
-            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
+            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading catalog for ${artist}... ⏳</h2></div>`;
+            document.getElementById('loading-overlay').style.display = 'flex'; 
             resetGameStats(); currentMode = 'artist';
             
             try {
