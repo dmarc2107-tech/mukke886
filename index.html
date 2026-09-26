@@ -549,14 +549,16 @@
             } else { document.getElementById('premium-overlay').style.display = 'flex'; }
         }
 
+        let globalDeezerCbCounter = 0; // Globale ID Zuweisung für sichere API Calls
+
         function loadArtistVisuals(artistName) {
             if (!artistName) return; 
-            const cb = 'deezer_vis_' + Date.now() + Math.floor(Math.random() * 100000);
+            const cb = 'deezer_vis_' + Date.now() + '_' + (++globalDeezerCbCounter);
             let isResolved = false;
             
             let fallbackTimer = setTimeout(() => {
                 if(!isResolved) { isResolved = true; cleanupJsonpScript(cb); }
-            }, 4000);
+            }, 8000);
 
             window[cb] = function(res) {
                 if(isResolved) return; isResolved = true; clearTimeout(fallbackTimer);
@@ -588,12 +590,12 @@
             let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
             if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = `<option value="yt:${vid}" data-title="YouTube Track">▶️ YouTube Video (${vid})</option>`; sel.style.display = 'block'; return; }
             
-            const cb = 'deezer_anthem_' + Date.now() + Math.floor(Math.random() * 100000);
+            const cb = 'deezer_anthem_' + Date.now() + '_' + (++globalDeezerCbCounter);
             let isResolved = false;
 
             let fallbackTimer = setTimeout(() => {
                 if(!isResolved) { isResolved = true; cleanupJsonpScript(cb); sel.innerHTML = '<option value="">❌ Network error</option>'; sel.style.display = 'block'; }
-            }, 4000);
+            }, 8000);
 
             window[cb] = function(res) {
                 if(isResolved) return; isResolved = true; clearTimeout(fallbackTimer);
@@ -1063,6 +1065,19 @@
 
         let hlPool = []; let hlCurrentA = null; let hlCurrentB = null; let hlStreak = 0; let hlRecentArtists = [];
 
+        // BESSERES ERROR HANDLING OHNE ALERT-BLOCKADE
+        function showNetworkError() {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-overlay').innerHTML = `
+                <div class="loading-container">
+                    <h2 style="color: var(--danger); margin-top: 0;">❌ Error</h2>
+                    <p style="font-size:13px; color:var(--text-muted);">Verbindung zur Musik-Datenbank blockiert oder fehlgeschlagen (ggf. Adblocker).</p>
+                    <p style="font-size:13px; color:white; font-weight:bold;">Bitte versuche es noch einmal oder deaktiviere Tracking-Blocker.</p>
+                    <button onclick="location.reload()" class="btn-action" style="margin-top:15px; width:100%;">Neu laden 🔄</button>
+                </div>
+            `;
+        }
+
         async function startHigherLowerMode() {
             document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Stream Data...";
             resetGameStats(); currentMode = 'higherlower'; hlStreak = 0; hlRecentArtists = [];
@@ -1131,7 +1146,7 @@
                         cleanupJsonpScript(cb); 
                         resolve(); 
                     }
-                }, 4000);
+                }, 8000);
 
                 window[cb] = function(res) {
                     if(isResolved) return; 
@@ -1221,19 +1236,6 @@
             nextRound();
         }
 
-        // BESSERES ERROR HANDLING OHNE ALERT-BLOCKADE
-        function showNetworkError() {
-            document.getElementById('loading-overlay').style.display = 'flex';
-            document.getElementById('loading-overlay').innerHTML = `
-                <div class="loading-container">
-                    <h2 style="color: var(--danger); margin-top: 0;">❌ Blocked</h2>
-                    <p style="font-size:13px; color:var(--text-muted);">Dein Browser oder Adblocker (z.B. uBlock, Brave Shields) blockiert die Musik-API.</p>
-                    <p style="font-size:13px; color:white; font-weight:bold;">Bitte deaktiviere den Schutz für diese Seite.</p>
-                    <button onclick="location.reload()" class="btn-action" style="margin-top:15px; width:100%;">Neu laden 🔄</button>
-                </div>
-            `;
-        }
-
         async function startMixedMode(mode) {
             readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
@@ -1306,6 +1308,19 @@
                 div.onclick = () => { document.getElementById('guess-input').value = m.title; box.style.display = 'none'; checkTextInput(); }; box.appendChild(div);
             });
             box.style.display = 'block';
+        }
+
+        let currentPlayId = 0; 
+        let maxPlayTime = 1; 
+        let precisionTimer = null; 
+        let playedSongIds = new Set();
+        let currentSong = null;
+
+        function playAudioSnippet(isReplay = false) { 
+            clearTimeout(precisionTimer); let playId = ++currentPlayId;
+            if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
+            audio.volume = globalVolume; audio.loop = false; let p = audio.play();
+            if (p !== undefined) { p.then(() => { if (playId !== currentPlayId) return; if (maxPlayTime < 30) { precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000); } }).catch(e=>{}); }
         }
 
         function nextRound() {
