@@ -213,6 +213,8 @@
         .modal.warning { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.4); } 
         .modal.warning h2 { color: var(--warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
 
+        /* NEUER LOADER STYLE FÜR BESSERES ERROR HANDLING */
+        .loading-container { text-align: center; max-width: 450px; padding: 25px; background: rgba(15,15,18,0.95); border-radius: 20px; border: 1px solid var(--surface-border); box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
         .loader { border: 4px solid rgba(255,255,255,0.05); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
         
         .paywall-modal { border: 2px solid #fbbf24; background: linear-gradient(180deg, #18181b 0%, #09090b 100%); box-shadow: 0 0 50px rgba(245, 158, 11, 0.2); }
@@ -253,13 +255,19 @@
             errDiv.innerHTML = `🚨 Unexpected crash prevented!<br><br>Error: ${message} (Line ${lineno})<br><br><button onclick='localStorage.clear();location.reload();' style='padding:10px 20px;background:white;color:black;border:none;border-radius:8px;font-weight:bold;cursor:pointer;'>Click here for a hard reset</button>`;
         };
 
+        // SICHERHEITS-HELPER GEGEN FATALE TRACKING-CRASHES
+        function safeGetItem(key, fallback = '') {
+            try { return localStorage.getItem(key) || fallback; }
+            catch(e) { return fallback; }
+        }
+
         function safeReadJSON(key, fallback) {
             try {
                 let val = localStorage.getItem(key);
                 return val ? JSON.parse(val) : fallback;
             } catch(e) {
                 console.error("Storage repaired for: " + key);
-                localStorage.removeItem(key);
+                try { localStorage.removeItem(key); } catch(err){}
                 return fallback;
             }
         }
@@ -312,7 +320,8 @@
 
         const SERVER_URL = 'https://mukke886.onrender.com';
         let globalVolume = 0.5;
-        try { let storedVol = parseFloat(localStorage.getItem('rapquiz_volume')); if (!isNaN(storedVol)) globalVolume = storedVol; } catch(e) {}
+        let storedVol = safeGetItem('rapquiz_volume'); 
+        if (storedVol) { try { globalVolume = parseFloat(storedVol); } catch(e){} }
 
         const supabaseUrl = 'https://txxklmrxzcaqbdpjuksw.supabase.co'; 
         const supabaseKey = 'sb_publishable_B9G2pzd-BFpKli71S5fu0g_a6xBSMdj'; 
@@ -331,18 +340,18 @@
             }
         } catch (e) { }
 
-        let playerName = localStorage.getItem('rapquiz_username') || ''; 
-        let savedPw = localStorage.getItem('rapquiz_password') || '';
-        let myFavArtist = localStorage.getItem('rapquiz_fav_artist') || ''; 
-        let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; 
-        let myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
-        let myQuote = localStorage.getItem('rapquiz_quote') || (myFavArtist ? getArtistQuote(myFavArtist) : '"Ready to dominate the game."');
+        let playerName = safeGetItem('rapquiz_username'); 
+        let savedPw = safeGetItem('rapquiz_password');
+        let myFavArtist = safeGetItem('rapquiz_fav_artist'); 
+        let myAvatar = safeGetItem('rapquiz_avatar', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'); 
+        let myBgUrl = safeGetItem('rapquiz_bg_url');
+        let myQuote = safeGetItem('rapquiz_quote', (myFavArtist ? getArtistQuote(myFavArtist) : '"Ready to dominate the game."'));
         
-        let isPremium = localStorage.getItem('rapquiz_premium') === 'true';
+        let isPremium = safeGetItem('rapquiz_premium') === 'true';
         const IS_TEMPORARILY_FREE = true; 
 
-        let mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || ''; 
-        let mySongTitle = localStorage.getItem('rapquiz_menu_song_title') || '';
+        let mySongUrl = safeGetItem('rapquiz_menu_song_url'); 
+        let mySongTitle = safeGetItem('rapquiz_menu_song_title');
 
         let myStats = safeReadJSON('rapquiz_stats', { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: {} });
         if (typeof myStats.totalScore === 'undefined') myStats.totalScore = 0; 
@@ -461,7 +470,7 @@
             accounts[playerName].quote = myQuote;
             accounts[playerName].bgUrl = myBgUrl;
             
-            localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
+            try { localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts)); } catch(e){}
         }
 
         function updateLevelDisplay() {
@@ -653,7 +662,7 @@
             if (editSel) { editSel.innerHTML = ''; allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; editSel.appendChild(opt); }); }
             
             let accounts = safeReadJSON('rapquiz_accounts', {});
-            let activeUser = localStorage.getItem('rapquiz_active_user');
+            let activeUser = safeGetItem('rapquiz_active_user');
 
             if (activeUser && accounts[activeUser]) { 
                 handleProfileLogin(true, activeUser); 
@@ -749,8 +758,10 @@
                 accounts[playerName].isPremium = isPremium;
                 accounts[playerName].stats.totalScore = myStats.totalScore;
                 
-                localStorage.setItem('rapquiz_active_user', playerName);
-                localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
+                try {
+                    localStorage.setItem('rapquiz_active_user', playerName);
+                    localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
+                } catch (e) {}
 
                 updateLevelDisplay(); updateDetailedStats();
                 
@@ -786,7 +797,7 @@
             }
         }
 
-        function resetProfile() { localStorage.removeItem('rapquiz_active_user'); location.reload(); }
+        function resetProfile() { try { localStorage.removeItem('rapquiz_active_user'); } catch(e){} location.reload(); }
 
         function updateFavArtist() { 
             myFavArtist = document.getElementById('edit-fav-artist-select').value; 
@@ -1059,7 +1070,7 @@
             let sel = [...megaStars, ...artists2010s, ...soundcloudArtists, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0, 15);
             await Promise.all(sel.map(a => fetchArtistSongs(a)));
             
-            if (songsPool.length < 5) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); return; }
+            if (songsPool.length < 5) { showNetworkError(); return; }
             
             hlPool = smartShuffle(songsPool).map(s => ({ ...s, streams: getTrackEstimatedStreams(s.title, s.artist.name) }));
             document.getElementById('loading-overlay').style.display = 'none'; pauseMenuMusic();
@@ -1110,7 +1121,8 @@
 
         function fetchArtistSongs(artist) {
             return new Promise((resolve) => {
-                const cb = 'deezer_game_' + Date.now() + Math.floor(Math.random() * 100000);
+                let globalCbCounter = 0;
+                const cb = 'deezer_game_' + Date.now() + '_' + (++globalCbCounter) + Math.floor(Math.random() * 100000);
                 let isResolved = false;
                 
                 let fallbackTimer = setTimeout(() => {
@@ -1209,10 +1221,27 @@
             nextRound();
         }
 
+        // BESSERES ERROR HANDLING OHNE ALERT-BLOCKADE
+        function showNetworkError() {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-overlay').innerHTML = `
+                <div class="loading-container">
+                    <h2 style="color: var(--danger); margin-top: 0;">❌ Blocked</h2>
+                    <p style="font-size:13px; color:var(--text-muted);">Dein Browser oder Adblocker (z.B. uBlock, Brave Shields) blockiert die Musik-API.</p>
+                    <p style="font-size:13px; color:white; font-weight:bold;">Bitte deaktiviere den Schutz für diese Seite.</p>
+                    <button onclick="location.reload()" class="btn-action" style="margin-top:15px; width:100%;">Neu laden 🔄</button>
+                </div>
+            `;
+        }
+
         async function startMixedMode(mode) {
             readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
+            
+            // Standard Loader wiederherstellen falls er überschrieben wurde
+            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading... ⏳</h2></div>`;
             document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading database...";
+            
             resetGameStats(); currentMode = mode; let sel = [];
             
             if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
@@ -1232,40 +1261,37 @@
                     }
                 }
                 
-                if (songsPool.length < 4) { 
-                    document.getElementById('loading-overlay').style.display = 'none'; 
-                    let errorMsg = mode === 'megahits' ? "Network error or not enough 500M+ songs found. Please try again!" : "Network error loading songs. Please try again!";
-                    alert(errorMsg); 
-                    return; 
-                }
+                if (songsPool.length < 4) { showNetworkError(); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
-            } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
+            } catch (err) { showNetworkError(); }
         }
 
         async function startProgressiveMode() {
             readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
+            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading... ⏳</h2></div>`;
             document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
             resetGameStats(); currentMode = 'progressive';
             
             try {
                 await Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchArtistSongs(a)));
-                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error loading songs. Please try again!"); return; }
+                if (songsPool.length < 4) { showNetworkError(); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
-            } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
+            } catch (err) { showNetworkError(); }
         }
 
         async function startArtistMode(artist) {
             readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
+            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading... ⏳</h2></div>`;
             document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
             resetGameStats(); currentMode = 'artist';
             
             try {
                 await fetchArtistSongs(artist);
-                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error loading songs. Please try again!"); return; }
+                if (songsPool.length < 4) { showNetworkError(); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
-            } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
+            } catch (err) { showNetworkError(); }
         }
 
         function updateSuggestions() {
