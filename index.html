@@ -3,21 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- SEO Meta Tags -->
-    <title>Rapmusik Guessr – Das interaktive Hip-Hop & Rap Musik-Quiz</title>
-    <meta name="description" content="Teste dein Wissen im Rapmusik Guessr! Errate Songs von 2Pac, Juice WRLD, Travis Scott, XXXTentacion und vielen mehr im Singleplayer oder Multiplayer mit Freunden.">
-    <meta name="keywords" content="Rap Musik Guessr, Rap Music Guessr, Rap Quiz, Musik Quiz, Hip Hop Guessr, Song Raten, Rap Song Quiz, Spotify Stream Battle">
-    <meta name="robots" content="index, follow">
-
-    <!-- Open Graph (Vorschau auf Discord, WhatsApp & Social Media) -->
-    <meta property="og:title" content="Rapmusik Guessr – Rap & Hip-Hop Song Quiz">
-    <meta property="og:description" content="Errate Rap-Tracks in Sekundenbruchteilen oder trete online gegen Freunde an!">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://rapmusikguessr.de">
-    
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1472289843576449" crossorigin="anonymous"></script>
+    <title>Rapmusik Guessr</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -213,8 +199,6 @@
         .modal.warning { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.4); } 
         .modal.warning h2 { color: var(--warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
 
-        /* NEUER LOADER STYLE FÜR BESSERES ERROR HANDLING */
-        .loading-container { text-align: center; max-width: 450px; padding: 25px; background: rgba(15,15,18,0.95); border-radius: 20px; border: 1px solid var(--surface-border); box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
         .loader { border: 4px solid rgba(255,255,255,0.05); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
         
         .paywall-modal { border: 2px solid #fbbf24; background: linear-gradient(180deg, #18181b 0%, #09090b 100%); box-shadow: 0 0 50px rgba(245, 158, 11, 0.2); }
@@ -252,30 +236,379 @@
                 errDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:#ef4444;color:white;padding:20px;border-radius:10px;z-index:999999;font-family:sans-serif;font-weight:bold;box-shadow:0 10px 30px rgba(0,0,0,0.8);';
                 document.body.appendChild(errDiv);
             }
-            errDiv.innerHTML = `🚨 Unexpected crash prevented!<br><br>Error: ${message} (Line ${lineno})<br><br><button onclick='localStorage.clear();location.reload();' style='padding:10px 20px;background:white;color:black;border:none;border-radius:8px;font-weight:bold;cursor:pointer;'>Click here for a hard reset</button>`;
+            errDiv.innerHTML = `🚨 Unerwarteter Absturz verhindert!<br><br>Fehler: ${message} (Zeile ${lineno})<br><br><button onclick='localStorage.clear();location.reload();' style='padding:10px 20px;background:white;color:black;border:none;border-radius:8px;font-weight:bold;cursor:pointer;'>Klick hier für einen Hard-Reset</button>`;
         };
+    </script>
 
-        // GLOABALER COUNTER FÜR SICHERE JSONP-CALLBACKS
-        let globalDeezerCbCounter = 0;
+    <div id="yt-player" style="position: absolute; top: -9999px; left: -9999px; width: 200px; height: 200px; opacity: 0; pointer-events: none;"></div>
 
-        function safeGetItem(key, fallback = '') {
-            try { return localStorage.getItem(key) || fallback; }
-            catch(e) { return fallback; }
-        }
+    <img id="app-background" src="" alt="">
+    <div class="scanlines"></div>
 
+    <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
+
+    <div id="profile-overlay" class="overlay" style="display: flex;">
+        <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
+            <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
+            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login oder lokalen Account erstellen.</p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="username-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="👤 Username" autocomplete="off">
+                <input type="password" id="password-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="🔑 Password">
+            </div>
+            
+            <button id="login-btn" class="btn-action" onclick="handleProfileLogin()" style="margin-top: 15px;">Login / Register ➔</button>
+            <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
+            
+            <div style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                <button onclick="localStorage.clear(); location.reload();" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s;">🛠️ Speicher-Reset (behebt Fehler)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="premium-overlay" class="overlay" style="display: none;">
+        <div class="modal paywall-modal">
+            <div style="font-size: 50px; margin-bottom: 10px;">👑</div>
+            <h2 style="color: #fbbf24; font-weight: 900; letter-spacing: 2px; font-size: 32px; margin-bottom: 5px;">LIFETIME VIP</h2>
+            <p style="color: #d4d4d8; font-size: 14px; margin-bottom: 25px;">Support the servers once and unlock everything forever.</p>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 25px 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid rgba(251, 191, 36, 0.2);">
+                <div class="paywall-feature">
+                    <div class="paywall-check">✓</div>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Online Multiplayer (2-4 Players)</span>
+                </div>
+                <div class="paywall-feature">
+                    <div class="paywall-check">✓</div>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Stream Battle (Higher / Lower Mode)</span>
+                </div>
+                <div class="paywall-feature">
+                    <div class="paywall-check">✓</div>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Fallen Legends Mode (Tupac, X, Juice...)</span>
+                </div>
+                <div class="paywall-feature">
+                    <div class="paywall-check">✓</div>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Premium Eras (2010s, SoundCloud)</span>
+                </div>
+                <div class="paywall-feature" style="margin-bottom: 0;">
+                    <div class="paywall-check">✓</div>
+                    <span style="color: white; font-weight: 600; font-size: 15px;">Full Artist Catalog Mode</span>
+                </div>
+            </div>
+
+            <button class="btn-action btn-gold" style="font-size: 18px; padding: 20px; margin-bottom: 15px;" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Unlock on Gumroad (12€) ➔</button>
+            
+            <p style="margin-top: 15px; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('premium-overlay').style.display='none'">Maybe later</p>
+        </div>
+    </div>
+
+    <div id="app-layout">
+        <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Menu</button>
+        <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <nav id="sidebar">
+            <div class="sidebar-logo">RAPMUSIK<span>GUESSR</span></div>
+            <div class="sidebar-user">
+                <img id="sidebar-avatar" class="sidebar-avatar" src="">
+                <div class="sidebar-user-info">
+                    <span id="sidebar-name" class="sidebar-name">Name</span>
+                    <span class="sidebar-status" style="display:flex; gap:10px; align-items:center;">
+                        <span id="premium-badge" style="display:none; background: var(--warning); color: black; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 900;">VIP</span>
+                        <span id="sidebar-level" style="color:var(--primary); font-weight:900; font-size:12px;">Lvl 1</span>
+                    </span>
+                </div>
+            </div>
+            <div class="nav-menu">
+                <div id="nav-play" class="nav-item active" onclick="switchTab('play-tab', this)">🎮 Play</div>
+                <div id="nav-mp" class="nav-item" onclick="switchTab('multiplayer-tab', this)">⚔️ Online (2-4) <span class="lock-icon" style="font-size:10px; color:var(--warning);">🔒 VIP</span></div>
+                <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 My Club</div>
+            </div>
+            <div class="sidebar-footer">
+                <button id="music-toggle-btn-sidebar" onclick="toggleMenuMusic()" style="background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 700; width: 80%; margin: 0 auto; display: block;">🔇 Music Off</button>
+                
+                <div style="display:flex; align-items:center; gap:10px; margin-top:15px; padding: 0 15px;">
+                    <span style="font-size:16px;">🔉</span>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.05" oninput="changeVolume(this.value)">
+                    <span style="font-size:16px;">🔊</span>
+                </div>
+            </div>
+        </nav>
+
+        <main id="main-content">
+            <div id="play-tab" class="tab-content active">
+                <div class="settings-bar">
+                    <div class="settings-group">
+                        <span class="settings-label">Hardcore (Typing)</span>
+                        <label class="switch"><input type="checkbox" id="hardcore-toggle" onchange="readSettings()"><span class="slider red"></span></label>
+                    </div>
+                    <div class="settings-group">
+                        <span class="settings-label">Show Artist</span>
+                        <label class="switch"><input type="checkbox" id="artist-toggle" onchange="readSettings()" checked><span class="slider green"></span></label>
+                    </div>
+                </div>
+
+                <div class="section-title">Your Club</div>
+                <div id="fav-artist-banner" class="banner-container" style="display: none;">
+                    <img id="fav-artist-img-1" src="" class="banner-img">
+                    <div class="banner-text-box">
+                        <h3 class="banner-subtitle">Your Favorite Artist</h3>
+                        <h2 id="banner-artist-name" class="banner-title">Artist</h2>
+                    </div>
+                </div>
+
+                <div class="section-title">Quick Play (Free)</div>
+                <div class="cards-grid">
+                    <div class="ea-card card-highlight" onclick="startMixedMode('all')">
+                        <div class="ea-card-icon">🔀</div>
+                        <div class="ea-card-title">All Mixed</div>
+                        <div class="ea-card-desc">The ultimate test across all eras.</div>
+                    </div>
+                    <div class="ea-card" onclick="startProgressiveMode()">
+                        <div class="ea-card-icon">⚡</div>
+                        <div class="ea-card-title">Progressive Mode</div>
+                        <div class="ea-card-desc">Starts at 0.1s. For real pros only.</div>
+                    </div>
+                    <div class="ea-card card-gold" onclick="startMixedMode('megahits')">
+                        <div class="ea-card-icon">🌟</div>
+                        <div class="ea-card-title">Mega Hits</div>
+                        <div class="ea-card-desc">Over 100M streams. The classics.</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Premium Categories <span style="font-size:12px; color:var(--warning); vertical-align: middle;">VIP</span></div>
+                <div class="cards-grid">
+                    <div class="ea-card locked-card card-stream" onclick="checkPremiumAndStart('higherlower')">
+                        <div class="ea-card-icon">📈</div>
+                        <div class="ea-card-title">Stream Battle <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
+                        <div class="ea-card-desc">Higher or Lower: Which song has more Spotify streams?</div>
+                    </div>
+                    <div class="ea-card locked-card card-fallen" onclick="checkPremiumAndStart('fallen')">
+                        <div class="ea-card-icon">🕊️</div>
+                        <div class="ea-card-title">Fallen Legends <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
+                        <div class="ea-card-desc">Tupac, Biggie, Juice WRLD, X & more.</div>
+                    </div>
+                    <div class="ea-card locked-card" onclick="checkPremiumAndStart('2010s')">
+                        <div class="ea-card-icon">📅</div>
+                        <div class="ea-card-title">2010-2020 Rap <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
+                        <div class="ea-card-desc">The golden trap era (US/UK only).</div>
+                    </div>
+                    <div class="ea-card locked-card" onclick="checkPremiumAndStart('soundcloud')">
+                        <div class="ea-card-icon">☁️</div>
+                        <div class="ea-card-title">SoundCloud Era <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
+                        <div class="ea-card-desc">Peep, X, Juice & Co.</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Catalog Quiz (Artist Mode) <span style="font-size:12px; color:var(--warning); vertical-align: middle;">VIP</span></div>
+                <div class="artist-list" id="artist-grid"></div>
+            </div>
+
+            <div id="multiplayer-tab" class="tab-content">
+                <div class="section-title">Online Multiplayer (2-4 Players)</div>
+                <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                    <div class="ea-card" style="border-color: var(--success); justify-content: flex-start;">
+                        <h3 style="margin-top: 0; color: var(--success); font-weight: 800; letter-spacing: 1px;">HOST MATCH</h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">Create a lobby for 2 to 4 players.</p>
+                        <button class="btn-action" style="background: var(--success); margin-bottom: 20px;" onclick="createRoom()">Generate Code</button>
+                        <div style="text-align: center;">
+                            <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Your Room Code:</span>
+                            <h2 id="room-code-display" style="margin: 0; font-size: 40px; letter-spacing: 8px; color: white;">----</h2>
+                        </div>
+                    </div>
+                    <div class="ea-card" style="justify-content: flex-start;">
+                        <h3 style="margin-top: 0; color: white; font-weight: 800; letter-spacing: 1px;">JOIN MATCH</h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">Enter your friend's 4-digit code.</p>
+                        <input type="number" id="join-code-input" class="ea-input" style="letter-spacing: 5px; font-size: 24px; text-align: center;" placeholder="CODE">
+                        <button class="btn-action" onclick="joinRoom()">Join</button>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(0,0,0,0.5); padding: 25px; border-radius: 16px; text-align: center; border: 1px solid var(--surface-border); margin-top: 20px;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase; color: white; letter-spacing: 1px;">Players in Lobby</h3>
+                    <div id="lobby-players-container" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px;">
+                        <span style="color: var(--text-muted); font-size: 14px;">No one here yet...</span>
+                    </div>
+                    <p id="mp-status" style="color: var(--warning); font-weight: 800; margin: 0; font-size: 16px; text-transform: uppercase;">Not connected</p>
+                </div>
+            </div>
+
+            <div id="profile-tab" class="tab-content">
+                <div class="section-title">My Club</div>
+                <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
+                    <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
+                    <div style="text-align: left; flex: 1;">
+                        <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
+                        <p id="profile-view-quote" style="margin: 0 0 15px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
+                        
+                        <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Anthem: <span id="profile-view-hymn" style="color: white;">None</span></p>
+                        
+                        <div style="width: 100%; max-width: 400px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
+                                <span>Level <span id="profile-level-num">1</span></span>
+                                <span><span id="profile-xp-current">0</span> / 4000 XP</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); width: 100%; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div id="profile-xp-bar" style="background: var(--success); width: 0%; height: 100%; transition: width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="ea-card" style="align-items: center; justify-content: center; min-height: 100px;">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 800;">Matches Played</div>
+                        <div id="stat-played" style="font-size: 32px; font-weight: 900; color: white;">0</div>
+                    </div>
+                    <div class="ea-card" style="align-items: center; justify-content: center; min-height: 100px; border-color: rgba(16,185,129,0.5);">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 800;">Wins</div>
+                        <div id="stat-wins" style="font-size: 32px; font-weight: 900; color: var(--success);">0</div>
+                    </div>
+                    <div class="ea-card" style="align-items: center; justify-content: center; min-height: 100px; border-color: rgba(239,68,68,0.5);">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 800;">Losses</div>
+                        <div id="stat-losses" style="font-size: 32px; font-weight: 900; color: var(--danger);">0</div>
+                    </div>
+                </div>
+
+                <div class="section-title" style="margin-top: 40px;">Detailed Stats & Trophies</div>
+                <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div class="ea-card" style="min-height: 100px;">
+                        <div style="font-size: 12px; color: var(--success); font-weight: 800;">Songs Correct</div>
+                        <div id="stat-songs-correct" style="font-size: 28px; font-weight: 900; color: white;">0</div>
+                    </div>
+                    <div class="ea-card" style="min-height: 100px;">
+                        <div style="font-size: 12px; color: var(--danger); font-weight: 800;">Songs Wrong / Skipped</div>
+                        <div id="stat-songs-wrong" style="font-size: 28px; font-weight: 900; color: white;">0</div>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left; margin-bottom: 30px;">
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">Mode Mastery (Points per Mode)</h3>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px;">Earn points to unlock Bronze 🥉, Silver 🥈, Gold 🥇, and Champion 🏆 ranks in each mode!</p>
+                    <div id="mode-stats-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;"></div>
+                </div>
+
+                <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
+                    <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
+                </div>
+
+                <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 Redeem Gumroad License</h3>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="e.g. A7X9-B2M4-99PL-Q1ZS">
+                        <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Verify</button>
+                    </div>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Change Artist (Avatar & Background)</h3>
+                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 20px;" onchange="updateFavArtist()"></select>
+
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">2. Change Anthem & Menu Music</h3>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px; margin-bottom: 10px;">Type a song name (results appear automatically) OR paste a YouTube link.</p>
+                    <div style="display:flex; gap:8px; margin-bottom:10px;">
+                        <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="e.g. Sicko Mode..." oninput="handleAnthemInput()">
+                        <button id="song-search-btn-edit" class="btn-action" style="width:55px; padding:0;" onclick="searchMenuSong()">🔍</button>
+                    </div>
+                    <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
+                </div>
+                
+                <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Log Out / Switch Account</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="game-screen">
+        <div class="game-inner">
+            <div class="stats-bar" id="game-stats-bar"></div>
+            <div class="visualizer"><div class="visualizer-inner">🎵</div></div>
+            <div class="game-controls">
+                <button onclick="backToMenu()">🏠 Quit</button>
+                <button onclick="replaySnippet()" style="border-color: #3b82f6;">🔄 Replay</button>
+                <button id="add-time-btn" onclick="addTime()">+3s</button>
+                <button onclick="skipSong()" style="border-color: var(--danger); color: var(--danger);">⏭️ Skip (-250)</button>
+            </div>
+            <div id="options" class="options-container"></div>
+            <div id="text-input-container" style="display: none;">
+                <input type="text" id="guess-input" class="ea-input" placeholder="Enter song title..." autocomplete="off" oninput="updateSuggestions()">
+                <div id="suggestions-box"></div>
+                <button class="btn-action" onclick="checkTextInput()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIGHER LOWER MODE SCREEN -->
+    <div id="hl-screen">
+        <div class="hl-inner">
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 20px;">
+                <button onclick="backToMenu()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--surface-border); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer;">🏠 Quit</button>
+                <div style="text-align: right;">
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Current Streak</span>
+                    <h2 id="hl-streak-num" style="margin: 0; font-size: 28px; color: var(--warning);">0</h2>
+                </div>
+            </div>
+
+            <h2 style="font-size: 24px; font-weight: 900; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px;">Spotify Stream Battle</h2>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 20px 0;">Does the second song have MORE or LESS streams than the first?</p>
+
+            <div class="hl-cards-container">
+                <div class="hl-card" id="hl-card-a">
+                    <img id="hl-img-a" class="hl-cover" src="">
+                    <h3 id="hl-title-a" class="hl-song-title">Song A</h3>
+                    <p id="hl-artist-a" class="hl-artist-name">Artist A</p>
+                    <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Has approximately</span>
+                    <div id="hl-streams-a" class="hl-streams-val">0</div>
+                    <span style="font-size: 11px; color: #a1a1aa;">Spotify Streams</span>
+                </div>
+
+                <div class="hl-card" id="hl-card-b">
+                    <img id="hl-img-b" class="hl-cover" src="">
+                    <h3 id="hl-title-b" class="hl-song-title">Song B</h3>
+                    <p id="hl-artist-b" class="hl-artist-name">Artist B</p>
+                    
+                    <div id="hl-action-box" style="width: 100%; display: flex; flex-direction: column; justify-content: center; flex: 1;">
+                        <button class="btn-hl higher" onclick="processHLChoice('higher')">HIGHER ⬆️</button>
+                        <button class="btn-hl lower" onclick="processHLChoice('lower')">LOWER ⬇️</button>
+                    </div>
+
+                    <div id="hl-result-box" style="display: none; width: 100%; flex-direction: column; align-items: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Has approximately</span>
+                        <div id="hl-streams-b" class="hl-streams-val">0</div>
+                        <span style="font-size: 11px; color: #a1a1aa;">Spotify Streams</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOADING & FEEDBACK OVERLAYS -->
+    <div id="loading-overlay" class="overlay" style="display: none;">
+        <div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Please Wait...</h2></div>
+    </div>
+    <div id="feedback-overlay" class="overlay" style="display: none;">
+        <div id="feedback-modal" class="modal">
+            <h2 id="feedback-title">Title</h2>
+            <img id="feedback-cover" src="">
+            <p id="feedback-desc">Description</p>
+            <div id="mp-result" style="display: none; margin-bottom: 25px;"></div>
+            <button id="feedback-btn" class="btn-action">Next ➔</button>
+        </div>
+    </div>
+
+    <script>
         function safeReadJSON(key, fallback) {
             try {
                 let val = localStorage.getItem(key);
                 return val ? JSON.parse(val) : fallback;
             } catch(e) {
-                console.error("Storage repaired for: " + key);
-                try { localStorage.removeItem(key); } catch(err){}
+                console.error("Speicher repariert für: " + key);
+                localStorage.removeItem(key);
                 return fallback;
             }
         }
 
         const fallenLegends = ['2Pac', 'The Notorious B.I.G.', 'XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Mac Miller', 'Pop Smoke', 'King Von', 'Takeoff', 'Nipsey Hussle', 'Eazy-E', 'MF DOOM'];
-        const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean'];
+        const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean', 'Bones'];
         const artists2010s = ['Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa', 'Offset', 'Quavo', 'Yeat', 'Central Cee'];
         const legends = ['2Pac', 'The Notorious B.I.G.', 'Eminem', '50 Cent', 'Snoop Dogg', 'Dr. Dre', 'Ice Cube', 'Nas'];
         const megaStars = ['Drake', 'Kendrick Lamar', 'J. Cole', 'Kanye West', 'Post Malone'];
@@ -304,12 +637,10 @@
             let hash = 0; let combined = trackTitle + artistName;
             for (let i = 0; i < combined.length; i++) hash = combined.charCodeAt(i) + ((hash << 5) - hash);
             let baseMin = 50; let baseMax = 200;
-            
-            if (megaStars.includes(artistName)) { baseMin = 500; baseMax = 2500; }
-            else if (legends.includes(artistName)) { baseMin = 200; baseMax = 800; }
-            else if (fallenLegends.includes(artistName)) { baseMin = 250; baseMax = 1000; }
-            else if (artists2010s.includes(artistName)) { baseMin = 150; baseMax = 800; }
-            
+            if (megaStars.includes(artistName)) { baseMin = 300; baseMax = 900; }
+            else if (legends.includes(artistName)) { baseMin = 200; baseMax = 600; }
+            else if (fallenLegends.includes(artistName)) { baseMin = 250; baseMax = 800; }
+            else if (artists2010s.includes(artistName)) { baseMin = 150; baseMax = 500; }
             let randomTier = Math.abs(hash % (baseMax - baseMin)) + baseMin;
             return randomTier * 1000000 + Math.abs(hash % 999999);
         }
@@ -322,8 +653,7 @@
 
         const SERVER_URL = 'https://mukke886.onrender.com';
         let globalVolume = 0.5;
-        let storedVol = safeGetItem('rapquiz_volume'); 
-        if (storedVol) { try { globalVolume = parseFloat(storedVol); } catch(e){} }
+        try { let storedVol = parseFloat(localStorage.getItem('rapquiz_volume')); if (!isNaN(storedVol)) globalVolume = storedVol; } catch(e) {}
 
         const supabaseUrl = 'https://txxklmrxzcaqbdpjuksw.supabase.co'; 
         const supabaseKey = 'sb_publishable_B9G2pzd-BFpKli71S5fu0g_a6xBSMdj'; 
@@ -342,19 +672,15 @@
             }
         } catch (e) { }
 
-        let playerName = safeGetItem('rapquiz_username'); 
-        let savedPw = safeGetItem('rapquiz_password');
-        let myFavArtist = safeGetItem('rapquiz_fav_artist'); 
-        let myAvatar = safeGetItem('rapquiz_avatar', 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'); 
-        let myBgUrl = safeGetItem('rapquiz_bg_url');
-        let myQuote = safeGetItem('rapquiz_quote');
-        if(!myQuote) { myQuote = myFavArtist ? getArtistQuote(myFavArtist) : '"Ready to dominate the game."'; }
-        
-        let isPremium = safeGetItem('rapquiz_premium') === 'true';
-        const IS_TEMPORARILY_FREE = true; 
-
-        let mySongUrl = safeGetItem('rapquiz_menu_song_url'); 
-        let mySongTitle = safeGetItem('rapquiz_menu_song_title');
+        let playerName = localStorage.getItem('rapquiz_username') || ''; 
+        let savedPw = localStorage.getItem('rapquiz_password') || '';
+        let myFavArtist = localStorage.getItem('rapquiz_fav_artist') || ''; 
+        let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; 
+        let myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
+        let myQuote = localStorage.getItem('rapquiz_quote') || (myFavArtist ? getArtistQuote(myFavArtist) : '"Ready to dominate the game."');
+        let isPremium = localStorage.getItem('rapquiz_premium') === 'true';
+        let mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || ''; 
+        let mySongTitle = localStorage.getItem('rapquiz_menu_song_title') || '';
 
         let myStats = safeReadJSON('rapquiz_stats', { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: {} });
         if (typeof myStats.totalScore === 'undefined') myStats.totalScore = 0; 
@@ -365,17 +691,6 @@
         
         let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = '';
         let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
-        let isSearching = false; 
-
-        document.addEventListener('keydown', (e) => {
-            let overlay = document.getElementById('feedback-overlay');
-            if (overlay && window.getComputedStyle(overlay).display === 'flex' && e.key === 'Enter') {
-                let btn = document.getElementById('feedback-btn');
-                if (btn && window.getComputedStyle(btn).display !== 'none') {
-                    btn.click(); 
-                }
-            }
-        });
 
         let ytPlayer; let ytReady = false; let ytContext = 'menu';
 
@@ -400,10 +715,6 @@
             try { localStorage.setItem('rapquiz_volume', globalVolume); } catch(e){}
             menuAudio.volume = globalVolume * 0.4; audio.volume = globalVolume; sfxAudio.volume = globalVolume;
             if(ytReady && ytPlayer && ytPlayer.setVolume) { let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100; ytPlayer.setVolume(globalVolume * vol); }
-            
-            ['volume-slider', 'volume-slider-game', 'volume-slider-hl'].forEach(id => {
-                let el = document.getElementById(id); if (el && el.value !== val) el.value = val;
-            });
         }
 
         function playMenuMusic(url) {
@@ -443,7 +754,7 @@
             if (!dbClient || !playerName) return;
             try {
                 const { data: session } = await dbClient.auth.getSession();
-                if (session && session.session && session.session.user) {
+                if (session?.session?.user) {
                     await dbClient.from('profiles').upsert({
                         id: session.session.user.id,
                         username: playerName,
@@ -473,7 +784,7 @@
             accounts[playerName].quote = myQuote;
             accounts[playerName].bgUrl = myBgUrl;
             
-            try { localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts)); } catch(e){}
+            localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
         }
 
         function updateLevelDisplay() {
@@ -514,38 +825,19 @@
             return result;
         }
 
-        function cleanupJsonpScript(cbName) {
-            let scriptEl = document.getElementById(cbName); 
-            if(scriptEl) scriptEl.remove(); 
-            setTimeout(() => { try { delete window[cbName]; } catch(e){} }, 100);
-        }
-
         function switchTab(tabId, el) {
-            if (tabId === 'multiplayer-tab' && !(isPremium || IS_TEMPORARILY_FREE)) { document.getElementById('premium-overlay').style.display = 'flex'; return; }
-            
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); 
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if (tabId === 'multiplayer-tab' && !isPremium) { document.getElementById('premium-overlay').style.display = 'flex'; return; }
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
-            
-            if(tabId === 'profile-tab' || tabId === 'stats-tab') { 
-                document.getElementById('stat-played').innerText = myStats.played; 
-                document.getElementById('stat-wins').innerText = myStats.wins; 
-                document.getElementById('stat-losses').innerText = myStats.losses; 
-                updateLevelDisplay(); 
-                updateDetailedStats();
+            if(tabId === 'profile-tab') { 
+                document.getElementById('stat-played').innerText = myStats.played; document.getElementById('stat-wins').innerText = myStats.wins; document.getElementById('stat-losses').innerText = myStats.losses; 
+                updateLevelDisplay(); updateDetailedStats();
             }
             if (window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active'); }
-
-            try {
-                let uninitializedAds = document.querySelectorAll('.adsbygoogle:empty');
-                if (uninitializedAds.length > 0 && !(isPremium || IS_TEMPORARILY_FREE)) {
-                    (adsbygoogle = window.adsbygoogle || []).push({});
-                }
-            } catch (e) {}
         }
 
         function checkPremiumAndStart(mode) {
-            if (isPremium || IS_TEMPORARILY_FREE) {
+            if (isPremium) {
                 if(mode === 'artist') {} 
                 else if(mode === 'higherlower') { startHigherLowerMode(); }
                 else { startMixedMode(mode); }
@@ -553,27 +845,15 @@
         }
 
         function loadArtistVisuals(artistName) {
-            if (!artistName) return; 
-            const cb = 'deezer_vis_' + Date.now() + '_' + (++globalDeezerCbCounter);
-            let isResolved = false;
-            
-            let fallbackTimer = setTimeout(() => {
-                if(!isResolved) { isResolved = true; cleanupJsonpScript(cb); }
-            }, 8000);
-
+            if (!artistName) return; const cb = 'deezer_vis_' + Date.now();
             window[cb] = function(res) {
-                if(isResolved) return; isResolved = true; clearTimeout(fallbackTimer);
                 if (res && res.data && res.data.length > 0) {
                     myBgUrl = res.data[0].picture_xl; myAvatar = res.data[0].picture_medium;
                     saveAccountData();
                     document.getElementById('app-background').src = myBgUrl; updateAllAvatars();
                 }
-                cleanupJsonpScript(cb);
             };
-            const s = document.createElement('script'); s.id = cb;
-            s.onerror = () => { if(!isResolved) { isResolved = true; clearTimeout(fallbackTimer); cleanupJsonpScript(cb); } };
-            s.src = `https://api.deezer.com/search/artist?q="${encodeURIComponent(artistName)}"&limit=1&output=jsonp&callback=${cb}`; 
-            document.head.appendChild(s);
+            const s = document.createElement('script'); s.src = `https://api.deezer.com/search/artist?q="${encodeURIComponent(artistName)}"&limit=1&output=jsonp&callback=${cb}`; document.head.appendChild(s);
         }
 
         function updateAllAvatars() { 
@@ -585,51 +865,27 @@
         let searchTimeout = null;
         function handleAnthemInput() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { searchMenuSong(); }, 500); }
 
-        function searchMenuSong() {
+        async function searchMenuSong() {
             let q = document.getElementById('edit-song-search-input').value.trim(); let sel = document.getElementById('edit-menu-song-select');
             if(!q) { sel.style.display = 'none'; return; }
             let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
             if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = `<option value="yt:${vid}" data-title="YouTube Track">▶️ YouTube Video (${vid})</option>`; sel.style.display = 'block'; return; }
-            
-            const cb = 'deezer_anthem_' + Date.now() + '_' + (++globalDeezerCbCounter);
-            let isResolved = false;
-
-            let fallbackTimer = setTimeout(() => {
-                if(!isResolved) { isResolved = true; cleanupJsonpScript(cb); sel.innerHTML = '<option value="">❌ Network error</option>'; sel.style.display = 'block'; }
-            }, 8000);
-
-            window[cb] = function(res) {
-                if(isResolved) return; isResolved = true; clearTimeout(fallbackTimer);
+            try {
+                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=10`);
+                let data = await res.json();
                 sel.innerHTML = '';
-                if (res && res.data && res.data.length > 0) {
-                    let valid = res.data.filter(t => t.preview);
+                if (data && data.results && data.results.length > 0) {
+                    let valid = data.results.filter(t => t.previewUrl);
                     if (valid.length > 0) {
                         sel.innerHTML = '<option value="">🎵 Choose your Anthem...</option>';
-                        valid.sort((a,b) => (b.explicit_lyrics ? 1 : 0) - (a.explicit_lyrics ? 1 : 0));
-                        let seen = new Set();
                         valid.forEach(t => {
-                            let key = t.title.toLowerCase() + t.artist.name.toLowerCase();
-                            if(!seen.has(key)){
-                                seen.add(key);
-                                let opt = document.createElement('option'); 
-                                opt.value = t.preview; 
-                                opt.innerText = `${t.artist.name} - ${t.title} ${t.explicit_lyrics ? '(E)' : ''}`; 
-                                opt.setAttribute('data-title', `${t.artist.name} - ${t.title}`); 
-                                sel.appendChild(opt);
-                            }
+                            let opt = document.createElement('option'); opt.value = t.previewUrl; opt.innerText = `${t.artistName} - ${t.trackName}`; opt.setAttribute('data-title', `${t.artistName} - ${t.trackName}`); sel.appendChild(opt);
                         });
-                        sel.style.display = 'block';
-                        cleanupJsonpScript(cb);
-                        return;
+                        sel.style.display = 'block'; return;
                     }
                 }
                 sel.innerHTML = '<option value="">❌ No songs found</option>'; sel.style.display = 'block';
-                cleanupJsonpScript(cb);
-            };
-            const s = document.createElement('script'); s.id = cb;
-            s.onerror = () => { if(!isResolved) { isResolved = true; clearTimeout(fallbackTimer); cleanupJsonpScript(cb); sel.innerHTML = '<option value="">❌ Adblocker active</option>'; sel.style.display = 'block'; } };
-            s.src = `https://api.deezer.com/search?q="${encodeURIComponent(q)}"&limit=20&output=jsonp&callback=${cb}`; 
-            document.head.appendChild(s);
+            } catch(e) {}
         }
 
         function updateFavSong() {
@@ -645,10 +901,9 @@
         function buildArtistGrid() {
             let grid = document.getElementById('artist-grid'); if(!grid) return;
             grid.innerHTML = '';
-            let hasAccess = isPremium || IS_TEMPORARILY_FREE;
             allArtists.forEach(a => { 
-                let d = document.createElement('div'); d.className = hasAccess ? 'artist-tile' : 'artist-tile locked-card'; 
-                if(!hasAccess) {
+                let d = document.createElement('div'); d.className = isPremium ? 'artist-tile' : 'artist-tile locked-card'; 
+                if(!isPremium) {
                     d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:10px; margin-top:3px; color:var(--warning);">🔒 VIP</span>`;
                     d.onclick = () => { document.getElementById('premium-overlay').style.display = 'flex'; };
                 } else { d.innerText = a; d.onclick = () => startArtistMode(a); }
@@ -657,15 +912,13 @@
         }
 
         window.onload = () => {
-            ['volume-slider', 'volume-slider-game', 'volume-slider-hl'].forEach(id => {
-                let el = document.getElementById(id); if(el) el.value = globalVolume;
-            });
+            let volSlider = document.getElementById('volume-slider'); if(volSlider) volSlider.value = globalVolume;
             
             let editSel = document.getElementById('edit-fav-artist-select');
             if (editSel) { editSel.innerHTML = ''; allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; editSel.appendChild(opt); }); }
             
             let accounts = safeReadJSON('rapquiz_accounts', {});
-            let activeUser = safeGetItem('rapquiz_active_user');
+            let activeUser = localStorage.getItem('rapquiz_active_user');
 
             if (activeUser && accounts[activeUser]) { 
                 handleProfileLogin(true, activeUser); 
@@ -682,24 +935,21 @@
                 let accounts = safeReadJSON('rapquiz_accounts', {});
                 
                 let name = isAutoLogin ? autoName : document.getElementById('username-input').value.trim(); 
-                
-                let localAccountExists = !!accounts[name];
-                let pw = document.getElementById('password-input').value.trim(); 
-                if (isAutoLogin && localAccountExists && accounts[name].password) {
-                    pw = accounts[name].password;
-                }
+                let pw = isAutoLogin ? (accounts[name]?.password || "") : document.getElementById('password-input').value.trim(); 
 
                 if (!name || !pw) { 
-                    if(err) { err.innerText = "Please enter a username and password!"; err.style.display = 'block'; } 
+                    if(err) { err.innerText = "Bitte fülle Username und Passwort aus!"; err.style.display = 'block'; } 
                     document.getElementById('profile-overlay').style.display = 'flex';
                     return; 
                 }
 
-                if (!isAutoLogin && btn) { btn.innerText = "Loading... ⏳"; btn.disabled = true; }
+                if (!isAutoLogin && btn) { btn.innerText = "Lade... ⏳"; btn.disabled = true; }
+
+                let localAccountExists = !!accounts[name];
 
                 if (localAccountExists && !isAutoLogin) {
                     if (accounts[name].password !== pw) { 
-                        if(err) { err.innerText = "Wrong password!"; err.style.display = 'block'; } 
+                        if(err) { err.innerText = "Falsches Passwort!"; err.style.display = 'block'; } 
                         if(btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
                         return; 
                     }
@@ -732,10 +982,10 @@
                         
                         if (authError) {
                             let { data: regData, error: regError } = await dbClient.auth.signUp({ email: fakeEmail, password: pw });
-                            if (regData && regData.user) authData = regData;
+                            if (regData?.user) authData = regData;
                         }
 
-                        if (authData && authData.user) {
+                        if (authData?.user) {
                             let { data: profile } = await dbClient.from('profiles').select('*').eq('id', authData.user.id).single();
                             if (profile) {
                                 isPremium = profile.is_premium || isPremium;
@@ -755,7 +1005,7 @@
                         }
                     }
                 } catch(e) {
-                    console.log("Cloud offline, playing locally.", e);
+                    console.log("Cloud offline, spiele lokal weiter.", e);
                 }
 
                 if (!accounts[playerName]) accounts[playerName] = {};
@@ -764,10 +1014,8 @@
                 accounts[playerName].isPremium = isPremium;
                 accounts[playerName].stats.totalScore = myStats.totalScore;
                 
-                try {
-                    localStorage.setItem('rapquiz_active_user', playerName);
-                    localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
-                } catch (e) {}
+                localStorage.setItem('rapquiz_active_user', playerName);
+                localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
 
                 updateLevelDisplay(); updateDetailedStats();
                 
@@ -785,14 +1033,11 @@
 
                 buildArtistGrid();
 
-                if (isPremium || IS_TEMPORARILY_FREE) {
-                    let badge = document.getElementById('premium-badge'); if(badge && isPremium) badge.style.display = 'inline-block'; 
+                if (isPremium) {
+                    let badge = document.getElementById('premium-badge'); if(badge) badge.style.display = 'inline-block'; 
                     let buy = document.getElementById('vip-buy-section'); if(buy) buy.style.display = 'none'; 
                     let redeem = document.getElementById('vip-redeem-section'); if(redeem) redeem.style.display = 'none';
-                    let lockedCards = document.querySelectorAll('.locked-card');
-                    for (let i = 0; i < lockedCards.length; i++) { lockedCards[i].classList.remove('locked-card'); }
-                    let lockIcons = document.querySelectorAll('.lock-icon');
-                    for (let i = 0; i < lockIcons.length; i++) { lockIcons[i].style.display = 'none'; }
+                    document.querySelectorAll('.locked-card').forEach(el => { el.classList.remove('locked-card'); let lockIcon = el.querySelector('.lock-icon'); if(lockIcon) lockIcon.style.display = 'none'; });
                 }
 
                 updateAllAvatars(); playMenuMusic(mySongUrl);
@@ -800,12 +1045,12 @@
             } catch (error) {
                 console.error("Login Error:", error);
                 document.getElementById('profile-overlay').style.display = 'flex';
-                if(err) { err.innerText = "An error occurred. Please click Reset."; err.style.display = 'block'; }
+                if(err) { err.innerText = "Ein Fehler ist aufgetreten. Bitte auf Reset klicken."; err.style.display = 'block'; }
                 if (btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
             }
         }
 
-        function resetProfile() { try { localStorage.removeItem('rapquiz_active_user'); } catch(e){} location.reload(); }
+        function resetProfile() { localStorage.removeItem('rapquiz_active_user'); location.reload(); }
 
         function updateFavArtist() { 
             myFavArtist = document.getElementById('edit-fav-artist-select').value; 
@@ -851,77 +1096,17 @@
 
         function encodeAvatarAndQuote() { return myAvatar + '|Q|' + myQuote; }
 
-        function startRandomMatchmaking() {
-            isSearching = true; isMultiplayer = true; socket.emit('findRandomMatch', { name: playerName, avatar: encodeAvatarAndQuote() });
-            document.getElementById('random-match-ui').innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; gap:10px;"><div class="loader" style="width:30px; height:30px; border-top-color: var(--primary); margin: 0;"></div><span style="color:var(--primary); font-weight:bold; font-size:14px;">Searching for opponent in queue...</span><button onclick="cancelRandomMatchmaking()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:5px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">Cancel</button></div>`;
-            document.getElementById('mp-status').innerText = 'Searching for public match...';
-        }
-
-        function cancelRandomMatchmaking() {
-            try { if(currentRoom) socket.emit('leaveRoom', currentRoom); } catch(e){}
-            isSearching = false; isMultiplayer = false; isMpHost = false; currentRoom = ''; lobbyPlayers = [];
-            socket.emit('cancelMatchmaking'); resetRandomMatchUI(); 
-            document.getElementById('mp-status').innerText = 'Not connected';
-            document.getElementById('mp-status').style.color = 'var(--warning)';
-        }
-
-        function resetRandomMatchUI() {
-            let el = document.getElementById('random-match-ui');
-            if(el) { el.innerHTML = `<button class="btn-action" style="background: var(--primary); margin-bottom: 20px;" onclick="startRandomMatchmaking()">Find Opponent 🔍</button>`; }
-        }
-
-        socket.on('randomMatchFound', (data) => {
-            isSearching = false; currentRoom = data.roomCode; isMpHost = (socket.id === data.hostId); lobbyPlayers = data.players;
-            resetRandomMatchUI(); renderLobbyPlayers();
-            
-            let leaveBtn = document.getElementById('leave-lobby-btn');
-            if(leaveBtn) leaveBtn.style.display = 'block';
-            
-            let statusEl = document.getElementById('mp-status'); statusEl.innerHTML = `🟢 Match found! Starting in 3 seconds...`; statusEl.style.color = 'var(--success)';
-            if(isMpHost) { setTimeout(() => { if(currentRoom === data.roomCode) { startMixedMode('all'); } }, 3000); }
-        });
-
         function createRoom() { isMultiplayer = true; isMpHost = true; socket.emit('createRoom', { name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Connecting...'; }
         function joinRoom() { let c = document.getElementById('join-code-input').value; if(c) { isMultiplayer = true; isMpHost = false; socket.emit('joinRoom', { code: c, name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Joining...'; } }
-        
-        function cancelMultiplayer() { 
-            try { if(currentRoom) socket.emit('leaveRoom', currentRoom); } catch(e){} 
-            isMultiplayer = false; 
-            isMpHost = false; 
-            currentRoom = ''; 
-            lobbyPlayers = [];
-            if(isSearching) cancelRandomMatchmaking(); 
-            
-            document.getElementById('mp-status').innerText = 'Not connected';
-            document.getElementById('mp-status').style.color = 'var(--warning)';
-            document.getElementById('room-code-display').innerText = '----';
-            document.getElementById('lobby-players-container').innerHTML = '<span style="color: var(--text-muted); font-size: 14px;">No one here yet...</span>';
-            
-            let leaveBtn = document.getElementById('leave-lobby-btn');
-            if(leaveBtn) leaveBtn.style.display = 'none';
-            
-            switchTab('play-tab', document.getElementById('nav-play')); 
-        }
+        function cancelMultiplayer() { isMultiplayer = false; isMpHost = false; currentRoom = ''; switchTab('play-tab', document.getElementById('nav-play')); }
 
-        socket.on('roomCreated', (code) => { 
-            currentRoom = code; 
-            document.getElementById('room-code-display').innerText = code; 
-            let leaveBtn = document.getElementById('leave-lobby-btn');
-            if(leaveBtn) leaveBtn.style.display = 'block';
-        });
-
-        socket.on('joinedSuccess', (data) => { 
-            currentRoom = data.roomCode; 
-            document.getElementById('room-code-display').innerText = data.roomCode; 
-            let leaveBtn = document.getElementById('leave-lobby-btn');
-            if(leaveBtn) leaveBtn.style.display = 'block';
-        });
-
+        socket.on('roomCreated', (code) => { currentRoom = code; document.getElementById('room-code-display').innerText = code; });
+        socket.on('joinedSuccess', (data) => { currentRoom = data.roomCode; document.getElementById('room-code-display').innerText = data.roomCode; });
         socket.on('errorMsg', (msg) => { alert(msg); cancelMultiplayer(); });
         
         socket.on('lobbyUpdate', (players) => { 
             lobbyPlayers = players; renderLobbyPlayers();
-            if(currentRoom && !isSearching) {
+            if(currentRoom) {
                 let statusEl = document.getElementById('mp-status');
                 if(isMpHost) {
                     if(players.length >= 2) { statusEl.innerHTML = `🟢 Ready! You can now choose a mode<br>in the left menu to start.`; statusEl.style.color = 'var(--success)'; } 
@@ -951,43 +1136,19 @@
         socket.on('gameReady', (code) => { if(!isMpHost) { document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading game data from host..."; } });
         socket.on('receiveRoundData', (data) => { resetGameStats(); songsPool = data.songs; currentMode = data.mode; isHardcoreMode = data.hardcore; showArtistName = data.showArtist; document.getElementById('hardcore-toggle').checked = isHardcoreMode; document.getElementById('artist-toggle').checked = showArtistName; isMultiplayer = true; document.getElementById('loading-overlay').style.display = 'none'; launchGame(); });
         socket.on('updateAllStats', (players) => { lobbyPlayers = players; if(!isWinnerScreenShown) updateStatsDisplay(); if(gameIsOver) renderMpLeaderboard(); });
-        
         socket.on('teammateAnswered', (data) => {
             if (data.type === 'ROUND_ANSWERED') { playersAnsweredThisRound.add(data.id); checkAllAnswered(); } 
             else if (data.type === 'READY_NEXT') { playersReadyForNextRound.add(data.id); checkAllReady(); } 
             else if (data.type === 'SUDDEN_DEATH') { triggerSuddenDeathLocal(data.ids); }
         });
-        
         socket.on('triggerNextRound', () => { if (!isMpHost && lives > 0 && !gameIsOver) nextRound(); });
-        
-        socket.on('opponentGameOver', (data) => { 
-            matchEndData[data.id] = data; 
-            playersAnsweredThisRound.add(data.id); 
-            playersReadyForNextRound.add(data.id); 
-
-            let aliveOpponents = lobbyPlayers.filter(p => p.id !== socket.id && !matchEndData[p.id]);
-            
-            if (aliveOpponents.length === 0 && !gameIsOver) {
-                triggerGameOver(true);
-            } else {
-                checkAllAnswered(); 
-                checkAllReady(); 
-                if (gameIsOver) checkMatchEnd(); 
-            }
-        });
+        socket.on('opponentGameOver', (data) => { matchEndData[data.id] = data; playersAnsweredThisRound.add(data.id); playersReadyForNextRound.add(data.id); checkAllAnswered(); checkAllReady(); if (gameIsOver) checkMatchEnd(); });
 
         function checkMatchEnd() {
             if (!isMultiplayer || !gameIsOver || isWinnerScreenShown) return;
             let allDone = lobbyPlayers.length > 0 && lobbyPlayers.every(p => matchEndData[p.id]);
             if (allDone) {
-                let sorted = Object.values(matchEndData).sort((a,b) => {
-                    if (b.lives !== a.lives) return b.lives - a.lives;
-                    return b.score - a.score;
-                });
-                
-                let topScore = sorted[0].score; let topLives = sorted[0].lives;
-                let tiedPlayers = sorted.filter(p => p.score === topScore && p.lives === topLives);
-                
+                let sorted = Object.values(matchEndData).sort((a,b) => b.score - a.score); let topScore = sorted[0].score; let tiedPlayers = sorted.filter(p => p.score === topScore);
                 if (tiedPlayers.length > 1) {
                     if (isMpHost) { let tiedIds = tiedPlayers.map(p => p.id); socket.emit('teammateAnswered', { type: 'SUDDEN_DEATH', ids: tiedIds, roomCode: currentRoom }); triggerSuddenDeathLocal(tiedIds); }
                 } else {
@@ -1000,35 +1161,7 @@
         }
 
         function backToMenu() { 
-            try { 
-                audio.pause(); sfxAudio.pause(); clearTimeout(precisionTimer); 
-                
-                document.getElementById('game-screen').style.display = 'none'; 
-                document.getElementById('hl-screen').style.display = 'none'; 
-                document.getElementById('feedback-overlay').style.display = 'none'; 
-                document.getElementById('app-layout').style.display = 'flex'; 
-                resumeMenuMusic(); 
-
-                if (isMultiplayer) {
-                    resetGameStats(); 
-                    gameIsOver = true; 
-                    
-                    switchTab('multiplayer-tab', document.getElementById('nav-mp'));
-                    
-                    let statusEl = document.getElementById('mp-status');
-                    if (isMpHost) {
-                        statusEl.innerHTML = `🟢 Ready! You can now choose a mode<br>in the left menu to start.`; 
-                        statusEl.style.color = 'var(--success)';
-                    } else {
-                        statusEl.innerText = `🟢 In lobby (${Math.max(1, lobbyPlayers.length)}/4). Waiting for host to start...`; 
-                        statusEl.style.color = 'var(--success)';
-                    }
-                } else {
-                    gameIsOver = true;
-                    cancelMultiplayer(); 
-                    switchTab('play-tab', document.getElementById('nav-play'));
-                }
-            } 
+            try { audio.pause(); sfxAudio.pause(); clearTimeout(precisionTimer); gameIsOver = true; cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('hl-screen').style.display = 'none'; document.getElementById('feedback-overlay').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; resumeMenuMusic(); } 
             catch(e) { location.reload(); }
         }
 
@@ -1071,33 +1204,14 @@
 
         let hlPool = []; let hlCurrentA = null; let hlCurrentB = null; let hlStreak = 0; let hlRecentArtists = [];
 
-        function showNetworkError() {
-            document.getElementById('loading-overlay').style.display = 'flex';
-            document.getElementById('loading-overlay').innerHTML = `
-                <div class="loading-container">
-                    <h2 style="color: var(--danger); margin-top: 0;">❌ Error</h2>
-                    <p style="font-size:13px; color:var(--text-muted);">Es konnten nicht genug Songs geladen werden (evtl. blockiert durch Adblocker oder Timeout).</p>
-                    <button onclick="location.reload()" class="btn-action" style="margin-top:15px; width:100%;">Neu laden 🔄</button>
-                </div>
-            `;
-            // Fallback für Browser, die das div nicht zeichnen
-            setTimeout(() => {
-                if (document.getElementById('loading-overlay').style.display === 'flex' && document.querySelectorAll('.loading-container').length === 0) {
-                    alert("Netzwerkfehler! Konnte Songs nicht laden.");
-                    location.reload();
-                }
-            }, 1000);
-        }
-
         async function startHigherLowerMode() {
-            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading Stream Data... ⏳</h2></div>`;
-            document.getElementById('loading-overlay').style.display = 'flex'; 
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Stream Data...";
             resetGameStats(); currentMode = 'higherlower'; hlStreak = 0; hlRecentArtists = [];
             
             let sel = [...megaStars, ...artists2010s, ...soundcloudArtists, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0, 15);
             await Promise.all(sel.map(a => fetchArtistSongs(a)));
             
-            if (songsPool.length < 5) { showNetworkError(); return; }
+            if (songsPool.length < 5) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); return; }
             
             hlPool = smartShuffle(songsPool).map(s => ({ ...s, streams: getTrackEstimatedStreams(s.title, s.artist.name) }));
             document.getElementById('loading-overlay').style.display = 'none'; pauseMenuMusic();
@@ -1146,84 +1260,64 @@
             saveAccountData();
         }
 
-        function fetchArtistSongs(artist) {
-            return new Promise((resolve) => {
-                const cb = 'deezer_game_' + Date.now() + '_' + (++globalDeezerCbCounter);
-                let isResolved = false;
+        let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; 
+        let currentPlayId = 0; 
+
+        function playAudioSnippet(isReplay = false) { 
+            clearTimeout(precisionTimer); let playId = ++currentPlayId;
+            if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
+            audio.volume = globalVolume; audio.loop = false; let p = audio.play();
+            if (p !== undefined) { p.then(() => { if (playId !== currentPlayId) return; if (maxPlayTime < 30) { precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000); } }).catch(e=>{}); }
+        }
+
+        function readSettings() { let hcToggle = document.getElementById('hardcore-toggle'); let artToggle = document.getElementById('artist-toggle'); if (hcToggle) isHardcoreMode = hcToggle.checked; if (artToggle) showArtistName = artToggle.checked; }
+
+        async function fetchArtistSongs(artist) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000); 
+                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=200`, { signal: controller.signal });
+                clearTimeout(timeoutId);
                 
-                let fallbackTimer = setTimeout(() => {
-                    if(!isResolved) { 
-                        isResolved = true; 
-                        cleanupJsonpScript(cb); 
-                        resolve(); 
-                    }
-                }, 8000);
-
-                window[cb] = function(res) {
-                    if(isResolved) return; 
-                    isResolved = true; 
-                    clearTimeout(fallbackTimer);
-
-                    if (res && res.data && res.data.length > 0) {
-                        const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout', 'radio edit', 'clean'];
-                        const blacklistedArtists = ['bones', 'bones uk'];
+                let data = await res.json();
+                if (data && data.results) {
+                    // STRENGER FILTER GEGEN REMIXE, INSTRUMENTALS UND NO-NAMES
+                    const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout'];
+                    
+                    let valid = data.results.filter(t => {
+                        if (!t.previewUrl) return false;
                         
-                        let valid = res.data.filter(t => {
-                            if (!t.preview) return false;
-                            
-                            let trackNameLower = t.title.toLowerCase(); 
-                            let artistNameLower = t.artist.name.toLowerCase(); 
-                            let searchArtistLower = artist.toLowerCase();
+                        let trackNameLower = t.trackName.toLowerCase(); 
+                        let artistNameLower = t.artistName.toLowerCase(); 
+                        let searchArtistLower = artist.toLowerCase();
 
-                            if (blacklistedArtists.includes(artistNameLower) || artistNameLower.includes('bones uk') || artistNameLower === 'bones') return false;
-                            if (blacklistedArtists.includes(searchArtistLower)) return false;
+                        // 1. Zwingend: Der gesuchte Künstler MUSS der Lead-Artist sein (verhindert Sampler & Producer die nur "feat." im Namen haben)
+                        let isLeadArtist = artistNameLower === searchArtistLower || 
+                                           artistNameLower.startsWith(searchArtistLower + " ") || 
+                                           artistNameLower.startsWith(searchArtistLower + ",");
+                                           
+                        if (!isLeadArtist) return false;
 
-                            let isLeadArtist = artistNameLower === searchArtistLower || 
-                                               artistNameLower.startsWith(searchArtistLower + " ") || 
-                                               artistNameLower.startsWith(searchArtistLower + ",");
-                            if (!isLeadArtist) return false;
-
-                            for (let term of forbidden) { if (trackNameLower.includes(term) || artistNameLower.includes(term)) { return false; } }
-                            
-                            return true;
-                        });
-                        
-                        let uniqueTracks = new Map();
-                        for (let t of valid) { 
-                            let cleanName = t.title.toLowerCase().split('(')[0].split('[')[0].trim(); 
-                            
-                            if (!uniqueTracks.has(cleanName)) { 
-                                uniqueTracks.set(cleanName, t); 
-                            } else {
-                                let existing = uniqueTracks.get(cleanName);
-                                if (t.explicit_lyrics === true && existing.explicit_lyrics !== true) {
-                                    uniqueTracks.set(cleanName, t);
-                                }
-                            }
+                        // 2. Trash-Wörter blockieren
+                        for (let term of forbidden) { 
+                            if (trackNameLower.includes(term) || artistNameLower.includes(term)) { 
+                                return false; 
+                            } 
                         }
                         
-                        let uniqueArray = Array.from(uniqueTracks.values()).sort(() => 0.5 - Math.random());
-                        let mapped = uniqueArray.slice(0, 40).map(t => ({
-                            id: t.id.toString(), title: t.title, preview: t.preview, artist: { name: t.artist.name }, album: { cover_medium: t.album.cover_xl || t.album.cover_medium || '' }
-                        }));
-                        songsPool = songsPool.concat(mapped);
-                    }
-                    cleanupJsonpScript(cb);
-                    resolve();
-                };
-
-                const s = document.createElement('script'); s.id = cb;
-                s.onerror = () => { 
-                    if(!isResolved) { 
-                        isResolved = true; 
-                        clearTimeout(fallbackTimer); 
-                        cleanupJsonpScript(cb); 
-                        resolve(); 
-                    } 
-                };
-                s.src = `https://api.deezer.com/search?q=artist:"${encodeURIComponent(artist)}"&limit=100&output=jsonp&callback=${cb}`; 
-                document.head.appendChild(s);
-            });
+                        return true;
+                    });
+                    
+                    let uniqueTracks = new Map();
+                    for (let t of valid) { let cleanName = t.trackName.toLowerCase().split('(')[0].split('[')[0].trim(); if (!uniqueTracks.has(cleanName)) { uniqueTracks.set(cleanName, t); } }
+                    
+                    let uniqueArray = Array.from(uniqueTracks.values()); uniqueArray.sort(() => 0.5 - Math.random());
+                    let mapped = uniqueArray.slice(0, 40).map(t => ({
+                        id: t.trackId.toString(), title: t.trackName, preview: t.previewUrl, artist: { name: t.artistName }, album: { cover_medium: t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '500x500bb') : '' }
+                    }));
+                    songsPool = songsPool.concat(mapped);
+                }
+            } catch (e) { console.warn("API Error for", artist, e); }
         }
 
         function resetGameStats() {
@@ -1250,60 +1344,46 @@
         async function startMixedMode(mode) {
             readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            
-            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading database... ⏳</h2></div>`;
-            document.getElementById('loading-overlay').style.display = 'flex'; 
-            
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading database...";
             resetGameStats(); currentMode = mode; let sel = [];
             
             if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === 'soundcloud') sel = [...soundcloudArtists].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === '2010s') sel = [...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
-            if (mode === 'megahits') sel = [...megaStars, ...artists2010s].sort(()=>0.5-Math.random()).slice(0,15);
+            if (mode === 'megahits') sel = [...megaStars, ...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === 'fallen') sel = [...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
             
             try {
                 await Promise.all(sel.map(a => fetchArtistSongs(a)));
-                
-                if (mode === 'megahits') {
-                    let originalPool = [...songsPool];
-                    songsPool = songsPool.filter(s => getTrackEstimatedStreams(s.title, s.artist.name) >= 500000000);
-                    if (songsPool.length < 4 && originalPool.length >= 4) {
-                        songsPool = originalPool.sort((a,b) => getTrackEstimatedStreams(b.title, b.artist.name) - getTrackEstimatedStreams(a.title, a.artist.name)).slice(0, 30);
-                    }
-                }
-                
-                if (songsPool.length < 4) { showNetworkError(); return; }
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker blocked the songs. Please try again!"); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
-            } catch (err) { showNetworkError(); }
+            } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
         }
 
         async function startProgressiveMode() {
             readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading Progressive Mode... ⏳</h2></div>`;
-            document.getElementById('loading-overlay').style.display = 'flex'; 
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
             resetGameStats(); currentMode = 'progressive';
             
             try {
                 await Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchArtistSongs(a)));
-                if (songsPool.length < 4) { showNetworkError(); return; }
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker blocked the songs. Please try again!"); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
-            } catch (err) { showNetworkError(); }
+            } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
         }
 
         async function startArtistMode(artist) {
             readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
-            document.getElementById('loading-overlay').innerHTML = `<div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Loading catalog for ${artist}... ⏳</h2></div>`;
-            document.getElementById('loading-overlay').style.display = 'flex'; 
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
             resetGameStats(); currentMode = 'artist';
             
             try {
                 await fetchArtistSongs(artist);
-                if (songsPool.length < 4) { showNetworkError(); return; }
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker blocked the songs. Please try again!"); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
-            } catch (err) { showNetworkError(); }
+            } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
         }
 
         function updateSuggestions() {
@@ -1318,19 +1398,6 @@
                 div.onclick = () => { document.getElementById('guess-input').value = m.title; box.style.display = 'none'; checkTextInput(); }; box.appendChild(div);
             });
             box.style.display = 'block';
-        }
-
-        let currentPlayId = 0; 
-        let maxPlayTime = 1; 
-        let precisionTimer = null; 
-        let playedSongIds = new Set();
-        let currentSong = null;
-
-        function playAudioSnippet(isReplay = false) { 
-            clearTimeout(precisionTimer); let playId = ++currentPlayId;
-            if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
-            audio.volume = globalVolume; audio.loop = false; let p = audio.play();
-            if (p !== undefined) { p.then(() => { if (playId !== currentPlayId) return; if (maxPlayTime < 30) { precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000); } }).catch(e=>{}); }
         }
 
         function nextRound() {
@@ -1369,12 +1436,7 @@
         function replaySnippet() { playAudioSnippet(true); }
         function addTime() { if (maxPlayTime < 10) { maxPlayTime += 3; if(maxPlayTime>10)maxPlayTime=10; document.getElementById('add-time-btn').innerText = `+3s (${maxPlayTime.toFixed(1)}s)`; playAudioSnippet(true); } }
         function skipSong() { processAnswer(false, true); }
-        
-        function checkTextInput() { 
-            let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); 
-            let c = currentSong.title.toLowerCase().split(/\s+fe?a?t\.?\s+/i)[0].split('(')[0].split('[')[0].replace(/[^a-z0-9]/g, ''); 
-            processAnswer(v === c || (v.length >= 4 && c.includes(v))); 
-        }
+        function checkTextInput() { let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); let c = currentSong.title.toLowerCase().split('(')[0].split(' feat')[0].replace(/[^a-z0-9]/g, ''); processAnswer(v === c || (v.length >= 4 && c.includes(v))); }
 
         function checkAllAnswered() {
             if (!isMultiplayer) return;
@@ -1458,7 +1520,7 @@
                 
                 if (isMultiplayer) {
                     socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
-                    let myData = { id: socket.id, score: score, lives: lives, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
+                    let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
                     matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
                     
                     t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
@@ -1530,10 +1592,7 @@
             const res = document.getElementById('mp-result');
             if(!res || !isMultiplayer || isWinnerScreenShown) return;
             
-            let sorted = [...lobbyPlayers].map(p => { return matchEndData[p.id] ? matchEndData[p.id] : p; }).sort((a,b) => {
-                if (b.lives !== a.lives) return b.lives - a.lives;
-                return b.score - a.score;
-            });
+            let sorted = [...lobbyPlayers].map(p => { return matchEndData[p.id] ? matchEndData[p.id] : p; }).sort((a,b) => b.score - a.score);
             
             let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Standings</h3>';
             html += '<div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
