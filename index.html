@@ -820,31 +820,29 @@
         let searchTimeout = null;
         function handleAnthemInput() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { searchMenuSong(); }, 500); }
 
-        async function searchMenuSong() {
+        function searchMenuSong() {
             let q = document.getElementById('edit-song-search-input').value.trim(); let sel = document.getElementById('edit-menu-song-select');
             if(!q) { sel.style.display = 'none'; return; }
             let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
             if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = `<option value="yt:${vid}" data-title="YouTube Track">▶️ YouTube Video (${vid})</option>`; sel.style.display = 'block'; return; }
             
-            try {
-                // Für die Hymnen-Suche nutzen wir das zuverlässige iTunes, da Deezer JSONP hier oft hängt
-                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=10`);
-                let data = await res.json();
+            const cb = 'dz_menu_' + Date.now() + Math.floor(Math.random()*1000);
+            window[cb] = function(res) {
                 sel.innerHTML = '';
-                if (data && data.results && data.results.length > 0) {
-                    let valid = data.results.filter(t => t.previewUrl);
+                if (res && res.data && res.data.length > 0) {
+                    let valid = res.data.filter(t => t.preview);
                     if (valid.length > 0) {
                         sel.innerHTML = '<option value="">🎵 Choose your Anthem...</option>';
                         valid.forEach(t => {
-                            let opt = document.createElement('option'); opt.value = t.previewUrl; opt.innerText = `${t.artistName} - ${t.trackName}`; opt.setAttribute('data-title', `${t.artistName} - ${t.trackName}`); sel.appendChild(opt);
+                            let opt = document.createElement('option'); opt.value = t.preview; opt.innerText = `${t.artist.name} - ${t.title}`; opt.setAttribute('data-title', `${t.artist.name} - ${t.title}`); sel.appendChild(opt);
                         });
-                        sel.style.display = 'block'; return;
+                        sel.style.display = 'block'; delete window[cb]; return;
                     }
                 }
                 sel.innerHTML = '<option value="">❌ No songs found</option>'; sel.style.display = 'block';
-            } catch(e) {
-                sel.innerHTML = '<option value="">❌ Error fetching</option>'; sel.style.display = 'block';
-            }
+                delete window[cb];
+            };
+            const s = document.createElement('script'); s.src = `https://api.deezer.com/search/track?q=${encodeURIComponent(q)}&limit=10&output=jsonp&callback=${cb}`; document.head.appendChild(s);
         }
 
         function updateFavSong() {
@@ -1192,7 +1190,7 @@
             return new Promise(async (resolve) => {
                 let fetchedFromDeezer = false;
                 
-                // 1. DEEZER API (Hauptquelle, priorisiert Explicit)
+                // 1. DEEZER API (Hauptquelle)
                 try {
                     fetchedFromDeezer = await new Promise((resDeez) => {
                         const cb = 'dz_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
@@ -1201,7 +1199,32 @@
                         window[cb] = function(res) {
                             clearTimeout(to);
                             if (res && res.data && res.data.length > 0) {
-                                let valid = res.data.filter(t => t.preview);
+                                const forbidden = ['karaoke', 'tribute', 'in the style', 'type beat', 'lullaby', '8-bit', 'parody', 'workout', 'cover', 'bad bunny', 'camila cabello', 'ed sheeran', 'justin bieber', 'j balvin', 'ozuna', 'shakira', 'rosalia'];
+                                
+                                let valid = res.data.filter(t => {
+                                    if (!t.preview) return false;
+                                    
+                                    let trackNameLower = t.title.toLowerCase(); 
+                                    let artistNameLower = t.artist.name.toLowerCase(); 
+                                    let searchArtistLower = artist.toLowerCase();
+
+                                    // STRIKTER FILTER: Der Artist MUSS der Haupt-Artist sein!
+                                    let isLeadArtist = artistNameLower === searchArtistLower || 
+                                                       artistNameLower.startsWith(searchArtistLower + " ") || 
+                                                       artistNameLower.startsWith(searchArtistLower + ",") ||
+                                                       artistNameLower.startsWith(searchArtistLower + " &") ||
+                                                       artistNameLower.startsWith(searchArtistLower + " x");
+                                                       
+                                    if (!isLeadArtist) return false;
+
+                                    for (let term of forbidden) { 
+                                        if (trackNameLower.includes(term) || artistNameLower.includes(term)) { 
+                                            return false; 
+                                        } 
+                                    }
+                                    return true;
+                                });
+
                                 let uniqueTracks = new Map();
                                 for (let t of valid) {
                                     let cleanName = t.title.toLowerCase().split('(')[0].split('[')[0].trim();
@@ -1228,13 +1251,41 @@
                     });
                 } catch (e) {}
 
-                // 2. UNSICHTBARER FALLBACK AUF ITUNES (Nur wenn Deezer blockiert wurde / fehlschlägt)
+                // 2. UNSICHTBARER FALLBACK AUF ITUNES (Nur wenn Deezer blockiert wurde oder nichts zurückgab)
                 if (!fetchedFromDeezer) {
                     try {
                         let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=100`);
                         let data = await res.json();
                         if (data && data.results) {
-                            let valid = data.results.filter(t => t.previewUrl);
+                            const forbidden = ['karaoke', 'tribute', 'in the style', 'type beat', 'lullaby', '8-bit', 'parody', 'workout', 'cover', 'bad bunny', 'camila cabello', 'ed sheeran', 'justin bieber', 'j balvin', 'ozuna', 'shakira', 'rosalia'];
+                            let valid = data.results.filter(t => {
+                                if(!t.previewUrl) return false;
+                                
+                                let trackNameLower = t.trackName.toLowerCase();
+                                let artistNameLower = t.artistName.toLowerCase();
+                                let searchArtistLower = artist.toLowerCase();
+                                
+                                // STRIKTER FILTER für iTunes
+                                let isLeadArtist = artistNameLower === searchArtistLower || 
+                                                   artistNameLower.startsWith(searchArtistLower + " ") || 
+                                                   artistNameLower.startsWith(searchArtistLower + ",") ||
+                                                   artistNameLower.startsWith(searchArtistLower + " &") ||
+                                                   artistNameLower.startsWith(searchArtistLower + " x");
+                                                   
+                                if (!isLeadArtist) return false;
+                                
+                                // Genre Prüfung (Sicherheitshalber)
+                                let genre = t.primaryGenreName ? t.primaryGenreName.toLowerCase() : '';
+                                if (genre && (genre.includes('pop') && !genre.includes('hip-hop') || genre.includes('latino') || genre.includes('reggaeton'))) {
+                                    return false;
+                                }
+
+                                for (let term of forbidden) { 
+                                    if (trackNameLower.includes(term) || artistNameLower.includes(term)) return false; 
+                                }
+                                return true;
+                            });
+                            
                             let uniqueTracks = new Map();
                             for (let t of valid) {
                                 let cleanName = t.trackName.toLowerCase().split('(')[0].split('[')[0].trim();
@@ -1242,6 +1293,7 @@
                                     uniqueTracks.set(cleanName, t);
                                 }
                             }
+                            
                             let mapped = Array.from(uniqueTracks.values()).slice(0, 40).map((t, i) => ({
                                 id: 'it' + t.trackId, title: t.trackName, preview: t.previewUrl, artist: { name: t.artistName },
                                 album: { cover_medium: t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '500x500bb') : '' }, popRank: i
