@@ -597,7 +597,6 @@
             for (let i = 0; i < combined.length; i++) hash = combined.charCodeAt(i) + ((hash << 5) - hash);
             
             let baseMin = 50; let baseMax = 200;
-            // Higher base values to ensure Mega Hits and stream battle feels accurate and mainstream
             if (megaStars.includes(artistName)) { baseMin = 400; baseMax = 1500; }
             else if (legends.includes(artistName)) { baseMin = 300; baseMax = 900; }
             else if (fallenLegends.includes(artistName)) { baseMin = 300; baseMax = 1200; }
@@ -677,7 +676,6 @@
             menuAudio.volume = globalVolume * 0.4; audio.volume = globalVolume; sfxAudio.volume = globalVolume;
             if(ytReady && ytPlayer && ytPlayer.setVolume) { let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100; ytPlayer.setVolume(globalVolume * vol); }
             
-            // Sync all sliders everywhere
             document.querySelectorAll('.vol-slider').forEach(el => {
                 if (el.value != val) el.value = val;
             });
@@ -810,7 +808,7 @@
                     document.getElementById('app-background').src = myBgUrl; updateAllAvatars();
                 }
             };
-            const s = document.createElement('script'); s.src = `https://api.deezer.com/search/artist?q="${encodeURIComponent(artistName)}"&limit=1&output=jsonp&callback=${cb}`; document.head.appendChild(s);
+            const s = document.createElement('script'); s.src = `https://api.deezer.com/search/artist?q=${encodeURIComponent(artistName)}&limit=1&output=jsonp&callback=${cb}`; document.head.appendChild(s);
         }
 
         function updateAllAvatars() { 
@@ -844,7 +842,7 @@
                 sel.innerHTML = '<option value="">❌ No songs found</option>'; sel.style.display = 'block';
                 delete window[cb];
             };
-            const s = document.createElement('script'); s.src = `https://api.deezer.com/search/track?q="${encodeURIComponent(q)}"&limit=10&output=jsonp&callback=${cb}`; document.head.appendChild(s);
+            const s = document.createElement('script'); s.src = `https://api.deezer.com/search/track?q=${encodeURIComponent(q)}&limit=10&output=jsonp&callback=${cb}`; document.head.appendChild(s);
         }
 
         function updateFavSong() {
@@ -1123,7 +1121,8 @@
             resetGameStats(); currentMode = 'higherlower'; hlStreak = 0; hlRecentArtists = [];
             
             let sel = [...megaStars, ...artists2010s, ...soundcloudArtists, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0, 15);
-            await Promise.all(sel.map(a => fetchArtistSongs(a)));
+            
+            for (let a of sel) { await fetchArtistSongs(a); }
             
             if (songsPool.length < 5) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); return; }
             
@@ -1186,66 +1185,90 @@
 
         function readSettings() { let hcToggle = document.getElementById('hardcore-toggle'); let artToggle = document.getElementById('artist-toggle'); if (hcToggle) isHardcoreMode = hcToggle.checked; if (artToggle) showArtistName = artToggle.checked; }
 
+        function processTracks(tracks, artist, source) {
+            const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout', 'clean', 'radio edit'];
+            
+            let valid = tracks.filter(t => {
+                let preview = source === 'deezer' ? t.preview : t.previewUrl;
+                if (!preview) return false;
+                
+                let title = source === 'deezer' ? t.title : t.trackName;
+                let artName = source === 'deezer' ? t.artist.name : t.artistName;
+                
+                if (source === 'itunes' && t.trackExplicitness === 'cleaned') return false;
+                
+                let trackNameLower = title.toLowerCase(); 
+                let artistNameLower = artName.toLowerCase(); 
+                let searchArtistLower = artist.toLowerCase();
+
+                let isLeadArtist = artistNameLower === searchArtistLower || artistNameLower.startsWith(searchArtistLower + " ") || artistNameLower.startsWith(searchArtistLower + ",");
+                if (!isLeadArtist) return false;
+
+                for (let term of forbidden) { if (trackNameLower.includes(term) || artistNameLower.includes(term)) return false; }
+                return true;
+            });
+            
+            let uniqueTracks = new Map();
+            for (let t of valid) { 
+                let title = source === 'deezer' ? t.title : t.trackName;
+                let cleanName = title.toLowerCase().split('(')[0].split('[')[0].trim(); 
+                
+                if (!uniqueTracks.has(cleanName)) { 
+                    uniqueTracks.set(cleanName, t); 
+                } else {
+                    let isExplicit = source === 'deezer' ? t.explicit_lyrics : (t.trackExplicitness === 'explicit');
+                    let currExplicit = source === 'deezer' ? uniqueTracks.get(cleanName).explicit_lyrics : (uniqueTracks.get(cleanName).trackExplicitness === 'explicit');
+                    if (isExplicit && !currExplicit) uniqueTracks.set(cleanName, t);
+                }
+            }
+            
+            let uniqueArray = Array.from(uniqueTracks.values()); 
+            let mapped = uniqueArray.slice(0, 40).map((t, index) => ({
+                id: source === 'deezer' ? t.id.toString() : t.trackId.toString(), 
+                title: source === 'deezer' ? t.title : t.trackName, 
+                preview: source === 'deezer' ? t.preview : t.previewUrl, 
+                artist: { name: source === 'deezer' ? t.artist.name : t.artistName }, 
+                album: { cover_medium: source === 'deezer' ? (t.album.cover_xl || t.album.cover_medium || '') : (t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '500x500bb') : '') }, 
+                popRank: index
+            }));
+            songsPool = songsPool.concat(mapped);
+            return mapped.length;
+        }
+
         function fetchArtistSongs(artist) {
-            return new Promise((resolve) => {
-                const cb = 'deezer_tracks_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-                window[cb] = function(res) {
-                    if (res && res.data && res.data.length > 0) {
-                        const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout', 'clean', 'radio edit'];
-                        
-                        let valid = res.data.filter(t => {
-                            if (!t.preview) return false;
-                            
-                            let trackNameLower = t.title.toLowerCase(); 
-                            let artistNameLower = t.artist.name.toLowerCase(); 
-                            let searchArtistLower = artist.toLowerCase();
-
-                            let isLeadArtist = artistNameLower === searchArtistLower || 
-                                               artistNameLower.startsWith(searchArtistLower + " ") || 
-                                               artistNameLower.startsWith(searchArtistLower + ",");
-                                               
-                            if (!isLeadArtist) return false;
-
-                            for (let term of forbidden) { 
-                                if (trackNameLower.includes(term) || artistNameLower.includes(term)) { 
-                                    return false; 
-                                } 
-                            }
-                            return true;
-                        });
-                        
-                        let uniqueTracks = new Map();
-                        for (let t of valid) { 
-                            let cleanName = t.title.toLowerCase().split('(')[0].split('[')[0].trim(); 
-                            
-                            if (!uniqueTracks.has(cleanName)) { 
-                                uniqueTracks.set(cleanName, t); 
-                            } else {
-                                // Explicit Version überschreibt eine eventuell vorhandene Clean-Version
-                                if (t.explicit_lyrics && !uniqueTracks.get(cleanName).explicit_lyrics) {
-                                    uniqueTracks.set(cleanName, t);
-                                }
-                            }
+            return new Promise(async (resolve) => {
+                // 1. Deezer API (via JSONP)
+                let deezerSuccess = await new Promise((resDeez) => {
+                    const cb = 'dz_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+                    // Adblocker Fallback Timeout
+                    let to = setTimeout(() => { if(window[cb]) delete window[cb]; resDeez(false); }, 3500);
+                    
+                    window[cb] = function(res) {
+                        clearTimeout(to);
+                        let added = 0;
+                        if (res && res.data && res.data.length > 0) {
+                            added = processTracks(res.data, artist, 'deezer');
                         }
-                        
-                        let uniqueArray = Array.from(uniqueTracks.values()); 
-                        let mapped = uniqueArray.slice(0, 40).map((t, index) => ({
-                            id: t.id.toString(), 
-                            title: t.title, 
-                            preview: t.preview, 
-                            artist: { name: t.artist.name }, 
-                            album: { cover_medium: t.album.cover_xl || t.album.cover_medium || t.album.cover || '' }, 
-                            popRank: index
-                        }));
-                        songsPool = songsPool.concat(mapped);
-                    }
-                    delete window[cb];
-                    resolve();
-                };
-                const s = document.createElement('script'); 
-                s.src = `https://api.deezer.com/search/track?q=artist:"${encodeURIComponent(artist)}"&limit=100&output=jsonp&callback=${cb}`; 
-                s.onerror = () => { delete window[cb]; resolve(); };
-                document.head.appendChild(s);
+                        delete window[cb];
+                        resDeez(added > 0);
+                    };
+                    const s = document.createElement('script'); 
+                    s.src = `https://api.deezer.com/search?q=${encodeURIComponent(artist)}&limit=50&output=jsonp&callback=${cb}`; 
+                    s.onerror = () => { clearTimeout(to); delete window[cb]; resDeez(false); };
+                    document.head.appendChild(s);
+                });
+
+                // 2. Fallback: Apple Music (Wenn Deezer vom Adblocker blockiert wird)
+                if (!deezerSuccess) {
+                    try {
+                        let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=50&explicit=Yes`);
+                        let data = await res.json();
+                        if (data && data.results && data.results.length > 0) {
+                            processTracks(data.results, artist, 'itunes');
+                        }
+                    } catch(e) {}
+                }
+                resolve();
             });
         }
 
@@ -1280,17 +1303,16 @@
             if (mode === 'soundcloud') sel = [...soundcloudArtists].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === '2010s') sel = [...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
             
-            // Mega Hits nutzt nun direkt die Top 10 Artists aus allen Sparten
             if (mode === 'megahits') sel = [...megaStars, ...artists2010s, ...legends, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0,10);
             
             if (mode === 'fallen') sel = [...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
             
             try {
-                await Promise.all(sel.map(a => fetchArtistSongs(a)));
+                for (let a of sel) { await fetchArtistSongs(a); }
+                
                 if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker blocked the songs. Please try again!"); return; }
                 
                 if (mode === 'megahits') {
-                    // Mega Hits behält nur die Top 5 der absoluten Mainstream-Songs pro Künstler (Deezer sortiert ab API bereits nach global Rank)
                     songsPool = songsPool.filter(s => s.popRank < 5);
                 }
                 
@@ -1304,8 +1326,10 @@
             document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
             resetGameStats(); currentMode = 'progressive';
             
+            let sel = [...allArtists].sort(()=>0.5-Math.random()).slice(0,10);
+            
             try {
-                await Promise.all([...allArtists].sort(()=>0.5-Math.random()).slice(0,10).map(a => fetchArtistSongs(a)));
+                for (let a of sel) { await fetchArtistSongs(a); }
                 if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker blocked the songs. Please try again!"); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
             } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
