@@ -107,9 +107,6 @@
         .ea-card { background: var(--surface); backdrop-filter: blur(12px); border: 1px solid var(--surface-border); border-top: 1px solid rgba(255,255,255,0.25); border-radius: 16px; padding: 25px; cursor: pointer; transition: 0.3s; text-align: left; display: flex; flex-direction: column; justify-content: flex-end; min-height: 140px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); position: relative; overflow: hidden; }
         .ea-card:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(139, 92, 246, 0.25); }
         
-        .locked-card::after { content: "🔒 PREMIUM"; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: var(--warning); text-transform: uppercase; letter-spacing: 2px; opacity: 0.9; transition: 0.3s; }
-        .locked-card:hover::after { opacity: 1; font-size: 22px; }
-
         .ea-card-icon { font-size: 32px; margin-bottom: 10px; }
         .ea-card-title { font-size: 18px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; color: white; text-shadow: 0 0 5px black;}
         .ea-card-desc { font-size: 12px; color: #e4e4e7; font-weight: 600; text-shadow: 0 0 5px black;}
@@ -200,10 +197,6 @@
         .modal.warning h2 { color: var(--warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
 
         .loader { border: 4px solid rgba(255,255,255,0.05); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
-        
-        .paywall-modal { border: 2px solid #fbbf24; background: linear-gradient(180deg, #18181b 0%, #09090b 100%); box-shadow: 0 0 50px rgba(245, 158, 11, 0.2); }
-        .paywall-feature { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; text-align: left; }
-        .paywall-check { background: #fbbf24; color: black; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; flex-shrink: 0; }
 
         input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(139,92,246,0.8); }
@@ -266,41 +259,6 @@
         </div>
     </div>
 
-    <div id="premium-overlay" class="overlay" style="display: none;">
-        <div class="modal paywall-modal">
-            <div style="font-size: 50px; margin-bottom: 10px;">👑</div>
-            <h2 style="color: #fbbf24; font-weight: 900; letter-spacing: 2px; font-size: 32px; margin-bottom: 5px;">LIFETIME VIP</h2>
-            <p style="color: #d4d4d8; font-size: 14px; margin-bottom: 25px;">Support the servers once and unlock everything forever.</p>
-            
-            <div style="background: rgba(255,255,255,0.05); padding: 25px 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid rgba(251, 191, 36, 0.2);">
-                <div class="paywall-feature">
-                    <div class="paywall-check">✓</div>
-                    <span style="color: white; font-weight: 600; font-size: 15px;">Online Multiplayer (2-4 Players)</span>
-                </div>
-                <div class="paywall-feature">
-                    <div class="paywall-check">✓</div>
-                    <span style="color: white; font-weight: 600; font-size: 15px;">Stream Battle (Higher / Lower Mode)</span>
-                </div>
-                <div class="paywall-feature">
-                    <div class="paywall-check">✓</div>
-                    <span style="color: white; font-weight: 600; font-size: 15px;">Fallen Legends Mode (Tupac, X, Juice...)</span>
-                </div>
-                <div class="paywall-feature">
-                    <div class="paywall-check">✓</div>
-                    <span style="color: white; font-weight: 600; font-size: 15px;">Premium Eras (2010s, SoundCloud)</span>
-                </div>
-                <div class="paywall-feature" style="margin-bottom: 0;">
-                    <div class="paywall-check">✓</div>
-                    <span style="color: white; font-weight: 600; font-size: 15px;">Full Artist Catalog Mode</span>
-                </div>
-            </div>
-
-            <button class="btn-action btn-gold" style="font-size: 18px; padding: 20px; margin-bottom: 15px;" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Unlock on Gumroad (12€) ➔</button>
-            
-            <p style="margin-top: 15px; color: var(--text-muted); font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('premium-overlay').style.display='none'">Maybe later</p>
-        </div>
-    </div>
-
     <div id="app-layout">
         <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Menu</button>
         <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
@@ -312,14 +270,13 @@
                 <div class="sidebar-user-info">
                     <span id="sidebar-name" class="sidebar-name">Name</span>
                     <span class="sidebar-status" style="display:flex; gap:10px; align-items:center;">
-                        <span id="premium-badge" style="display:none; background: var(--warning); color: black; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 900;">VIP</span>
                         <span id="sidebar-level" style="color:var(--primary); font-weight:900; font-size:12px;">Lvl 1</span>
                     </span>
                 </div>
             </div>
             <div class="nav-menu">
                 <div id="nav-play" class="nav-item active" onclick="switchTab('play-tab', this)">🎮 Play</div>
-                <div id="nav-mp" class="nav-item" onclick="switchTab('multiplayer-tab', this)">⚔️ Online (2-4) <span class="lock-icon" style="font-size:10px; color:var(--warning);">🔒 VIP</span></div>
+                <div id="nav-mp" class="nav-item" onclick="switchTab('multiplayer-tab', this)">⚔️ Online (2-4)</div>
                 <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 My Club</div>
             </div>
             <div class="sidebar-footer">
@@ -355,7 +312,7 @@
                     </div>
                 </div>
 
-                <div class="section-title">Quick Play (Free)</div>
+                <div class="section-title">Quick Play</div>
                 <div class="cards-grid">
                     <div class="ea-card card-highlight" onclick="startMixedMode('all')">
                         <div class="ea-card-icon">🔀</div>
@@ -374,31 +331,31 @@
                     </div>
                 </div>
 
-                <div class="section-title">Premium Categories <span style="font-size:12px; color:var(--warning); vertical-align: middle;">VIP</span></div>
+                <div class="section-title">Categories</div>
                 <div class="cards-grid">
-                    <div class="ea-card locked-card card-stream" onclick="checkPremiumAndStart('higherlower')">
+                    <div class="ea-card card-stream" onclick="startHigherLowerMode()">
                         <div class="ea-card-icon">📈</div>
-                        <div class="ea-card-title">Stream Battle <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
+                        <div class="ea-card-title">Stream Battle</div>
                         <div class="ea-card-desc">Higher or Lower: Which song has more Spotify streams?</div>
                     </div>
-                    <div class="ea-card locked-card card-fallen" onclick="checkPremiumAndStart('fallen')">
+                    <div class="ea-card card-fallen" onclick="startMixedMode('fallen')">
                         <div class="ea-card-icon">🕊️</div>
-                        <div class="ea-card-title">Fallen Legends <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
+                        <div class="ea-card-title">Fallen Legends</div>
                         <div class="ea-card-desc">Tupac, Biggie, Juice WRLD, X & more.</div>
                     </div>
-                    <div class="ea-card locked-card" onclick="checkPremiumAndStart('2010s')">
+                    <div class="ea-card" onclick="startMixedMode('2010s')">
                         <div class="ea-card-icon">📅</div>
-                        <div class="ea-card-title">2010-2020 Rap <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
+                        <div class="ea-card-title">2010-2020 Rap</div>
                         <div class="ea-card-desc">The golden trap era (US/UK only).</div>
                     </div>
-                    <div class="ea-card locked-card" onclick="checkPremiumAndStart('soundcloud')">
+                    <div class="ea-card" onclick="startMixedMode('soundcloud')">
                         <div class="ea-card-icon">☁️</div>
-                        <div class="ea-card-title">SoundCloud Era <span class="lock-icon" style="font-size:12px; margin-left:5px;">🔒</span></div>
+                        <div class="ea-card-title">SoundCloud Era</div>
                         <div class="ea-card-desc">Peep, X, Juice & Co.</div>
                     </div>
                 </div>
 
-                <div class="section-title">Catalog Quiz (Artist Mode) <span style="font-size:12px; color:var(--warning); vertical-align: middle;">VIP</span></div>
+                <div class="section-title">Catalog Quiz (Artist Mode)</div>
                 <div class="artist-list" id="artist-grid"></div>
             </div>
 
@@ -484,19 +441,6 @@
                     <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">Mode Mastery (Points per Mode)</h3>
                     <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px;">Earn points to unlock Bronze 🥉, Silver 🥈, Gold 🥇, and Champion 🏆 ranks in each mode!</p>
                     <div id="mode-stats-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;"></div>
-                </div>
-
-                <div id="vip-buy-section" style="background: rgba(139, 92, 246, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--primary); margin-bottom: 20px; text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">🚀 Get Lifetime VIP Pass</h3>
-                    <button class="btn-action btn-gold" onclick="window.open('https://deanster671.gumroad.com/l/jqyky', '_blank')">Buy Lifetime Pass (12€) ➔</button>
-                </div>
-
-                <div id="vip-redeem-section" style="background: rgba(245, 158, 11, 0.1); padding: 25px; border-radius: 16px; border: 1px solid var(--warning); margin-bottom: 30px; text-align: left;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--warning);">👑 Redeem Gumroad License</h3>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="vip-code-input" class="ea-input" style="margin:0; border-color: var(--warning);" placeholder="e.g. A7X9-B2M4-99PL-Q1ZS">
-                        <button class="btn-action btn-gold" style="width:auto; padding:0 20px;" onclick="redeemVIPCode()">Verify</button>
-                    </div>
                 </div>
 
                 <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
@@ -678,7 +622,6 @@
         let myAvatar = localStorage.getItem('rapquiz_avatar') || 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix'; 
         let myBgUrl = localStorage.getItem('rapquiz_bg_url') || '';
         let myQuote = localStorage.getItem('rapquiz_quote') || (myFavArtist ? getArtistQuote(myFavArtist) : '"Ready to dominate the game."');
-        let isPremium = localStorage.getItem('rapquiz_premium') === 'true';
         let mySongUrl = localStorage.getItem('rapquiz_menu_song_url') || ''; 
         let mySongTitle = localStorage.getItem('rapquiz_menu_song_title') || '';
 
@@ -758,7 +701,7 @@
                     await dbClient.from('profiles').upsert({
                         id: session.session.user.id,
                         username: playerName,
-                        is_premium: isPremium,
+                        is_premium: true,
                         avatar_url: myAvatar,
                         quote: myQuote,
                         fav_artist: myFavArtist,
@@ -776,7 +719,7 @@
             
             if(!accounts[playerName]) accounts[playerName] = {};
             accounts[playerName].stats = myStats;
-            accounts[playerName].isPremium = isPremium;
+            accounts[playerName].isPremium = true;
             accounts[playerName].avatar = myAvatar;
             accounts[playerName].favArtist = myFavArtist;
             accounts[playerName].songUrl = mySongUrl;
@@ -826,7 +769,6 @@
         }
 
         function switchTab(tabId, el) {
-            if (tabId === 'multiplayer-tab' && !isPremium) { document.getElementById('premium-overlay').style.display = 'flex'; return; }
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
             if(tabId === 'profile-tab') { 
@@ -834,14 +776,6 @@
                 updateLevelDisplay(); updateDetailedStats();
             }
             if (window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active'); }
-        }
-
-        function checkPremiumAndStart(mode) {
-            if (isPremium) {
-                if(mode === 'artist') {} 
-                else if(mode === 'higherlower') { startHigherLowerMode(); }
-                else { startMixedMode(mode); }
-            } else { document.getElementById('premium-overlay').style.display = 'flex'; }
         }
 
         function loadArtistVisuals(artistName) {
@@ -902,11 +836,8 @@
             let grid = document.getElementById('artist-grid'); if(!grid) return;
             grid.innerHTML = '';
             allArtists.forEach(a => { 
-                let d = document.createElement('div'); d.className = isPremium ? 'artist-tile' : 'artist-tile locked-card'; 
-                if(!isPremium) {
-                    d.innerHTML = `<span>${a}</span><span class="lock-icon" style="display:block; font-size:10px; margin-top:3px; color:var(--warning);">🔒 VIP</span>`;
-                    d.onclick = () => { document.getElementById('premium-overlay').style.display = 'flex'; };
-                } else { d.innerText = a; d.onclick = () => startArtistMode(a); }
+                let d = document.createElement('div'); d.className = 'artist-tile'; 
+                d.innerText = a; d.onclick = () => startArtistMode(a);
                 grid.appendChild(d); 
             });
         }
@@ -957,7 +888,7 @@
 
                 if (!localAccountExists) {
                     accounts[name] = {
-                        password: pw, isPremium: false, 
+                        password: pw, isPremium: true, 
                         stats: { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, progressive: 0, megahits: 0, higherlower: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0 } },
                         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
                         bgUrl: '', favArtist: '', quote: '"Ready to dominate the game."', songUrl: '', songTitle: ''
@@ -967,7 +898,6 @@
                 playerName = name; savedPw = pw;
                 
                 myStats = accounts[playerName].stats || { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: {} };
-                isPremium = accounts[playerName].isPremium || false;
                 myAvatar = accounts[playerName].avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
                 myBgUrl = accounts[playerName].bgUrl || '';
                 myFavArtist = accounts[playerName].favArtist || '';
@@ -988,7 +918,6 @@
                         if (authData?.user) {
                             let { data: profile } = await dbClient.from('profiles').select('*').eq('id', authData.user.id).single();
                             if (profile) {
-                                isPremium = profile.is_premium || isPremium;
                                 if (profile.avatar_url) myAvatar = profile.avatar_url;
                                 if (profile.quote) myQuote = profile.quote;
                                 if (profile.fav_artist) myFavArtist = profile.fav_artist;
@@ -1011,7 +940,7 @@
                 if (!accounts[playerName]) accounts[playerName] = {};
                 if (!accounts[playerName].stats) accounts[playerName].stats = myStats;
 
-                accounts[playerName].isPremium = isPremium;
+                accounts[playerName].isPremium = true;
                 accounts[playerName].stats.totalScore = myStats.totalScore;
                 
                 localStorage.setItem('rapquiz_active_user', playerName);
@@ -1033,13 +962,6 @@
 
                 buildArtistGrid();
 
-                if (isPremium) {
-                    let badge = document.getElementById('premium-badge'); if(badge) badge.style.display = 'inline-block'; 
-                    let buy = document.getElementById('vip-buy-section'); if(buy) buy.style.display = 'none'; 
-                    let redeem = document.getElementById('vip-redeem-section'); if(redeem) redeem.style.display = 'none';
-                    document.querySelectorAll('.locked-card').forEach(el => { el.classList.remove('locked-card'); let lockIcon = el.querySelector('.lock-icon'); if(lockIcon) lockIcon.style.display = 'none'; });
-                }
-
                 updateAllAvatars(); playMenuMusic(mySongUrl);
                 if (btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
             } catch (error) {
@@ -1058,40 +980,6 @@
             document.getElementById('profile-view-quote').innerText = myQuote; 
             saveAccountData();
             loadArtistVisuals(myFavArtist); 
-        }
-
-        async function redeemVIPCode() {
-            let code = document.getElementById('vip-code-input').value.trim();
-            if(!code) return alert("Please enter your Gumroad code!");
-
-            let btn = document.querySelector('#vip-redeem-section button');
-            let originalText = btn.innerText;
-            btn.innerText = "Verifying...";
-            document.getElementById('vip-code-input').disabled = true;
-
-            try {
-                let res = await fetch('https://corsproxy.io/?https://api.gumroad.com/v2/licenses/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ product_id: 'ZWtMCbbtsw3aVMslIZK7MQ==', license_key: code, increment_uses_count: true })
-                });
-                
-                let data = await res.json();
-                if (data.success && !data.purchase.refunded) {
-                    isPremium = true; saveAccountData(); syncToCloud();
-                    alert("🎉 SUCCESS! License verified. You are now a Lifetime VIP!"); location.reload();
-                } else { alert("❌ Invalid or refunded code."); }
-            } catch (e) {
-                if(code.length >= 10 && code.includes('-')) {
-                    isPremium = true; saveAccountData(); syncToCloud();
-                    alert("🎉 SUCCESS! (Fallback Verification) You are now a Lifetime VIP!"); location.reload();
-                } else {
-                    alert("❌ API Error. Check your connection or format.");
-                }
-            }
-
-            document.getElementById('vip-code-input').disabled = false;
-            btn.innerText = originalText;
         }
 
         function encodeAvatarAndQuote() { return myAvatar + '|Q|' + myQuote; }
@@ -1281,7 +1169,6 @@
                 
                 let data = await res.json();
                 if (data && data.results) {
-                    // STRENGER FILTER GEGEN REMIXE, INSTRUMENTALS UND NO-NAMES
                     const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout'];
                     
                     let valid = data.results.filter(t => {
@@ -1291,14 +1178,12 @@
                         let artistNameLower = t.artistName.toLowerCase(); 
                         let searchArtistLower = artist.toLowerCase();
 
-                        // 1. Zwingend: Der gesuchte Künstler MUSS der Lead-Artist sein (verhindert Sampler & Producer die nur "feat." im Namen haben)
                         let isLeadArtist = artistNameLower === searchArtistLower || 
                                            artistNameLower.startsWith(searchArtistLower + " ") || 
                                            artistNameLower.startsWith(searchArtistLower + ",");
                                            
                         if (!isLeadArtist) return false;
 
-                        // 2. Trash-Wörter blockieren
                         for (let term of forbidden) { 
                             if (trackNameLower.includes(term) || artistNameLower.includes(term)) { 
                                 return false; 
