@@ -327,7 +327,7 @@
                     <div class="ea-card card-gold" onclick="startMixedMode('megahits')">
                         <div class="ea-card-icon">🌟</div>
                         <div class="ea-card-title">Mega Hits</div>
-                        <div class="ea-card-desc">Over 100M streams. The classics.</div>
+                        <div class="ea-card-desc">Over 500M streams. The biggest hits.</div>
                     </div>
                 </div>
 
@@ -580,11 +580,14 @@
             for(let k in knownStreamBenchmarks) { if (clean === k || clean.includes(k) || k.includes(clean)) return knownStreamBenchmarks[k]; }
             let hash = 0; let combined = trackTitle + artistName;
             for (let i = 0; i < combined.length; i++) hash = combined.charCodeAt(i) + ((hash << 5) - hash);
+            
             let baseMin = 50; let baseMax = 200;
-            if (megaStars.includes(artistName)) { baseMin = 300; baseMax = 900; }
-            else if (legends.includes(artistName)) { baseMin = 200; baseMax = 600; }
-            else if (fallenLegends.includes(artistName)) { baseMin = 250; baseMax = 800; }
-            else if (artists2010s.includes(artistName)) { baseMin = 150; baseMax = 500; }
+            // Higher base values to ensure Mega Hits and stream battle feels accurate and mainstream
+            if (megaStars.includes(artistName)) { baseMin = 400; baseMax = 1500; }
+            else if (legends.includes(artistName)) { baseMin = 300; baseMax = 900; }
+            else if (fallenLegends.includes(artistName)) { baseMin = 300; baseMax = 1200; }
+            else if (artists2010s.includes(artistName)) { baseMin = 200; baseMax = 800; }
+            
             let randomTier = Math.abs(hash % (baseMax - baseMin)) + baseMin;
             return randomTier * 1000000 + Math.abs(hash % 999999);
         }
@@ -1164,15 +1167,19 @@
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 4000); 
-                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=200`, { signal: controller.signal });
+                // Explizite Songs forcieren mit &explicit=Yes
+                let res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(artist)}&entity=song&limit=200&explicit=Yes`, { signal: controller.signal });
                 clearTimeout(timeoutId);
                 
                 let data = await res.json();
                 if (data && data.results) {
-                    const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout'];
+                    const forbidden = ['cover', 'tribute', 'karaoke', 'in the style', 'type beat', 'lullaby', '8-bit', 'slowed', 'reverb', 'sped up', 'tiktok', 'remix', 'instrumental', 'acapella', 'mashup', 'medley', 'parody', 'workout', 'clean', 'radio edit'];
                     
                     let valid = data.results.filter(t => {
                         if (!t.previewUrl) return false;
+                        
+                        // Zensierte / geschnittene Versionen ausdrücklich filtern
+                        if (t.trackExplicitness === 'cleaned') return false; 
                         
                         let trackNameLower = t.trackName.toLowerCase(); 
                         let artistNameLower = t.artistName.toLowerCase(); 
@@ -1196,9 +1203,11 @@
                     let uniqueTracks = new Map();
                     for (let t of valid) { let cleanName = t.trackName.toLowerCase().split('(')[0].split('[')[0].trim(); if (!uniqueTracks.has(cleanName)) { uniqueTracks.set(cleanName, t); } }
                     
-                    let uniqueArray = Array.from(uniqueTracks.values()); uniqueArray.sort(() => 0.5 - Math.random());
-                    let mapped = uniqueArray.slice(0, 40).map(t => ({
-                        id: t.trackId.toString(), title: t.trackName, preview: t.previewUrl, artist: { name: t.artistName }, album: { cover_medium: t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '500x500bb') : '' }
+                    let uniqueArray = Array.from(uniqueTracks.values()); 
+                    
+                    // Wir speichern den popRank (wie weit oben sie bei iTunes sind = Popularität) für den Mega Hits Modus
+                    let mapped = uniqueArray.slice(0, 40).map((t, index) => ({
+                        id: t.trackId.toString(), title: t.trackName, preview: t.previewUrl, artist: { name: t.artistName }, album: { cover_medium: t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '500x500bb') : '' }, popRank: index
                     }));
                     songsPool = songsPool.concat(mapped);
                 }
@@ -1235,12 +1244,21 @@
             if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === 'soundcloud') sel = [...soundcloudArtists].sort(()=>0.5-Math.random()).slice(0,8);
             if (mode === '2010s') sel = [...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
-            if (mode === 'megahits') sel = [...megaStars, ...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
+            
+            // Mega Hits bedient sich bei den großen Artists
+            if (mode === 'megahits') sel = [...megaStars, ...artists2010s, ...legends, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0,10);
+            
             if (mode === 'fallen') sel = [...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
             
             try {
                 await Promise.all(sel.map(a => fetchArtistSongs(a)));
                 if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Network error or Adblocker blocked the songs. Please try again!"); return; }
+                
+                if (mode === 'megahits') {
+                    // Nur die Mainstream-Songs behalten (Top 5 der iTunes Ergebnisse pro Artist)
+                    songsPool = songsPool.filter(s => s.popRank < 5);
+                }
+                
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
             } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; alert("Error loading songs."); }
         }
