@@ -115,6 +115,7 @@
         .card-sc { border-color: rgba(255,85,0,0.5); }
         .card-gold { border-color: rgba(245,158,11,0.5); }
         .card-fallen { border-color: rgba(255,255,255,0.5); }
+        .card-stream { border-color: rgba(16,185,129,0.5); }
         .card-mystery { border-color: rgba(236, 72, 153, 0.5); }
 
         .artist-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
@@ -172,6 +173,19 @@
         .mystery-box { background: rgba(20, 20, 25, 0.9); border: 1px solid var(--primary); border-radius: 16px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .hint-row { font-size: 16px; font-weight: 700; color: white; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--warning); display: none; animation: fadeIn 0.3s ease forwards; }
 
+        #hl-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(25px); z-index: 100; flex-direction: column; justify-content: center; align-items: center; }
+        .hl-inner { width: 100%; max-width: 900px; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
+        .hl-cards-container { display: flex; width: 100%; gap: 20px; justify-content: center; align-items: stretch; margin-top: 20px; }
+        .hl-card { flex: 1; max-width: 400px; background: rgba(20, 20, 25, 0.7); border: 2px solid var(--surface-border); border-radius: 20px; padding: 25px; display: flex; flex-direction: column; align-items: center; text-align: center; backdrop-filter: blur(15px); box-shadow: 0 15px 35px rgba(0,0,0,0.5); transition: 0.3s; }
+        .hl-cover { width: 180px; height: 180px; border-radius: 16px; object-fit: cover; box-shadow: 0 10px 25px rgba(0,0,0,0.6); margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.2); }
+        .hl-song-title { font-size: 20px; font-weight: 900; color: white; margin: 0 0 5px 0; text-transform: uppercase; }
+        .hl-artist-name { font-size: 14px; font-weight: 700; color: var(--primary); margin: 0 0 20px 0; }
+        .hl-streams-val { font-size: 26px; font-weight: 900; color: var(--warning); margin: 10px 0; letter-spacing: 1px; text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+        .btn-hl { width: 100%; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 16px; text-transform: uppercase; border: none; cursor: pointer; transition: 0.2s; margin-bottom: 10px; color: white; }
+        .btn-hl.higher { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 5px 15px rgba(16,185,129,0.4); }
+        .btn-hl.lower { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 5px 15px rgba(239,68,68,0.4); }
+        .btn-hl:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: rgba(15, 15, 18, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 480px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -184,6 +198,9 @@
         .modal.wrong { border-color: var(--danger); box-shadow: 0 0 40px rgba(239, 68, 68, 0.2); } .modal.wrong h2 { color: var(--danger); }
         .modal.gameover { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); } .modal.gameover h2 { color: var(--warning); }
         
+        .modal.warning { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.4); } 
+        .modal.warning h2 { color: var(--warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
+
         .loader { border: 4px solid rgba(255,255,255,0.05); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
 
         input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
@@ -200,12 +217,16 @@
             .cards-grid { grid-template-columns: 1fr; }
             h1 { font-size: 32px; }
             .section-title { font-size: 22px; }
+            .hl-cards-container { flex-direction: column; align-items: center; gap: 15px; }
+            .hl-card { width: 100%; padding: 15px; }
+            .hl-cover { width: 120px; height: 120px; }
         }
     </style>
 </head>
 <body>
 
     <script>
+        // Error Handler für saubere Fehlermeldungen (sollte ganz oben bleiben)
         window.onerror = function(message, source, lineno, colno, error) {
             let errDiv = document.getElementById('fatal-error-box');
             if(!errDiv) {
@@ -214,41 +235,4 @@
                 errDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:#ef4444;color:white;padding:20px;border-radius:10px;z-index:999999;font-family:sans-serif;font-weight:bold;box-shadow:0 10px 30px rgba(0,0,0,0.8);';
                 document.body.appendChild(errDiv);
             }
-            errDiv.innerHTML = `🚨 Unerwarteter Absturz verhindert!<br><br>Fehler: ${message} (Zeile ${lineno})<br><br><button onclick='localStorage.clear();location.reload();' style='padding:10px 20px;background:white;color:black;border:none;border-radius:8px;font-weight:bold;cursor:pointer;'>Klick hier für einen Hard-Reset</button>`;
-        };
-    </script>
-
-    <div id="yt-player" style="position: absolute; top: -9999px; left: -9999px; width: 200px; height: 200px; opacity: 0; pointer-events: none;"></div>
-    <img id="app-background" src="" alt="">
-    <div class="scanlines"></div>
-    <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
-
-    <div id="profile-overlay" class="overlay" style="display: flex;">
-        <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
-            <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
-            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login oder lokalen Account erstellen.</p>
-            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <input type="text" id="username-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="👤 Username" autocomplete="off">
-                <input type="password" id="password-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="🔑 Password">
-            </div>
-            <button id="login-btn" class="btn-action" onclick="handleProfileLogin()" style="margin-top: 15px;">Login / Register ➔</button>
-            <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
-        </div>
-    </div>
-
-    <div id="app-layout">
-        <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Menu</button>
-        <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
-
-        <nav id="sidebar">
-            <div class="sidebar-logo">RAPMUSIK<span>GUESSR</span></div>
-            <div class="sidebar-user">
-                <img id="sidebar-avatar" class="sidebar-avatar" src="">
-                <div class="sidebar-user-info">
-                    <span id="sidebar-name" class="sidebar-name">Name</span>
-                    <span class="sidebar-status" style="display:flex; gap:10px; align-items:center;">
-                        <span id="sidebar-level" style="color:var(--primary); font-weight:900; font-size:12px;">Lvl 1</span>
-                    </span>
-                </div>
-            </div>
-       
+            errDiv.innerHTML = `🚨 Unerwarteter Absturz verhindert!<br><br>
