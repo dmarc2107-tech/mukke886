@@ -235,4 +235,1440 @@
                 errDiv.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:#ef4444;color:white;padding:20px;border-radius:10px;z-index:999999;font-family:sans-serif;font-weight:bold;box-shadow:0 10px 30px rgba(0,0,0,0.8);';
                 document.body.appendChild(errDiv);
             }
-            errDiv.innerHTML = `🚨 Unerwarteter Absturz verhindert!<br><br>
+            errDiv.innerHTML = `🚨 Unerwarteter Absturz verhindert!<br><br>Fehler: ${message} (Zeile ${lineno})<br><br><button onclick='localStorage.clear();location.reload();' style='padding:10px 20px;background:white;color:black;border:none;border-radius:8px;font-weight:bold;cursor:pointer;'>Klick hier für einen Hard-Reset</button>`;
+        };
+    </script>
+
+    <div id="yt-player" style="position: absolute; top: -9999px; left: -9999px; width: 200px; height: 200px; opacity: 0; pointer-events: none;"></div>
+
+    <img id="app-background" src="" alt="">
+    <div class="scanlines"></div>
+
+    <button id="music-toggle-btn" onclick="toggleMenuMusic()">🔊 Music On</button>
+
+    <div id="profile-overlay" class="overlay" style="display: flex;">
+        <div class="modal" style="border-top: 5px solid var(--primary); box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);">
+            <h2 id="profile-title" style="color: white; margin-bottom: 5px; font-size: 32px;">RAPMUSIK GUESSR</h2>
+            <p style="font-size:14px; color: var(--text-muted); margin-bottom: 25px;">Login oder lokalen Account erstellen.</p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="username-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="👤 Username" autocomplete="off">
+                <input type="password" id="password-input" class="ea-input" style="margin: 0; text-align: left;" placeholder="🔑 Password">
+            </div>
+            
+            <button id="login-btn" class="btn-action" onclick="handleProfileLogin()" style="margin-top: 15px;">Login / Register ➔</button>
+            <p id="profile-error" style="color: var(--danger); display: none; font-size: 14px; margin-top: 15px; font-weight: bold;"></p>
+            
+            <div style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                <button onclick="localStorage.clear(); location.reload();" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.3s;">🛠️ Speicher-Reset (behebt Fehler)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-layout">
+        <button id="mobile-menu-btn" onclick="toggleSidebar()">☰ Menu</button>
+        <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <nav id="sidebar">
+            <div class="sidebar-logo">RAPMUSIK<span>GUESSR</span></div>
+            <div class="sidebar-user">
+                <img id="sidebar-avatar" class="sidebar-avatar" src="">
+                <div class="sidebar-user-info">
+                    <span id="sidebar-name" class="sidebar-name">Name</span>
+                    <span class="sidebar-status" style="display:flex; gap:10px; align-items:center;">
+                        <span id="sidebar-level" style="color:var(--primary); font-weight:900; font-size:12px;">Lvl 1</span>
+                    </span>
+                </div>
+            </div>
+            <div class="nav-menu">
+                <div id="nav-play" class="nav-item active" onclick="switchTab('play-tab', this)">🎮 Play</div>
+                <div id="nav-mp" class="nav-item" onclick="switchTab('multiplayer-tab', this)">⚔️ Online (2-4)</div>
+                <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 My Club</div>
+            </div>
+            <div class="sidebar-footer">
+                <button id="music-toggle-btn-sidebar" onclick="toggleMenuMusic()" style="background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 700; width: 80%; margin: 0 auto; display: block;">🔇 Music Off</button>
+                
+                <div style="display:flex; align-items:center; gap:10px; margin-top:15px; padding: 0 15px;">
+                    <span style="font-size:16px;">🔉</span>
+                    <input type="range" class="vol-slider" min="0" max="1" step="0.05" oninput="changeVolume(this.value)">
+                    <span style="font-size:16px;">🔊</span>
+                </div>
+            </div>
+        </nav>
+
+        <main id="main-content">
+            <div id="play-tab" class="tab-content active">
+                <div class="settings-bar">
+                    <div class="settings-group">
+                        <span class="settings-label">Hardcore (Typing)</span>
+                        <label class="switch"><input type="checkbox" id="hardcore-toggle" onchange="readSettings()"><span class="slider red"></span></label>
+                    </div>
+                    <div class="settings-group">
+                        <span class="settings-label">Show Artist</span>
+                        <label class="switch"><input type="checkbox" id="artist-toggle" onchange="readSettings()" checked><span class="slider green"></span></label>
+                    </div>
+                </div>
+
+                <div class="section-title">Your Club</div>
+                <div id="fav-artist-banner" class="banner-container" style="display: none;">
+                    <img id="fav-artist-img-1" src="" class="banner-img">
+                    <div class="banner-text-box">
+                        <h3 class="banner-subtitle">Your Favorite Artist</h3>
+                        <h2 id="banner-artist-name" class="banner-title">Artist</h2>
+                    </div>
+                </div>
+
+                <div class="section-title">Quick Play</div>
+                <div class="cards-grid">
+                    <div class="ea-card card-highlight" onclick="startMixedMode('all')">
+                        <div class="ea-card-icon">🔀</div>
+                        <div class="ea-card-title">All Mixed</div>
+                        <div class="ea-card-desc">The ultimate test across all eras.</div>
+                    </div>
+                    <div class="ea-card" onclick="startProgressiveMode()">
+                        <div class="ea-card-icon">⚡</div>
+                        <div class="ea-card-title">Progressive Mode</div>
+                        <div class="ea-card-desc">Starts at 0.1s. For real pros only.</div>
+                    </div>
+                    <div class="ea-card card-gold" onclick="startMixedMode('megahits')">
+                        <div class="ea-card-icon">🌟</div>
+                        <div class="ea-card-title">Mega Hits</div>
+                        <div class="ea-card-desc">Nur die absolut größten Hits.</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Categories & Mini-Games</div>
+                <div class="cards-grid">
+                    <div class="ea-card card-mystery" onclick="startMysteryMode()">
+                        <div class="ea-card-icon">🕵️</div>
+                        <div class="ea-card-title">Mystery Rapper</div>
+                        <div class="ea-card-desc">Errate den Rapper anhand von 5 Hinweisen (Wer bin ich?).</div>
+                    </div>
+                    <div class="ea-card card-stream" onclick="startHigherLowerMode()">
+                        <div class="ea-card-icon">📈</div>
+                        <div class="ea-card-title">Stream Battle</div>
+                        <div class="ea-card-desc">Higher or Lower: Which song has more Spotify streams?</div>
+                    </div>
+                    <div class="ea-card card-fallen" onclick="startMixedMode('fallen')">
+                        <div class="ea-card-icon">🕊️</div>
+                        <div class="ea-card-title">Fallen Legends</div>
+                        <div class="ea-card-desc">Tupac, Biggie, Juice WRLD, X & more.</div>
+                    </div>
+                    <div class="ea-card" onclick="startMixedMode('2010s')">
+                        <div class="ea-card-icon">📅</div>
+                        <div class="ea-card-title">2010-2020 Rap</div>
+                        <div class="ea-card-desc">The golden trap era (US/UK only).</div>
+                    </div>
+                    <div class="ea-card" onclick="startMixedMode('soundcloud')">
+                        <div class="ea-card-icon">☁️</div>
+                        <div class="ea-card-title">SoundCloud Era</div>
+                        <div class="ea-card-desc">Peep, X, Juice & Co.</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Catalog Quiz (Artist Mode)</div>
+                <div class="artist-list" id="artist-grid"></div>
+            </div>
+
+            <div id="multiplayer-tab" class="tab-content">
+                <div class="section-title">Online Multiplayer (2-4 Players)</div>
+                <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                    <div class="ea-card" style="border-color: var(--success); justify-content: flex-start;">
+                        <h3 style="margin-top: 0; color: var(--success); font-weight: 800; letter-spacing: 1px;">HOST MATCH</h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">Create a lobby for 2 to 4 players.</p>
+                        <button class="btn-action" style="background: var(--success); margin-bottom: 20px;" onclick="createRoom()">Generate Code</button>
+                        <div style="text-align: center;">
+                            <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Your Room Code:</span>
+                            <h2 id="room-code-display" style="margin: 0; font-size: 40px; letter-spacing: 8px; color: white;">----</h2>
+                        </div>
+                    </div>
+                    <div class="ea-card" style="justify-content: flex-start;">
+                        <h3 style="margin-top: 0; color: white; font-weight: 800; letter-spacing: 1px;">JOIN MATCH</h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">Enter your friend's 4-digit code.</p>
+                        <input type="number" id="join-code-input" class="ea-input" style="letter-spacing: 5px; font-size: 24px; text-align: center;" placeholder="CODE">
+                        <button class="btn-action" onclick="joinRoom()">Join</button>
+                    </div>
+                </div>
+                <div style="background: rgba(0,0,0,0.5); padding: 25px; border-radius: 16px; text-align: center; border: 1px solid var(--surface-border); margin-top: 20px;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase; color: white; letter-spacing: 1px;">Players in Lobby</h3>
+                    <div id="lobby-players-container" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px;">
+                        <span style="color: var(--text-muted); font-size: 14px;">No one here yet...</span>
+                    </div>
+                    <p id="mp-status" style="color: var(--warning); font-weight: 800; margin: 0; font-size: 16px; text-transform: uppercase;">Not connected</p>
+                </div>
+            </div>
+
+            <div id="profile-tab" class="tab-content">
+                <div class="section-title">My Club</div>
+                <div style="display: flex; gap: 30px; background: rgba(0,0,0,0.6); padding: 30px; border-radius: 16px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; flex-wrap: wrap;">
+                    <img id="profile-view-avatar" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
+                    <div style="text-align: left; flex: 1;">
+                        <h2 id="profile-view-name" style="margin: 0 0 5px 0; font-size: 28px; font-weight: 900;">Name</h2>
+                        <p id="profile-view-quote" style="margin: 0 0 15px 0; color: var(--text-muted); font-style: italic; font-size: 13px;">"Quote"</p>
+                        <p style="margin: 0 0 15px 0; color: var(--primary); font-weight: 700; font-size: 14px;">🎵 Anthem: <span id="profile-view-hymn" style="color: white;">None</span></p>
+                        <div style="width: 100%; max-width: 400px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: var(--primary); margin-bottom: 5px; text-transform: uppercase;">
+                                <span>Level <span id="profile-level-num">1</span></span>
+                                <span><span id="profile-xp-current">0</span> / 4000 XP</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); width: 100%; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div id="profile-xp-bar" style="background: var(--success); width: 0%; height: 100%; transition: width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="ea-card" style="align-items: center; justify-content: center; min-height: 100px;">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 800;">Matches Played</div>
+                        <div id="stat-played" style="font-size: 32px; font-weight: 900; color: white;">0</div>
+                    </div>
+                    <div class="ea-card" style="align-items: center; justify-content: center; min-height: 100px; border-color: rgba(16,185,129,0.5);">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 800;">Wins</div>
+                        <div id="stat-wins" style="font-size: 32px; font-weight: 900; color: var(--success);">0</div>
+                    </div>
+                    <div class="ea-card" style="align-items: center; justify-content: center; min-height: 100px; border-color: rgba(239,68,68,0.5);">
+                        <div style="font-size: 12px; color: var(--text-muted); font-weight: 800;">Losses</div>
+                        <div id="stat-losses" style="font-size: 32px; font-weight: 900; color: var(--danger);">0</div>
+                    </div>
+                </div>
+
+                <div class="section-title" style="margin-top: 40px;">Detailed Stats & Trophies</div>
+                <div class="cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div class="ea-card" style="min-height: 100px;">
+                        <div style="font-size: 12px; color: var(--success); font-weight: 800;">Songs Correct</div>
+                        <div id="stat-songs-correct" style="font-size: 28px; font-weight: 900; color: white;">0</div>
+                    </div>
+                    <div class="ea-card" style="min-height: 100px;">
+                        <div style="font-size: 12px; color: var(--danger); font-weight: 800;">Songs Wrong / Skipped</div>
+                        <div id="stat-songs-wrong" style="font-size: 28px; font-weight: 900; color: white;">0</div>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left; margin-bottom: 30px;">
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">Mode Mastery (Points per Mode)</h3>
+                    <div id="mode-stats-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;"></div>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left;">
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">1. Change Artist (Avatar & Background)</h3>
+                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 20px;" onchange="updateFavArtist()"></select>
+
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase;">2. Change Anthem & Menu Music</h3>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px; margin-bottom: 10px;">Type a song name (results appear automatically) OR paste a YouTube link.</p>
+                    <div style="display:flex; gap:8px; margin-bottom:10px;">
+                        <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="e.g. Sicko Mode..." oninput="handleAnthemInput()">
+                        <button id="song-search-btn-edit" class="btn-action" style="width:55px; padding:0;" onclick="searchMenuSong()">🔍</button>
+                    </div>
+                    <select id="edit-menu-song-select" class="ea-input" style="display:none; color: var(--success);" onchange="updateFavSong()"></select>
+                </div>
+                
+                <button class="btn-action" style="background: var(--danger); margin-top: 30px;" onclick="resetProfile()">Log Out / Switch Account</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="game-screen">
+        <div class="game-inner">
+            <div class="stats-bar" id="game-stats-bar"></div>
+            <div class="visualizer"><div class="visualizer-inner">🎵</div></div>
+            <div class="game-controls">
+                <button onclick="backToMenu()">🏠 Quit</button>
+                <button onclick="replaySnippet()" style="border-color: #3b82f6;">🔄 Replay</button>
+                <button id="add-time-btn" onclick="addTime()">+3s</button>
+                <button onclick="skipSong()" style="border-color: var(--danger); color: var(--danger);">⏭️ Skip (-250)</button>
+            </div>
+            
+            <div id="options" class="options-container"></div>
+            <div id="text-input-container" style="display: none;">
+                <input type="text" id="guess-input" class="ea-input" placeholder="Enter song title..." autocomplete="off" oninput="updateSuggestions()">
+                <div id="suggestions-box"></div>
+                <button class="btn-action" onclick="checkTextInput()">Confirm</button>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:20px; padding: 10px 15px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid var(--surface-border);">
+                <span style="font-size:16px;">🔉</span>
+                <input type="range" class="vol-slider" min="0" max="1" step="0.05" oninput="changeVolume(this.value)">
+                <span style="font-size:16px;">🔊</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MYSTERY RAPPER SCREEN -->
+    <div id="mystery-screen">
+        <div class="game-inner">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <button onclick="backToMenu()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--surface-border); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer;">🏠 Quit</button>
+                <div style="text-align: right;">
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Punkte</span>
+                    <h2 id="mystery-pts" style="margin: 0; font-size: 28px; color: var(--success);">500</h2>
+                </div>
+            </div>
+
+            <h2 style="font-size: 24px; font-weight: 900; margin: 0 0 10px 0; text-transform: uppercase; text-align: center; color: var(--primary);">🕵️ Wer bin ich?</h2>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 20px 0; text-align: center;">Finde den Artist! Jeder neue Hinweis kostet Punkte.</p>
+            
+            <div class="mystery-box" id="mystery-hints-container">
+                <div class="hint-row" id="hint-1">Hinweis 1...</div>
+                <div class="hint-row" id="hint-2">Hinweis 2...</div>
+                <div class="hint-row" id="hint-3">Hinweis 3...</div>
+                <div class="hint-row" id="hint-4">Hinweis 4...</div>
+                <div class="hint-row" id="hint-5">Hinweis 5...</div>
+            </div>
+
+            <div style="position: relative; margin-bottom: 15px;">
+                <input type="text" id="mystery-input" class="ea-input" placeholder="Tippe einen Rapper-Namen..." autocomplete="off" oninput="updateMysterySuggestions()">
+                <div id="mystery-suggestions" style="position: absolute; bottom: 100%; left: 0; width: 100%; background: rgba(20,20,25,0.95); border: 1px solid var(--primary); border-radius: 12px; max-height: 200px; overflow-y: auto; text-align: left; display: none; margin-bottom: 5px; backdrop-filter: blur(10px); z-index: 50;"></div>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-action" onclick="guessMysteryArtist()" style="flex: 2;">Raten</button>
+                <button class="btn-action" onclick="revealNextHint()" style="flex: 1; background: var(--warning); color: black;">Tipp (-100)</button>
+            </div>
+            
+            <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:20px; padding: 10px 15px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid var(--surface-border);">
+                <span style="font-size:16px;">🔉</span>
+                <input type="range" class="vol-slider" min="0" max="1" step="0.05" oninput="changeVolume(this.value)">
+                <span style="font-size:16px;">🔊</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIGHER LOWER MODE SCREEN -->
+    <div id="hl-screen">
+        <div class="hl-inner">
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 20px;">
+                <button onclick="backToMenu()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--surface-border); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer;">🏠 Quit</button>
+                <div style="text-align: right;">
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Current Streak</span>
+                    <h2 id="hl-streak-num" style="margin: 0; font-size: 28px; color: var(--warning);">0</h2>
+                </div>
+            </div>
+
+            <h2 style="font-size: 24px; font-weight: 900; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px;">Spotify Stream Battle</h2>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 20px 0;">Does the second song have MORE or LESS streams than the first?</p>
+
+            <div class="hl-cards-container">
+                <div class="hl-card" id="hl-card-a">
+                    <img id="hl-img-a" class="hl-cover" src="">
+                    <h3 id="hl-title-a" class="hl-song-title">Song A</h3>
+                    <p id="hl-artist-a" class="hl-artist-name">Artist A</p>
+                    <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Has approximately</span>
+                    <div id="hl-streams-a" class="hl-streams-val">0</div>
+                    <span style="font-size: 11px; color: #a1a1aa;">Spotify Streams</span>
+                </div>
+
+                <div class="hl-card" id="hl-card-b">
+                    <img id="hl-img-b" class="hl-cover" src="">
+                    <h3 id="hl-title-b" class="hl-song-title">Song B</h3>
+                    <p id="hl-artist-b" class="hl-artist-name">Artist B</p>
+                    
+                    <div id="hl-action-box" style="width: 100%; display: flex; flex-direction: column; justify-content: center; flex: 1;">
+                        <button class="btn-hl higher" onclick="processHLChoice('higher')">HIGHER ⬆️</button>
+                        <button class="btn-hl lower" onclick="processHLChoice('lower')">LOWER ⬇️</button>
+                    </div>
+
+                    <div id="hl-result-box" style="display: none; width: 100%; flex-direction: column; align-items: center;">
+                        <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Has approximately</span>
+                        <div id="hl-streams-b" class="hl-streams-val">0</div>
+                        <span style="font-size: 11px; color: #a1a1aa;">Spotify Streams</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:20px; padding: 10px 15px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid var(--surface-border); max-width: 300px; width: 100%;">
+                <span style="font-size:16px;">🔉</span>
+                <input type="range" class="vol-slider" min="0" max="1" step="0.05" oninput="changeVolume(this.value)">
+                <span style="font-size:16px;">🔊</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOADING & FEEDBACK OVERLAYS -->
+    <div id="loading-overlay" class="overlay" style="display: none;">
+        <div style="text-align: center;"><div class="loader"></div><h2 id="loading-text" style="color: white;">Please Wait...</h2></div>
+    </div>
+    <div id="feedback-overlay" class="overlay" style="display: none;">
+        <div id="feedback-modal" class="modal">
+            <h2 id="feedback-title">Title</h2>
+            <img id="feedback-cover" src="">
+            <p id="feedback-desc">Description</p>
+            <div id="mp-result" style="display: none; margin-bottom: 25px;"></div>
+            <button id="feedback-btn" class="btn-action">Next ➔</button>
+        </div>
+    </div>
+
+    <script>
+        // GLOBALE VARIABLEN (Zuerst laden, damit es beim Starten des Skripts zu keinem Syntax-Crashes kommt)
+        const fallenLegends = ['2Pac', 'The Notorious B.I.G.', 'XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Mac Miller', 'Pop Smoke', 'King Von', 'Takeoff', 'Nipsey Hussle', 'Eazy-E', 'MF DOOM'];
+        const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean', 'Bones'];
+        const artists2010s = ['Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa', 'Offset', 'Quavo', 'Yeat', 'Central Cee'];
+        const legends = ['2Pac', 'The Notorious B.I.G.', 'Eminem', '50 Cent', 'Snoop Dogg', 'Dr. Dre', 'Ice Cube', 'Nas'];
+        const megaStars = ['Drake', 'Kendrick Lamar', 'J. Cole', 'Kanye West', 'Post Malone'];
+        const allArtists = [...new Set([...soundcloudArtists, ...artists2010s, ...legends, ...megaStars, ...fallenLegends])].sort();
+
+        const mysteryDatabase = {
+            "Drake": ["Kommt aus Toronto, Kanada", "Hat das Label OVO Sound gegründet", "Befand sich im Beef mit Kendrick Lamar", "Bekannt für Alben wie 'Scorpion' und 'Take Care'", "Hit: 'God's Plan'"],
+            "Travis Scott": ["Kommt aus Houston, Texas", "Label und Marke: Cactus Jack", "Hat ein sehr bekanntes Fortnite-Event veranstaltet", "Sein bekanntestes Album heißt 'Astroworld'", "Hit: 'Sicko Mode'"],
+            "XXXTentacion": ["SoundCloud-Legende aus Florida", "Mitbegründer der Crew 'Members Only'", "Sein Haar war berühmt schwarz-blond gefärbt", "Wurde 2018 in seinem Auto ermordet", "Hits: 'SAD!' und 'Look At Me!'"],
+            "Eminem": ["Kommt aus Detroit", "Sein Alter Ego heißt 'Slim Shady'", "Hat im Film '8 Mile' mitgespielt", "Wurde oft als 'Rap God' bezeichnet", "Hit: 'Lose Yourself'"],
+            "Juice WRLD": ["Kommt aus Chicago", "Oft mit der Zahl '999' assoziiert", "War ein legendärer Freestyler", "Starb 2019 an einer Überdosis", "Hit: 'Lucid Dreams'"],
+            "50 Cent": ["Kommt aus Queens, New York", "Gründer der Gruppe G-Unit", "Wurde im Jahr 2000 neunmal angeschossen", "Sein Debütalbum war 'Get Rich or Die Tryin'", "Hit: 'In Da Club'"],
+            "2Pac": ["West Coast Legende, geboren in NY", "Trug oft ein Bandana und hatte 'Thug Life' tätowiert", "Nutze auch den Alias 'Makaveli'", "Wurde 1996 in Las Vegas erschossen", "Hit: 'Hit Em Up' / 'California Love'"],
+            "Kanye West": ["Produzent und Rapper aus Chicago", "Gründer der Marke Yeezy", "Ließ seinen Namen in 'Ye' ändern", "Berühmtes Album: 'My Beautiful Dark Twisted Fantasy'", "Hit: 'Stronger' / 'Runaway'"],
+            "Kendrick Lamar": ["Kommt aus Compton, Kalifornien", "Teil von TDE und Gründer von pgLang", "Hat einen Pulitzer-Preis für Musik gewonnen", "Bekannt für das Album 'To Pimp A Butterfly'", "Hit: 'Not Like Us' / 'HUMBLE.'"],
+            "Lil Peep": ["Pionier des Emo-Rap", "War Mitglied der GothBoiClique (GBC)", "Viele Tattoos im Gesicht (u.a. Crybaby)", "Album: 'Come Over When You're Sober'", "Hit: 'Star Shopping'"],
+            "The Notorious B.I.G.": ["East Coast Legende aus Brooklyn", "Stand bei Bad Boy Records unter Vertrag", "Wurde auch 'Biggie Smalls' genannt", "Wurde 1997 in Los Angeles erschossen", "Hit: 'Juicy' / 'Hypnotize'"],
+            "Snoop Dogg": ["Rap-Legende aus Long Beach, Kalifornien", "Oft in Verbindung mit extremem Marihuana-Konsum", "Debütalbum: 'Doggystyle' (Death Row Records)", "Wurde von Dr. Dre entdeckt", "Hit: 'Drop It Like It's Hot'"],
+            "Playboi Carti": ["Rapper aus Atlanta", "Gründer des Labels 'Opium'", "Bekannt für seine Vampir-Ästhetik und Baby-Voice", "Album: 'Whole Lotta Red'", "Hit: 'Magnolia'"],
+            "Lil Uzi Vert": ["Kommt aus Philadelphia", "Hat sich einen riesigen pinken Diamanten in die Stirn implantieren lassen", "Album: 'Eternal Atake'", "Wurde oft mit Marilyn Manson assoziiert", "Hit: 'XO Tour Llif3'"],
+            "J. Cole": ["Rapper aus North Carolina", "Gründer von Dreamville Records", "Spielt professionell Basketball", "Berühmt für 'Platinum with no features'", "Hit: 'No Role Modelz'"],
+            "Mac Miller": ["Rapper und Produzent aus Pittsburgh", "Debütierte mit 'Blue Slide Park'", "War mit Ariana Grande zusammen", "Verstarb 2018 an einer Überdosis", "Hit: 'Self Care' / 'Donald Trump'"],
+            "Pop Smoke": ["Pionier des Brooklyn Drill", "Stand für das 'Woo' Movement", "Wurde 2020 in Hollywood bei einem Raubüberfall ermordet", "Sein posthumes Album wurde von 50 Cent produziert", "Hit: 'Dior'"],
+            "A$AP Rocky": ["Rapper aus Harlem, New York", "Mitglied des A$AP Mob", "Partner von Rihanna", "Hat einen starken Fokus auf Mode und Fashion", "Hit: 'Praise The Lord'"]
+        };
+
+        const artistQuotes = {
+            'XXXTentacion': '"What is real will prosper." - X', 'Juice WRLD': '"999. Turn the negative to a positive." - Juice WRLD', 'Lil Peep': '"Everything changes with time." - Lil Peep', 'Ski Mask the Slump God': '"Water!" - Ski Mask', 'Trippie Redd': '"I just wanna be a legend." - Trippie', 'Denzel Curry': '"I am the ultimate." - Denzel', 'Playboi Carti': '"Wake up, it\'s the first of the month." - Carti', 'Lil Uzi Vert': '"I just wanna go to outer space." - Uzi', 'Lil Pump': '"Esskeetit!" - Lil Pump', 'Chief Keef': '"A lot of people say they want to be famous..." - Sosa', '$uicideboy$': '"G59 until the grave." - $uicideboy$', 'Travis Scott': '"I\'m the highest in the room." - Travis Scott', 'Migos': '"Rain drop, drop top." - Migos', 'Future': '"If you don\'t get it, you just don\'t get it." - Future', 'Young Thug': '"Slime Season." - Thugger', '21 Savage': '"I do it for the gang." - 21', 'Lil Baby': '"I\'m just tryna be a better me." - Lil Baby', 'A$AP Rocky': '"I treat the game like a canvas." - Rocky', 'Tyler, The Creator': '"Find your wings." - Tyler', 'Mac Miller': '"No matter where life takes me, find me with a smile." - Mac', 'Drake': '"Started from the bottom, now we\'re here." - Drake', 'Kendrick Lamar': '"If God got us, then we gon\' be alright." - Kendrick', 'J. Cole': '"There\'s beauty in the struggle." - J. Cole', 'Kanye West': '"I still think I am the greatest." - Ye', 'Eminem': '"You only get one shot, do not miss your chance to blow." - Eminem', '2Pac': '"Reality is wrong. Dreams are for real." - 2Pac', 'The Notorious B.I.G.': '"Mo money, mo problems." - Biggie', '50 Cent': '"Get rich or die tryin\'." - 50 Cent', 'Snoop Dogg': '"Drop it like it\'s hot." - Snoop', 'Pop Smoke': '"Woo!" - Pop Smoke'
+        };
+
+        const knownStreamBenchmarks = {
+            "goosebumps": 2450000000, "sicko mode": 2210000000, "lucid dreams": 2620000000, "all girls are the same": 1820000000,
+            "sad!": 2340000000, "jocelyn flores": 2150000000, "star shopping": 1290000000, "falling down": 1120000000,
+            "god's plan": 2480000000, "one dance": 3120000000, "humble": 2240000000, "money trees": 1780000000,
+            "sunflower": 3380000000, "rockstar": 3010000000, "without me": 2180000000, "lose yourself": 2140000000,
+            "dior": 1480000000, "california love": 780000000, "juicy": 950000000, "in da club": 1650000000,
+            "xo tour llif3": 2100000000, "magnolia": 920000000, "look at me": 1450000000, "highest in the room": 1680000000,
+            "mask off": 1790000000, "bank account": 1380000000, "congratulations": 2100000000, "robbery": 1690000000,
+            "swimming pools": 1150000000, "godzilla": 1500000000, "stan": 2000000000, "the real slim shady": 1800000000,
+            "not afraid": 1900000000, "still dre": 1300000000, "changes": 900000000, "ambitionz az a ridah": 850000000,
+            "hypnotize": 800000000, "big poppa": 650000000, "love yourz": 1200000000, "no role modelz": 1500000000,
+            "middle child": 1700000000, "wet dreamz": 1400000000, "praise the lord": 1300000000, "ric flair drip": 1200000000,
+            "bad and boujee": 1400000000, "paris": 1100000000, "circles": 1500000000, "hope": 1300000000,
+            "moonlight": 1900000000, "fuck love": 1500000000
+        };
+
+        const SERVER_URL = 'https://mukke886.onrender.com';
+        const supabaseUrl = 'https://txxklmrxzcaqbdpjuksw.supabase.co'; 
+        const supabaseKey = 'sb_publishable_B9G2pzd-BFpKli71S5fu0g_a6xBSMdj';
+
+        // LOKALE ZUSTÄNDE & INITIALISIERUNG
+        let globalVolume = 0.5;
+        let dbClient = null;
+        let socket = { on: function(){}, emit: function(){} }; 
+        let ytPlayer; let ytReady = false; let ytContext = 'menu';
+        let menuAudio = new Audio(); menuAudio.loop = true; menuAudio.crossOrigin = "anonymous";
+        let isMenuMusicPlaying = false;
+        
+        let audio = new Audio(); audio.crossOrigin = "anonymous";
+        let sfxAudio = new Audio(); sfxAudio.crossOrigin = "anonymous";
+
+        let playerName = ''; 
+        let savedPw = '';
+        let myFavArtist = ''; 
+        let myAvatar = ''; 
+        let myBgUrl = '';
+        let myQuote = '';
+        let mySongUrl = ''; 
+        let mySongTitle = '';
+        let myStats = {};
+
+        let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = '';
+        let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
+        let searchTimeout = null;
+        
+        // Game Engine Variables
+        let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; let currentPlayId = 0; 
+        
+        // Mystery Mode Variables
+        let currentMysteryArtist = "";
+        let currentHints = [];
+        let hintIndex = 0;
+        let mysteryScore = 500;
+        let mysteryCandidates = Object.keys(mysteryDatabase);
+
+        let hlPool = []; let hlCurrentA = null; let hlCurrentB = null; let hlStreak = 0; let hlRecentArtists = [];
+
+        // HILFSFUNKTIONEN
+        function safeReadJSON(key, fallback) {
+            try { 
+                let val = localStorage.getItem(key); 
+                return val ? JSON.parse(val) : fallback; 
+            } catch(e) { 
+                localStorage.removeItem(key); 
+                return fallback; 
+            }
+        }
+
+        function getArtistQuote(name) { 
+            return artistQuotes[name] || '"Ready to dominate the game." - ' + name; 
+        }
+
+        function getTrackEstimatedStreams(trackTitle, artistName) {
+            let clean = trackTitle.toLowerCase().split('(')[0].split('feat')[0].split('-')[0].trim();
+            for(let k in knownStreamBenchmarks) { 
+                if (clean === k || clean.includes(k) || k.includes(clean)) return knownStreamBenchmarks[k]; 
+            }
+            let hash = 0; let combined = trackTitle + artistName;
+            for (let i = 0; i < combined.length; i++) hash = combined.charCodeAt(i) + ((hash << 5) - hash);
+            
+            let baseMin = 50; let baseMax = 200;
+            if (megaStars.includes(artistName)) { baseMin = 400; baseMax = 1500; }
+            else if (legends.includes(artistName)) { baseMin = 300; baseMax = 900; }
+            else if (fallenLegends.includes(artistName)) { baseMin = 300; baseMax = 1200; }
+            else if (artists2010s.includes(artistName)) { baseMin = 200; baseMax = 800; }
+            
+            let randomTier = Math.abs(hash % (baseMax - baseMin)) + baseMin;
+            return randomTier * 1000000 + Math.abs(hash % 999999);
+        }
+
+        function changeVolume(val) {
+            globalVolume = parseFloat(val); 
+            try { localStorage.setItem('rapquiz_volume', globalVolume); } catch(e){}
+            menuAudio.volume = globalVolume * 0.4; audio.volume = globalVolume; sfxAudio.volume = globalVolume;
+            if(ytReady && ytPlayer && ytPlayer.setVolume) { 
+                let vol = isMenuMusicPlaying && !gameIsOver ? 40 : 100; 
+                ytPlayer.setVolume(globalVolume * vol); 
+            }
+            document.querySelectorAll('.vol-slider').forEach(el => { 
+                if (el.value != val) el.value = val; 
+            });
+        }
+
+        function playMenuMusic(url) {
+            if(!url) return; 
+            isMenuMusicPlaying = true; ytContext = 'menu';
+            if (url.startsWith('yt:')) {
+                menuAudio.pause(); let vid = url.substring(3);
+                if(ytReady && ytPlayer && ytPlayer.loadVideoById) { 
+                    ytPlayer.setVolume(globalVolume * 40); 
+                    ytPlayer.loadVideoById(vid); 
+                    ytPlayer.playVideo(); 
+                } else { 
+                    setTimeout(() => playMenuMusic(url), 500); 
+                }
+            } else {
+                if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+                menuAudio.src = url; menuAudio.volume = globalVolume * 0.4; menuAudio.play().catch(e=>{});
+            }
+            let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
+            btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
+        }
+
+        function toggleMenuMusic() {
+            if (isMenuMusicPlaying) {
+                pauseMenuMusic(); isMenuMusicPlaying = false;
+                let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
+                btns.forEach(b => { if(b) { b.innerHTML = "🔇 Music Off"; b.style.opacity = "0.7"; } });
+            } else {
+                resumeMenuMusic(); isMenuMusicPlaying = true;
+                let btns = [document.getElementById('music-toggle-btn'), document.getElementById('music-toggle-btn-sidebar')];
+                btns.forEach(b => { if(b) { b.innerHTML = "🔊 Music On"; b.style.opacity = "1"; } });
+            }
+        }
+
+        function pauseMenuMusic() { 
+            menuAudio.pause(); 
+            if(ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo(); 
+        }
+        
+        function resumeMenuMusic() {
+            if (!isMenuMusicPlaying) return; 
+            ytContext = 'menu';
+            if (mySongUrl.startsWith('yt:')) { 
+                if(ytReady && ytPlayer && ytPlayer.playVideo) { 
+                    ytPlayer.setVolume(globalVolume * 40); ytPlayer.playVideo(); 
+                } 
+            } else { 
+                menuAudio.play().catch(e=>{}); 
+            }
+        }
+
+        async function syncToCloud() {
+            if (!dbClient || !playerName) return;
+            try {
+                const sessionData = await dbClient.auth.getSession();
+                if (sessionData && sessionData.data && sessionData.data.session && sessionData.data.session.user) {
+                    await dbClient.from('profiles').upsert({
+                        id: sessionData.data.session.user.id,
+                        username: playerName,
+                        is_premium: true,
+                        avatar_url: myAvatar,
+                        quote: myQuote,
+                        fav_artist: myFavArtist,
+                        song_url: mySongUrl,
+                        song_title: mySongTitle,
+                        stats: myStats
+                    });
+                }
+            } catch(e) {}
+        }
+
+        function saveAccountData() {
+            if(!playerName) return;
+            let accounts = safeReadJSON('rapquiz_accounts', {});
+            if(!accounts[playerName]) accounts[playerName] = {};
+            accounts[playerName].stats = myStats; accounts[playerName].isPremium = true; accounts[playerName].avatar = myAvatar;
+            accounts[playerName].favArtist = myFavArtist; accounts[playerName].songUrl = mySongUrl; accounts[playerName].songTitle = mySongTitle;
+            accounts[playerName].quote = myQuote; accounts[playerName].bgUrl = myBgUrl;
+            localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
+        }
+
+        function updateLevelDisplay() {
+            let total = myStats.totalScore || 0; let lvl = Math.floor(total / 4000) + 1; let currentXp = total % 4000; let percent = (currentXp / 4000) * 100;
+            let sbLevel = document.getElementById('sidebar-level'); if(sbLevel) sbLevel.innerText = 'Lvl ' + lvl;
+            let pLvl = document.getElementById('profile-level-num'); if(pLvl) pLvl.innerText = lvl;
+            let pXp = document.getElementById('profile-xp-current'); if(pXp) pXp.innerText = currentXp;
+            let pBar = document.getElementById('profile-xp-bar'); if(pBar) pBar.style.width = percent + '%';
+        }
+
+        function updateDetailedStats() {
+            document.getElementById('stat-songs-correct').innerText = myStats.correctGuesses || 0;
+            document.getElementById('stat-songs-wrong').innerText = myStats.wrongGuesses || 0;
+            const modeNames = { 'all': 'All Mixed', 'progressive': 'Progressive', 'megahits': 'Mega Hits', 'higherlower': 'Stream Battle', 'fallen': 'Fallen Legends', '2010s': '2010-2020 Rap', 'soundcloud': 'SoundCloud Era', 'artist': 'Artist Catalog', 'mystery': 'Mystery Rapper' };
+            const container = document.getElementById('mode-stats-container');
+            if (container) {
+                container.innerHTML = '';
+                for (let mode in myStats.modeScores) {
+                    let s = myStats.modeScores[mode] || 0;
+                    let trophy = s >= 10000 ? '🏆' : (s >= 5000 ? '🥇' : (s >= 2000 ? '🥈' : (s >= 500 ? '🥉' : '🔒')));
+                    container.innerHTML += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 18px; border-radius: 8px;">
+                            <span style="font-weight: 700; font-size: 13px; color: white;">${modeNames[mode] || mode}</span>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="color: var(--primary); font-weight: 900; font-size: 14px;">${s} Pts</span>
+                                <span style="font-size: 20px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">${trophy}</span>
+                            </div>
+                        </div>`;
+                }
+            }
+        }
+
+        function smartShuffle(pool) {
+            let byArtist = {}; for(let s of pool) { if(!byArtist[s.artist.name]) byArtist[s.artist.name] = []; byArtist[s.artist.name].push(s); }
+            for(let a in byArtist) byArtist[a].sort(() => 0.5 - Math.random());
+            let result = []; let artists = Object.keys(byArtist); let keepGoing = true;
+            while(keepGoing) { keepGoing = false; artists.sort(() => 0.5 - Math.random()); for(let a of artists) { if(byArtist[a].length > 0) { result.push(byArtist[a].pop()); keepGoing = true; } } }
+            return result;
+        }
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
+            if(tabId === 'profile-tab') { 
+                document.getElementById('stat-played').innerText = myStats.played; document.getElementById('stat-wins').innerText = myStats.wins; document.getElementById('stat-losses').innerText = myStats.losses; 
+                updateLevelDisplay(); updateDetailedStats();
+            }
+            if (window.innerWidth <= 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('active'); }
+        }
+
+        function loadArtistVisuals(artistName) {
+            if (!artistName) return; const cb = 'deezer_vis_' + Date.now();
+            window[cb] = function(res) {
+                if (res && res.data && res.data.length > 0) {
+                    myBgUrl = res.data[0].picture_xl; myAvatar = res.data[0].picture_medium;
+                    saveAccountData(); document.getElementById('app-background').src = myBgUrl; updateAllAvatars();
+                }
+            };
+            const s = document.createElement('script'); s.src = `https://api.deezer.com/search/artist?q=${encodeURIComponent(artistName)}&limit=1&output=jsonp&callback=${cb}`; document.head.appendChild(s);
+        }
+
+        function updateAllAvatars() { 
+            ['sidebar-avatar', 'profile-view-avatar'].forEach(id => { let el = document.getElementById(id); if(el) el.src = myAvatar; }); 
+            let b1 = document.getElementById('fav-artist-img-1'); let bName = document.getElementById('banner-artist-name');
+            if (b1 && myBgUrl) { b1.src = myBgUrl; if(bName) bName.innerText = myFavArtist; document.getElementById('fav-artist-banner').style.display = 'flex'; }
+        }
+
+        function handleAnthemInput() { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { searchMenuSong(); }, 500); }
+
+        function searchMenuSong() {
+            let q = document.getElementById('edit-song-search-input').value.trim(); let sel = document.getElementById('edit-menu-song-select');
+            if(!q) { sel.style.display = 'none'; return; }
+            let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+            if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = `<option value="yt:${vid}" data-title="YouTube Track">▶️ YouTube Video (${vid})</option>`; sel.style.display = 'block'; return; }
+            
+            const cb = 'dz_menu_' + Date.now() + Math.floor(Math.random()*1000);
+            window[cb] = function(res) {
+                sel.innerHTML = '';
+                if (res && res.data && res.data.length > 0) {
+                    let valid = res.data.filter(t => t.preview);
+                    if (valid.length > 0) {
+                        sel.innerHTML = '<option value="">🎵 Choose your Anthem...</option>';
+                        valid.forEach(t => {
+                            let opt = document.createElement('option'); opt.value = t.preview; opt.innerText = `${t.artist.name} - ${t.title}`; opt.setAttribute('data-title', `${t.artist.name} - ${t.title}`); sel.appendChild(opt);
+                        });
+                        sel.style.display = 'block'; delete window[cb]; return;
+                    }
+                }
+                sel.innerHTML = '<option value="">❌ No songs found</option>'; sel.style.display = 'block';
+                delete window[cb];
+            };
+            const s = document.createElement('script'); s.src = `https://api.deezer.com/search/track?q=${encodeURIComponent(q)}&limit=10&output=jsonp&callback=${cb}`; document.head.appendChild(s);
+        }
+
+        function updateFavSong() {
+            let sel = document.getElementById('edit-menu-song-select');
+            if(sel.value) {
+                mySongUrl = sel.value; let selectedOpt = sel.options[sel.selectedIndex]; mySongTitle = selectedOpt.getAttribute('data-title') || selectedOpt.text;
+                saveAccountData();
+                let hymnDisplay = document.getElementById('profile-view-hymn'); if (hymnDisplay) hymnDisplay.innerText = mySongTitle; 
+                playMenuMusic(mySongUrl);
+            }
+        }
+
+        function buildArtistGrid() {
+            let grid = document.getElementById('artist-grid'); if(!grid) return;
+            grid.innerHTML = '';
+            allArtists.forEach(a => { 
+                let d = document.createElement('div'); d.className = 'artist-tile'; 
+                d.innerText = a; d.onclick = () => startArtistMode(a);
+                grid.appendChild(d); 
+            });
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('active'); }
+
+        // CORE LOGIC & INITIALISIERUNG
+        window.onload = () => {
+            try {
+                let storedVol = localStorage.getItem('rapquiz_volume');
+                if (storedVol !== null) globalVolume = parseFloat(storedVol);
+            } catch(e) {}
+            
+            let volSlider = document.getElementById('volume-slider'); if(volSlider) volSlider.value = globalVolume;
+            document.querySelectorAll('.vol-slider').forEach(el => { el.value = globalVolume; });
+            
+            let editSel = document.getElementById('edit-fav-artist-select');
+            if (editSel) { editSel.innerHTML = ''; allArtists.forEach(a => { let opt = document.createElement('option'); opt.value = a; opt.innerText = a; editSel.appendChild(opt); }); }
+            
+            try { if (typeof window.supabase !== 'undefined') dbClient = window.supabase.createClient(supabaseUrl, supabaseKey); } catch(e) {}
+            
+            try {
+                if (typeof io !== 'undefined') {
+                    socket = io(SERVER_URL, { transports: ['websocket', 'polling'] });
+                    socket.on('connect', () => { let el = document.getElementById('mp-status'); if(el) { el.innerText = '🟢 Ready for Multiplayer'; el.style.color = 'var(--success)'; } });
+                }
+            } catch (e) { }
+
+            let accounts = safeReadJSON('rapquiz_accounts', {});
+            let activeUser = localStorage.getItem('rapquiz_active_user');
+
+            if (activeUser && accounts[activeUser]) { 
+                handleProfileLogin(true, activeUser); 
+            } else { 
+                document.getElementById('profile-overlay').style.display = 'flex'; 
+            }
+        };
+
+        // DIE REPARIERTE LOGIN-FUNKTION (OHNE OPTIONAL CHAINING)
+        async function handleProfileLogin(isAutoLogin = false, autoName = "") {
+            let err = document.getElementById('profile-error');
+            let btn = document.getElementById('login-btn');
+            
+            try {
+                let accounts = safeReadJSON('rapquiz_accounts', {});
+                let name = isAutoLogin ? autoName : document.getElementById('username-input').value.trim(); 
+                
+                // SICHERER CHECK STATT ?. SYNTAX
+                let pw = "";
+                if (isAutoLogin && accounts[name] && accounts[name].password) {
+                    pw = accounts[name].password;
+                } else {
+                    let pwInput = document.getElementById('password-input');
+                    if (pwInput) pw = pwInput.value.trim();
+                }
+
+                if (!name || !pw) { 
+                    if(err) { err.innerText = "Bitte fülle Username und Passwort aus!"; err.style.display = 'block'; } 
+                    document.getElementById('profile-overlay').style.display = 'flex';
+                    return; 
+                }
+
+                if (!isAutoLogin && btn) { btn.innerText = "Lade... ⏳"; btn.disabled = true; }
+
+                let localAccountExists = !!accounts[name];
+                if (localAccountExists && !isAutoLogin) {
+                    if (accounts[name].password !== pw) { 
+                        if(err) { err.innerText = "Falsches Passwort!"; err.style.display = 'block'; } 
+                        if(btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
+                        return; 
+                    }
+                }
+
+                if (!localAccountExists) {
+                    accounts[name] = {
+                        password: pw, isPremium: true, 
+                        stats: { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, progressive: 0, megahits: 0, higherlower: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0, mystery: 0 } },
+                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+                        bgUrl: '', favArtist: '', quote: '"Ready to dominate the game."', songUrl: '', songTitle: ''
+                    };
+                }
+
+                playerName = name; savedPw = pw;
+                
+                myStats = accounts[playerName].stats || { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, progressive: 0, megahits: 0, higherlower: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0, mystery: 0 } };
+                myAvatar = accounts[playerName].avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
+                myBgUrl = accounts[playerName].bgUrl || '';
+                myFavArtist = accounts[playerName].favArtist || '';
+                myQuote = accounts[playerName].quote || '';
+                mySongUrl = accounts[playerName].songUrl || '';
+                mySongTitle = accounts[playerName].songTitle || '';
+
+                try {
+                    if (dbClient) {
+                        let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
+                        let authData = null;
+                        
+                        try {
+                            let signRes = await dbClient.auth.signInWithPassword({ email: fakeEmail, password: pw });
+                            if (signRes && signRes.error) {
+                                let regRes = await dbClient.auth.signUp({ email: fakeEmail, password: pw });
+                                if (regRes && regRes.data && regRes.data.user) authData = regRes.data;
+                            } else if (signRes && signRes.data) {
+                                authData = signRes.data;
+                            }
+                        } catch (ex) {}
+
+                        if (authData && authData.user) {
+                            let profileRes = await dbClient.from('profiles').select('*').eq('id', authData.user.id).single();
+                            if (profileRes && profileRes.data) {
+                                let profile = profileRes.data;
+                                if (profile.avatar_url) myAvatar = profile.avatar_url;
+                                if (profile.quote) myQuote = profile.quote;
+                                if (profile.fav_artist) myFavArtist = profile.fav_artist;
+                                if (profile.song_url) mySongUrl = profile.song_url;
+                                if (profile.song_title) mySongTitle = profile.song_title;
+                                
+                                if (profile.stats && Object.keys(profile.stats).length > 0) {
+                                    if ((profile.stats.totalScore || 0) >= (myStats.totalScore || 0)) {
+                                        myStats = profile.stats;
+                                    }
+                                }
+                            }
+                            syncToCloud(); 
+                        }
+                    }
+                } catch(e) { }
+
+                if (!accounts[playerName]) accounts[playerName] = {};
+                if (!accounts[playerName].stats) accounts[playerName].stats = myStats;
+
+                accounts[playerName].isPremium = true;
+                accounts[playerName].stats.totalScore = myStats.totalScore;
+                
+                localStorage.setItem('rapquiz_active_user', playerName);
+                localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
+
+                updateLevelDisplay(); updateDetailedStats();
+                
+                document.getElementById('app-layout').style.display = 'flex';
+                document.getElementById('profile-overlay').style.display = 'none'; 
+
+                document.getElementById('sidebar-name').innerText = playerName; 
+                document.getElementById('profile-view-name').innerText = playerName; 
+                document.getElementById('profile-view-quote').innerText = myQuote || ""; 
+                
+                let hymnDisplay = document.getElementById('profile-view-hymn'); if (hymnDisplay) hymnDisplay.innerText = mySongTitle || "None";
+                if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
+                
+                let editSel = document.getElementById('edit-fav-artist-select'); if (editSel && myFavArtist) editSel.value = myFavArtist;
+
+                buildArtistGrid(); updateAllAvatars(); playMenuMusic(mySongUrl);
+                if (btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
+            } catch (error) {
+                document.getElementById('profile-overlay').style.display = 'flex';
+                if(err) { err.innerText = "Ein Fehler ist aufgetreten. Bitte auf Reset klicken."; err.style.display = 'block'; }
+                if (btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
+            }
+        }
+
+        function resetProfile() { localStorage.removeItem('rapquiz_active_user'); location.reload(); }
+        function updateFavArtist() { myFavArtist = document.getElementById('edit-fav-artist-select').value; myQuote = getArtistQuote(myFavArtist); document.getElementById('profile-view-quote').innerText = myQuote; saveAccountData(); loadArtistVisuals(myFavArtist); }
+        function encodeAvatarAndQuote() { return myAvatar + '|Q|' + myQuote; }
+
+        function createRoom() { isMultiplayer = true; isMpHost = true; socket.emit('createRoom', { name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Connecting...'; }
+        function joinRoom() { let c = document.getElementById('join-code-input').value; if(c) { isMultiplayer = true; isMpHost = false; socket.emit('joinRoom', { code: c, name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Joining...'; } }
+        function cancelMultiplayer() { isMultiplayer = false; isMpHost = false; currentRoom = ''; switchTab('play-tab', document.getElementById('nav-play')); }
+
+        socket.on('roomCreated', (code) => { currentRoom = code; document.getElementById('room-code-display').innerText = code; });
+        socket.on('joinedSuccess', (data) => { currentRoom = data.roomCode; document.getElementById('room-code-display').innerText = data.roomCode; });
+        socket.on('errorMsg', (msg) => { alert(msg); cancelMultiplayer(); });
+        
+        socket.on('lobbyUpdate', (players) => { 
+            lobbyPlayers = players; renderLobbyPlayers();
+            if(currentRoom) {
+                let statusEl = document.getElementById('mp-status');
+                if(isMpHost) {
+                    if(players.length >= 2) { statusEl.innerHTML = `🟢 Ready! You can now choose a mode<br>in the left menu to start.`; statusEl.style.color = 'var(--success)'; } 
+                    else { statusEl.innerText = `Waiting for players... (${players.length}/4)`; statusEl.style.color = 'var(--warning)'; }
+                } else { statusEl.innerText = `🟢 In lobby (${players.length}/4). Waiting for host to start...`; statusEl.style.color = 'var(--success)'; }
+            }
+            if (gameIsOver) checkMatchEnd(); 
+        });
+
+        function renderLobbyPlayers() {
+            const container = document.getElementById('lobby-players-container'); if(!container) return;
+            if(lobbyPlayers.length === 0) { container.innerHTML = '<span style="color: var(--text-muted); font-size: 14px;">No one here yet...</span>'; return; }
+            container.innerHTML = '';
+            lobbyPlayers.forEach(p => {
+                let isMe = p.id === socket.id; let parts = p.avatar.split('|Q|'); let pAv = parts[0]; let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
+                container.innerHTML += `
+                    <div style="background: rgba(20,20,25,0.8); padding: 10px 15px; border-radius: 12px; border: 1px solid ${isMe ? 'var(--primary)' : 'var(--surface-border)'}; display: flex; align-items: center; gap: 15px; width: 100%; max-width: 320px; text-align: left;">
+                        <img src="${pAv}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid ${isMe ? 'var(--primary)' : 'white'}; flex-shrink: 0;">
+                        <div style="display: flex; flex-direction: column; overflow: hidden;">
+                            <span style="font-weight: 800; font-size: 15px; color: white;">${p.name} ${isMe ? '(You)' : ''}</span>
+                            <span style="font-size: 11px; color: var(--text-muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title='${pQt.replace(/'/g, "&apos;")}'>${pQt}</span>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // ==========================================
+        // MYSTERY ARTIST MODE (AKINATOR)
+        // ==========================================
+
+        function startMysteryMode() {
+            if (isMultiplayer) return alert("Dieser Modus ist nur Solo verfügbar!");
+            pauseMenuMusic();
+            document.getElementById('app-layout').style.display = 'none';
+            document.getElementById('mystery-screen').style.display = 'flex';
+
+            currentMysteryArtist = mysteryCandidates[Math.floor(Math.random() * mysteryCandidates.length)];
+            currentHints = mysteryDatabase[currentMysteryArtist];
+            hintIndex = 1;
+            mysteryScore = 500;
+            currentMode = 'mystery';
+
+            document.getElementById('mystery-pts').innerText = mysteryScore;
+            document.getElementById('mystery-input').value = '';
+            document.getElementById('mystery-suggestions').style.display = 'none';
+
+            for (let i = 1; i <= 5; i++) {
+                let el = document.getElementById(`hint-${i}`);
+                el.style.display = 'none';
+                el.innerText = `Hinweis ${i}...`;
+            }
+
+            let h1 = document.getElementById('hint-1');
+            h1.innerText = `Hinweis 1: ${currentHints[0]}`;
+            h1.style.display = 'block';
+        }
+
+        function updateMysterySuggestions() {
+            let val = document.getElementById('mystery-input').value.toLowerCase();
+            let box = document.getElementById('mystery-suggestions');
+            box.innerHTML = '';
+            if (val.length < 2) { box.style.display = 'none'; return; }
+            
+            let matches = mysteryCandidates.filter(a => a.toLowerCase().includes(val));
+            if (matches.length === 0) { box.style.display = 'none'; return; }
+            
+            matches.slice(0, 5).forEach(m => {
+                let div = document.createElement('div');
+                div.className = 'suggestion-item'; div.innerText = m;
+                div.onclick = () => { document.getElementById('mystery-input').value = m; box.style.display = 'none'; };
+                box.appendChild(div);
+            });
+            box.style.display = 'block';
+        }
+
+        function revealNextHint() {
+            if (hintIndex < 5 && mysteryScore > 100) {
+                mysteryScore -= 100;
+                document.getElementById('mystery-pts').innerText = mysteryScore;
+                let h = document.getElementById(`hint-${hintIndex + 1}`);
+                h.innerText = `Hinweis ${hintIndex + 1}: ${currentHints[hintIndex]}`;
+                h.style.display = 'block';
+                hintIndex++;
+            } else {
+                alert("Keine weiteren Hinweise verfügbar!");
+            }
+        }
+
+        function guessMysteryArtist() {
+            let guess = document.getElementById('mystery-input').value.trim().toLowerCase();
+            document.getElementById('mystery-suggestions').style.display = 'none';
+            if (!guess) return;
+
+            let cleanTarget = currentMysteryArtist.toLowerCase().replace(/[^a-z0-9]/g, '');
+            let cleanGuess = guess.replace(/[^a-z0-9]/g, '');
+
+            if (cleanGuess === cleanTarget || (cleanGuess.length >= 4 && cleanTarget.includes(cleanGuess))) {
+                myStats.correctGuesses++;
+                myStats.totalScore = (myStats.totalScore || 0) + mysteryScore;
+                if(!myStats.modeScores['mystery']) myStats.modeScores['mystery'] = 0;
+                myStats.modeScores['mystery'] += mysteryScore;
+                myStats.played++; myStats.wins++;
+                saveAccountData(); updateLevelDisplay(); updateDetailedStats();
+
+                document.getElementById('mystery-screen').style.display = 'none';
+                playVictorySnippet(currentMysteryArtist, true);
+            } else {
+                myStats.wrongGuesses++;
+                if (hintIndex < 5) {
+                    alert("Falsch! Ein neuer Hinweis wird aufgedeckt (-100 Punkte).");
+                    revealNextHint();
+                    document.getElementById('mystery-input').value = '';
+                } else {
+                    myStats.played++; myStats.losses++;
+                    saveAccountData(); updateLevelDisplay(); updateDetailedStats();
+                    
+                    document.getElementById('mystery-screen').style.display = 'none';
+                    playVictorySnippet(currentMysteryArtist, false);
+                }
+            }
+        }
+
+        function playVictorySnippet(artistName, victory) {
+            let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover'); let b = document.getElementById('feedback-btn');
+            
+            document.getElementById('feedback-overlay').style.display = 'flex';
+            m.className = "modal"; 
+            t.innerText = "Lade Ergebnis..."; 
+            d.innerText = "Suche Deezer nach Song...";
+            cov.style.display = 'none'; b.style.display = 'none'; document.getElementById('mp-result').style.display = 'none';
+
+            let cb = 'dz_vic_' + Date.now() + Math.floor(Math.random()*1000);
+            window[cb] = function(res) {
+                if (res && res.data && res.data.length > 0) {
+                    let track = res.data.find(t => t.preview) || res.data[0];
+                    cov.src = track.album.cover_xl || track.album.cover_medium;
+                    cov.style.display = 'block';
+                    
+                    if (victory) {
+                        m.className = "modal correct";
+                        t.innerText = "🏆 RICHTIG!";
+                        d.innerText = `Es war ${currentMysteryArtist}!\n+${mysteryScore} Punkte.`;
+                    } else {
+                        m.className = "modal wrong";
+                        t.innerText = "💀 GAME OVER";
+                        d.innerText = `Gesucht war: ${currentMysteryArtist}.`;
+                    }
+                    
+                    b.innerText = "Zurück zum Menü 🏠";
+                    b.style.display = 'block';
+                    b.onclick = backToMenu;
+
+                    if (track.preview) {
+                        sfxAudio.src = track.preview;
+                        sfxAudio.volume = globalVolume;
+                        sfxAudio.play().catch(e=>{});
+                    }
+                } else {
+                    if (victory) {
+                        m.className = "modal correct"; t.innerText = "🏆 RICHTIG!"; d.innerText = `Es war ${currentMysteryArtist}!\n+${mysteryScore} Punkte.`;
+                    } else {
+                        m.className = "modal wrong"; t.innerText = "💀 GAME OVER"; d.innerText = `Gesucht war: ${currentMysteryArtist}.`;
+                    }
+                    b.innerText = "Zurück zum Menü 🏠"; b.style.display = 'block'; b.onclick = backToMenu;
+                }
+                delete window[cb];
+            };
+            let s = document.createElement('script');
+            s.src = `https://api.deezer.com/search/track?q=${encodeURIComponent('artist:"' + artistName + '"')}&limit=5&output=jsonp&callback=${cb}`;
+            document.head.appendChild(s);
+        }
+
+        socket.on('gameReady', (code) => { if(!isMpHost) { document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading game data from host..."; } });
+        socket.on('receiveRoundData', (data) => { resetGameStats(); songsPool = data.songs; currentMode = data.mode; isHardcoreMode = data.hardcore; showArtistName = data.showArtist; document.getElementById('hardcore-toggle').checked = isHardcoreMode; document.getElementById('artist-toggle').checked = showArtistName; isMultiplayer = true; document.getElementById('loading-overlay').style.display = 'none'; launchGame(); });
+        socket.on('updateAllStats', (players) => { lobbyPlayers = players; if(!isWinnerScreenShown) updateStatsDisplay(); if(gameIsOver) renderMpLeaderboard(); });
+        socket.on('teammateAnswered', (data) => {
+            if (data.type === 'ROUND_ANSWERED') { playersAnsweredThisRound.add(data.id); checkAllAnswered(); } 
+            else if (data.type === 'READY_NEXT') { playersReadyForNextRound.add(data.id); checkAllReady(); } 
+            else if (data.type === 'SUDDEN_DEATH') { triggerSuddenDeathLocal(data.ids); }
+        });
+        socket.on('triggerNextRound', () => { if (!isMpHost && lives > 0 && !gameIsOver) nextRound(); });
+        socket.on('opponentGameOver', (data) => { matchEndData[data.id] = data; playersAnsweredThisRound.add(data.id); playersReadyForNextRound.add(data.id); checkAllAnswered(); checkAllReady(); if (gameIsOver) checkMatchEnd(); });
+
+        function checkMatchEnd() {
+            if (!isMultiplayer || !gameIsOver || isWinnerScreenShown) return;
+            let allDone = lobbyPlayers.length > 0 && lobbyPlayers.every(p => matchEndData[p.id]);
+            if (allDone) {
+                let sorted = Object.values(matchEndData).sort((a,b) => b.score - a.score); let topScore = sorted[0].score; let tiedPlayers = sorted.filter(p => p.score === topScore);
+                if (tiedPlayers.length > 1) {
+                    if (isMpHost) { let tiedIds = tiedPlayers.map(p => p.id); socket.emit('teammateAnswered', { type: 'SUDDEN_DEATH', ids: tiedIds, roomCode: currentRoom }); triggerSuddenDeathLocal(tiedIds); }
+                } else {
+                    isWinnerScreenShown = true; let winner = sorted[0]; let amIFirst = (winner.id === socket.id);
+                    myStats.played++; if(amIFirst) myStats.wins++; else myStats.losses++;
+                    myStats.totalScore = (myStats.totalScore || 0) + score; if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0; myStats.modeScores[currentMode] += score;
+                    saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats(); showWinnerScreen(winner);
+                }
+            } else { renderMpLeaderboard(); }
+        }
+
+        function backToMenu() { 
+            try { audio.pause(); sfxAudio.pause(); clearTimeout(precisionTimer); gameIsOver = true; cancelMultiplayer(); document.getElementById('game-screen').style.display = 'none'; document.getElementById('hl-screen').style.display = 'none'; document.getElementById('mystery-screen').style.display = 'none'; document.getElementById('feedback-overlay').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex'; resumeMenuMusic(); } 
+            catch(e) { location.reload(); }
+        }
+
+        function triggerSuddenDeathLocal(tiedIds) {
+            let amITied = tiedIds.includes(socket.id); sfxAudio.pause(); tiedIds.forEach(id => delete matchEndData[id]); 
+            let m = document.getElementById('feedback-modal'); m.className = "modal warning"; document.getElementById('feedback-title').innerText = "💀 SUDDEN DEATH 💀"; document.getElementById('feedback-cover').style.display = 'none'; document.getElementById('mp-result').style.display = 'none'; document.getElementById('feedback-btn').style.display = 'none';
+            if (amITied) {
+                lives = 1; gameIsOver = false; isWinnerScreenShown = false; document.getElementById('feedback-desc').innerText = "Tie! You get 1 life. Whoever misses next, loses!";
+                playersAnsweredThisRound.clear(); playersReadyForNextRound.clear(); expectedAnswers = tiedIds.length;
+                if (isMpHost) { setTimeout(() => { socket.emit('nextRound', { roomCode: currentRoom }); nextRound(); }, 4000); }
+            } else { document.getElementById('feedback-desc').innerText = "Tie! Finalists are fighting in Sudden Death..."; }
+            document.getElementById('feedback-overlay').style.display = 'flex'; updateStatsDisplay();
+        }
+
+        function playWinnerAnthem(url) {
+            sfxAudio.pause(); pauseMenuMusic();
+            if (url && url.startsWith('yt:')) { let vid = url.substring(3); if(ytReady && ytPlayer && ytPlayer.loadVideoById) { ytContext = 'winner'; ytPlayer.setVolume(globalVolume * 100); ytPlayer.loadVideoById(vid); ytPlayer.playVideo(); } } 
+            else if (url) { sfxAudio.src = url; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{}); } 
+            else { sfxAudio.src = 'ultimate.mp3'; sfxAudio.volume = globalVolume; sfxAudio.play().catch(e=>{}); }
+        }
+
+        function showWinnerScreen(winner) {
+            try {
+                let parts = winner.avatar.split('|Q|'); let wAv = parts[0]; let wQt = parts.length > 1 ? parts[1] : '';
+                let m = document.getElementById('feedback-modal'); m.className = "modal correct"; document.getElementById('feedback-title').innerText = "🏆 WINNER 🏆"; document.getElementById('feedback-desc').innerText = "Playing winner's anthem...";
+                let cov = document.getElementById('feedback-cover'); cov.src = wAv; cov.style.display = 'block'; cov.style.borderRadius = '50%'; cov.style.width = '160px'; cov.style.height = '160px'; cov.style.border = '4px solid var(--warning)'; cov.style.boxShadow = '0 0 40px rgba(245, 158, 11, 0.8)';
+                document.getElementById('mp-result').style.display = 'block';
+                document.getElementById('mp-result').innerHTML = `<h2 style="color:var(--warning); margin:0; font-size:36px; text-transform: uppercase;">${winner.name}</h2><p style="color:var(--text-muted); font-style:italic; font-size:14px; margin: 5px 0;">${wQt}</p><p style="color:white; font-size:24px; font-weight:900;">${winner.score} Pts</p>`;
+                
+                playWinnerAnthem(winner.anthem);
+                document.getElementById('feedback-btn').style.display = 'none'; 
+                setTimeout(() => {
+                    sfxAudio.pause(); if(ytContext === 'winner' && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+                    cov.style.display = 'none'; cov.style.borderRadius = '16px'; cov.style.border = '2px solid var(--surface-border)'; cov.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+                    document.getElementById('feedback-title').innerText = "📊 FINAL STANDINGS"; document.getElementById('feedback-desc').innerText = "";
+                    renderMpLeaderboard(); let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Exit 🏠"; btn.onclick = () => { backToMenu(); };
+                }, 7000);
+            } catch(e) { backToMenu(); }
+        }
+
+        async function startHigherLowerMode() {
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Stream Data...";
+            resetGameStats(); currentMode = 'higherlower'; hlStreak = 0; hlRecentArtists = [];
+            
+            let sel = [...megaStars, ...artists2010s, ...soundcloudArtists, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0, 15);
+            let promises = sel.map(a => fetchArtistSongs(a)); await Promise.all(promises);
+            if (songsPool.length < 5) { document.getElementById('loading-overlay').style.display = 'none'; alert("Fehler. Bitte lade neu!"); return; }
+            
+            hlPool = smartShuffle(songsPool).map(s => ({ ...s, streams: getTrackEstimatedStreams(s.title, s.artist.name) }));
+            document.getElementById('loading-overlay').style.display = 'none'; pauseMenuMusic();
+            document.getElementById('app-layout').style.display = 'none'; document.getElementById('hl-screen').style.display = 'flex';
+            
+            hlCurrentA = hlPool.pop(); hlRecentArtists.push(hlCurrentA.artist.name);
+            let nextIndex = hlPool.findIndex(s => !hlRecentArtists.includes(s.artist.name));
+            if(nextIndex !== -1) { hlCurrentB = hlPool.splice(nextIndex, 1)[0]; } else { hlCurrentB = hlPool.pop(); }
+            hlRecentArtists.push(hlCurrentB.artist.name);
+            
+            renderHLRound();
+        }
+
+        function renderHLRound() {
+            document.getElementById('hl-streak-num').innerText = hlStreak;
+            document.getElementById('hl-img-a').src = hlCurrentA.album.cover_medium; document.getElementById('hl-title-a').innerText = hlCurrentA.title; document.getElementById('hl-artist-a').innerText = hlCurrentA.artist.name; document.getElementById('hl-streams-a').innerText = hlCurrentA.streams.toLocaleString('en-US');
+            document.getElementById('hl-img-b').src = hlCurrentB.album.cover_medium; document.getElementById('hl-title-b').innerText = hlCurrentB.title; document.getElementById('hl-artist-b').innerText = hlCurrentB.artist.name;
+            document.getElementById('hl-action-box').style.display = 'flex'; document.getElementById('hl-result-box').style.display = 'none'; document.getElementById('hl-streams-b').innerText = hlCurrentB.streams.toLocaleString('en-US');
+            audio.pause(); clearTimeout(precisionTimer);
+            if (hlCurrentB.preview) { audio.src = hlCurrentB.preview; audio.volume = globalVolume; audio.loop = true; audio.play().catch(e=>{}); }
+        }
+
+        function processHLChoice(choice) {
+            document.getElementById('hl-action-box').style.display = 'none'; document.getElementById('hl-result-box').style.display = 'flex';
+            let isHigher = hlCurrentB.streams >= hlCurrentA.streams; let wasCorrect = (choice === 'higher' && isHigher) || (choice === 'lower' && !isHigher);
+            
+            if (wasCorrect) {
+                hlStreak++; score += 150; myStats.correctGuesses++;
+                setTimeout(() => { 
+                    hlCurrentA = hlCurrentB; 
+                    if (hlPool.length === 0) { triggerGameOver(true); } 
+                    else { 
+                        let nextIndex = hlPool.findIndex(s => !hlRecentArtists.includes(s.artist.name));
+                        if(nextIndex !== -1) { hlCurrentB = hlPool.splice(nextIndex, 1)[0]; } else { hlCurrentB = hlPool.pop(); }
+                        hlRecentArtists.push(hlCurrentB.artist.name); if (hlRecentArtists.length > 8) hlRecentArtists.shift();
+                        renderHLRound(); 
+                    } 
+                }, 2000);
+            } else {
+                myStats.wrongGuesses++; setTimeout(() => { triggerGameOver(false); }, 2000);
+            }
+            saveAccountData();
+        }
+
+        function playAudioSnippet(isReplay = false) { 
+            clearTimeout(precisionTimer); let playId = ++currentPlayId;
+            if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
+            audio.volume = globalVolume; audio.loop = false; let p = audio.play();
+            if (p !== undefined) { p.then(() => { if (playId !== currentPlayId) return; if (maxPlayTime < 30) { precisionTimer = setTimeout(() => { if (playId === currentPlayId) audio.pause(); }, maxPlayTime * 1000); } }).catch(e=>{}); }
+        }
+
+        function readSettings() { let hcToggle = document.getElementById('hardcore-toggle'); let artToggle = document.getElementById('artist-toggle'); if (hcToggle) isHardcoreMode = hcToggle.checked; if (artToggle) showArtistName = artToggle.checked; }
+
+        function fetchArtistSongs(artist) {
+            return new Promise((resolve) => {
+                const cb = 'dz_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+                
+                let to = setTimeout(() => { 
+                    if(window[cb]) window[cb] = function(){}; 
+                    resolve(); 
+                }, 3500);
+
+                window[cb] = function(res) {
+                    clearTimeout(to);
+                    if (res && res.data && res.data.length > 0) {
+                        const forbidden = ['karaoke', 'tribute', 'in the style', 'type beat', 'lullaby', '8-bit', 'parody', 'workout', 'cover', 'bad bunny', 'camila cabello', 'ed sheeran', 'justin bieber', 'j balvin', 'ozuna', 'shakira', 'rosalia', 'dua lipa', 'ariana grande', 'taylor swift', 'katy perry', 'maroon 5', 'coldplay', 'selena gomez', 'maluma', 'daddy yankee', 'luis fonsi', 'becky g', 'anitta', 'jennifer lopez', 'pitbull'];
+                        let valid = res.data.filter(t => {
+                            if (!t.preview) return false;
+                            let trackNameLower = t.title.toLowerCase(); 
+                            let artistNameLower = t.artist.name.toLowerCase(); 
+                            let searchArtistLower = artist.toLowerCase();
+
+                            let isInvolved = artistNameLower.includes(searchArtistLower) || trackNameLower.includes(searchArtistLower);
+                            if (!isInvolved) return false;
+
+                            for (let term of forbidden) { 
+                                if (trackNameLower.includes(term) || artistNameLower.includes(term)) return false; 
+                            }
+                            return true;
+                        });
+
+                        let uniqueTracks = new Map();
+                        for (let t of valid) {
+                            let cleanName = t.title.toLowerCase().split('(')[0].split('[')[0].trim();
+                            if (!uniqueTracks.has(cleanName) || (t.explicit_lyrics && !uniqueTracks.get(cleanName).explicit_lyrics)) {
+                                uniqueTracks.set(cleanName, t);
+                            }
+                        }
+                        let mapped = Array.from(uniqueTracks.values()).slice(0, 40).map((t, i) => ({
+                            id: 'dz' + t.id, title: t.title, preview: t.preview, artist: { name: t.artist.name },
+                            album: { cover_medium: (t.album.cover_xl || t.album.cover_medium || '') }, popRank: i
+                        }));
+                        if(mapped.length > 0) songsPool.push(...mapped);
+                    }
+                    resolve();
+                };
+                const s = document.createElement('script');
+                s.src = `https://api.deezer.com/search?q=${encodeURIComponent(artist)}&limit=100&output=jsonp&callback=${cb}`;
+                s.onerror = () => { clearTimeout(to); resolve(); };
+                document.head.appendChild(s);
+            });
+        }
+
+        function resetGameStats() {
+            songsPool = []; playedSongIds.clear(); score = 0; lives = 3; gameIsOver = false; isWinnerScreenShown = false; matchEndData = {}; playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
+            updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); audio.loop = false;
+            let box = document.getElementById('suggestions-box'); if(box) box.style.display = 'none'; 
+            let res = document.getElementById('mp-result'); if(res) res.style.display = 'none';
+        }
+
+        function syncHostData() {
+            readSettings();
+            let safePool = songsPool.map(s => ({ id: s.id, title: s.title, preview: s.preview, artist: { name: s.artist.name }, album: { cover_medium: s.album.cover_medium } })).slice(0, 100);
+            socket.emit('syncRoundData', { roomCode: currentRoom, songs: safePool, mode: currentMode, hardcore: isHardcoreMode, showArtist: showArtistName });
+        }
+
+        function launchGame() {
+            pauseMenuMusic();
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('app-layout').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex';
+            if(isMultiplayer) socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
+            nextRound();
+        }
+
+        async function startMixedMode(mode) {
+            readSettings(); 
+            if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading database...";
+            resetGameStats(); currentMode = mode; let sel = [];
+            
+            if (mode === 'all') sel = [...artists2010s, ...soundcloudArtists, ...megaStars, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
+            if (mode === 'soundcloud') sel = [...soundcloudArtists].sort(()=>0.5-Math.random()).slice(0,8);
+            if (mode === '2010s') sel = [...artists2010s].sort(()=>0.5-Math.random()).slice(0,8);
+            if (mode === 'megahits') sel = [...megaStars, ...artists2010s, ...legends, ...fallenLegends].sort(()=>0.5-Math.random()).slice(0,10);
+            if (mode === 'fallen') sel = [...fallenLegends].sort(()=>0.5-Math.random()).slice(0,8);
+            
+            try {
+                let promises = sel.map(a => fetchArtistSongs(a));
+                await Promise.all(promises);
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Es konnten leider keine Songs geladen werden. Bitte lade die Seite neu!"); return; }
+                if (mode === 'megahits') songsPool = songsPool.filter(s => s.popRank < 5);
+                songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
+            } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; }
+        }
+
+        async function startProgressiveMode() {
+            readSettings(); 
+            if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = "Loading Progressive Mode...";
+            resetGameStats(); currentMode = 'progressive';
+            let sel = [...allArtists].sort(()=>0.5-Math.random()).slice(0,10);
+            try {
+                let promises = sel.map(a => fetchArtistSongs(a)); await Promise.all(promises);
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Es konnten leider keine Songs geladen werden. Bitte lade die Seite neu!"); return; }
+                songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
+            } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; }
+        }
+
+        async function startArtistMode(artist) {
+            readSettings(); 
+            if (isMultiplayer && isMpHost) socket.emit('startGame', currentRoom);
+            document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('loading-text').innerText = `Loading catalog for ${artist}...`;
+            resetGameStats(); currentMode = 'artist';
+            try {
+                await fetchArtistSongs(artist);
+                if (songsPool.length < 4) { document.getElementById('loading-overlay').style.display = 'none'; alert("Es konnten leider keine Songs geladen werden. Bitte lade die Seite neu!"); return; }
+                songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
+            } catch (err) { document.getElementById('loading-overlay').style.display = 'none'; }
+        }
+
+        function updateSuggestions() {
+            let val = document.getElementById('guess-input').value.toLowerCase(); let box = document.getElementById('suggestions-box'); box.innerHTML = '';
+            if (val.length < 2) { box.style.display = 'none'; return; }
+            let matches = songsPool.filter(s => s.title.toLowerCase().includes(val) || s.artist.name.toLowerCase().includes(val));
+            let uM = []; let seen = new Set();
+            for(let m of matches) { let id = m.title+m.artist.name; if(!seen.has(id)){ seen.add(id); uM.push(m); } }
+            if (uM.length === 0) { box.style.display = 'none'; return; }
+            uM.slice(0, 5).forEach(m => {
+                let div = document.createElement('div'); div.className = 'suggestion-item'; div.innerText = showArtistName ? `${m.title} - ${m.artist.name}` : m.title;
+                div.onclick = () => { document.getElementById('guess-input').value = m.title; box.style.display = 'none'; checkTextInput(); }; box.appendChild(div);
+            });
+            box.style.display = 'block';
+        }
+
+        function nextRound() {
+            document.getElementById('feedback-overlay').style.display = 'none'; audio.pause(); clearTimeout(precisionTimer); document.getElementById('suggestions-box').style.display = 'none';
+            playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
+            if(isMultiplayer) expectedAnswers = Math.max(1, lobbyPlayers.filter(p => p.lives > 0).length);
+            
+            let unp = songsPool.filter(s => !playedSongIds.has(s.id));
+            if (unp.length === 0) { triggerGameOver(true); return; }
+            currentSong = unp[0]; playedSongIds.add(currentSong.id);
+
+            if (currentMode === 'progressive') {
+                let times = [0.1, 1, 2, 5, 10]; maxPlayTime = times[Math.min(playedSongIds.size - 1, 4)];
+                document.getElementById('add-time-btn').innerText = `+3s (${maxPlayTime}s)`;
+            } else { maxPlayTime = 1; document.getElementById('add-time-btn').innerText = `+3s (1s)`; }
+
+            if (isHardcoreMode) {
+                document.getElementById('options').style.display = 'none'; document.getElementById('text-input-container').style.display = 'block';
+                let input = document.getElementById('guess-input'); input.value = ''; input.focus();
+            } else {
+                document.getElementById('text-input-container').style.display = 'none'; document.getElementById('options').style.display = 'flex';
+                let wrong = songsPool.filter(s => s.id !== currentSong.id).sort(()=>0.5-Math.random());
+                let opts = [currentSong]; let seenTitles = new Set([currentSong.title]);
+                for (let s of wrong) { if (!seenTitles.has(s.title)) { seenTitles.add(s.title); opts.push(s); } if (opts.length === 4) break; }
+                opts.sort(()=>0.5-Math.random());
+                let div = document.getElementById('options'); div.innerHTML = '';
+                opts.forEach(o => {
+                    let b = document.createElement('button'); b.className = 'option-btn'; b.innerText = showArtistName ? `${o.title} - ${o.artist.name}` : o.title;
+                    b.onclick = () => processAnswer(o.id === currentSong.id); div.appendChild(b);
+                });
+            }
+            audio.src = currentSong.preview; playAudioSnippet(false);
+        }
+
+        function skipSong() { processAnswer(false, true); }
+        function checkTextInput() { let v = document.getElementById('guess-input').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''); let c = currentSong.title.toLowerCase().split('(')[0].split(' feat')[0].replace(/[^a-z0-9]/g, ''); processAnswer(v === c || (v.length >= 4 && c.includes(v))); }
+
+        function checkAllAnswered() {
+            if (!isMultiplayer) return;
+            let btn = document.getElementById('feedback-btn'); let res = document.getElementById('mp-result');
+            if (playersAnsweredThisRound.size >= expectedAnswers) {
+                res.innerHTML = '<span style="color: var(--success); font-weight: 900;">All players guessed!</span>';
+                btn.style.display = 'block'; btn.innerText = 'Next Round ➔';
+                btn.onclick = () => {
+                    playersReadyForNextRound.add(socket.id);
+                    socket.emit('teammateAnswered', { type: 'READY_NEXT', id: socket.id, roomCode: currentRoom });
+                    btn.style.display = 'none'; res.innerHTML = '<span style="color: var(--warning); font-weight: 800;">Waiting for other players...</span>';
+                    checkAllReady();
+                };
+            } else {
+                res.innerHTML = `<span style="color: var(--warning); font-weight: 800;">Waiting for players... (${playersAnsweredThisRound.size}/${expectedAnswers})</span>`;
+                btn.style.display = 'none';
+            }
+        }
+
+        function checkAllReady() {
+            if (!isMultiplayer) return;
+            if (playersReadyForNextRound.size >= expectedAnswers) {
+                if (isMpHost) { socket.emit('nextRound', { roomCode: currentRoom }); if (lives > 0 && !gameIsOver) nextRound(); }
+            }
+        }
+
+        function processAnswer(wasCorrect, isSkip = false) {
+            if (document.getElementById('feedback-overlay').style.display === 'flex' || gameIsOver) return;
+            let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let cov = document.getElementById('feedback-cover');
+            document.getElementById('suggestions-box').style.display = 'none'; 
+            let pts = maxPlayTime <= 1 ? 100 : (maxPlayTime <= 4 ? 75 : 50);
+
+            if (wasCorrect) {
+                myStats.correctGuesses++; score += pts; maxPlayTime = 30; playAudioSnippet(true); cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
+                m.className = "modal correct"; t.innerText = "🔥 CORRECT!"; d.innerText = `+${pts} Points!\n${currentSong.title} - ${currentSong.artist.name}`;
+            } else {
+                myStats.wrongGuesses++; cov.src = currentSong.album.cover_medium; cov.style.display = 'block';
+                if (isSkip) { score = Math.max(0, score - 250); m.className = "modal wrong"; t.innerText = "⏭️ SKIPPED"; d.innerText = `-250 Points\n${currentSong.title} - ${currentSong.artist.name}`; } 
+                else { lives = Math.max(0, lives - 1); m.className = "modal wrong"; t.innerText = "❌ WRONG!"; d.innerText = `Lost a life!\n${currentSong.title} - ${currentSong.artist.name}`; }
+            }
+            
+            saveAccountData();
+            if (isMultiplayer) {
+                socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives }); document.getElementById('mp-result').style.display = 'block';
+                playersAnsweredThisRound.add(socket.id); socket.emit('teammateAnswered', { type: 'ROUND_ANSWERED', id: socket.id, roomCode: currentRoom }); checkAllAnswered();
+            } else {
+                document.getElementById('mp-result').style.display = 'none'; let btn = document.getElementById('feedback-btn'); btn.style.display = 'block'; btn.innerText = "Next Round ➔"; btn.onclick = nextRound;
+            }
+            
+            updateStatsDisplay(); document.getElementById('feedback-overlay').style.display = 'flex';
+            if (lives <= 0) { document.getElementById('feedback-btn').style.display = 'none'; setTimeout(() => triggerGameOver(false), 2000); }
+        }
+
+        function triggerGameOver(victory) {
+            try {
+                if (gameIsOver) return; gameIsOver = true; audio.pause(); clearTimeout(precisionTimer);
+                let m = document.getElementById('feedback-modal'); let t = document.getElementById('feedback-title'); let d = document.getElementById('feedback-desc'); let b = document.getElementById('feedback-btn'); let cov = document.getElementById('feedback-cover');
+                cov.style.display = 'none'; m.className = "modal gameover";
+                
+                if (isMultiplayer) {
+                    socket.emit('syncStats', { roomCode: currentRoom, score: score, lives: lives });
+                    let myData = { id: socket.id, score: score, name: playerName, avatar: encodeAvatarAndQuote(), anthem: mySongUrl, roomCode: currentRoom };
+                    matchEndData[socket.id] = myData; socket.emit('gameOver', myData);
+                    t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
+                    document.getElementById('mp-result').style.display = 'block'; document.getElementById('mp-result').innerHTML = "Loading live data...";
+                    b.style.display = 'none'; document.getElementById('feedback-overlay').style.display = 'flex';
+                    renderMpLeaderboard(); checkMatchEnd();
+                } else {
+                    t.innerText = victory ? "🏆 COMPLETED!" : "💀 GAME OVER"; d.innerText = `Your Score: ${score}`;
+                    myStats.played++; if(victory) myStats.wins++; else myStats.losses++; 
+                    myStats.totalScore = (myStats.totalScore || 0) + score; if(!myStats.modeScores[currentMode]) myStats.modeScores[currentMode] = 0; myStats.modeScores[currentMode] += score;
+                    saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats();
+                    b.innerText = "Exit 🏠"; b.style.display = 'block'; b.onclick = () => { backToMenu(); };
+                    document.getElementById('feedback-overlay').style.display = 'flex';
+                }
+            } catch(e) {}
+        }
+
+        function updateStatsDisplay() { 
+            const bar = document.getElementById('game-stats-bar'); if(!bar) return;
+            try {
+                if(!isMultiplayer) {
+                    bar.innerHTML = `<div class="team-score-box"><span class="team-score-title" style="color: white;">Your Score</span><span class="team-score-num" style="color: var(--primary);">${score}</span></div><div style="text-align: center;"><div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Lives</div><span style="font-size: 20px; letter-spacing: 2px;">${"❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3-lives))}</span></div>`;
+                } else {
+                    bar.innerHTML = '';
+                    lobbyPlayers.forEach(p => {
+                        const isMe = (p.id === socket.id); let parts = p.avatar.split('|Q|'); let pAv = parts[0]; let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
+                        bar.innerHTML += `<div class="team-score-box" style="opacity: ${p.lives <= 0 ? '0.4' : '1'}; transition: 0.3s; width: ${100/Math.max(1, lobbyPlayers.length)}%;"><img src="${pAv}" style="width: 75px; height: 75px; border-radius: 50%; border: 3px solid ${isMe ? 'var(--primary)' : 'white'}; margin-bottom: 8px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.5);"><span class="team-score-title" style="color: ${isMe ? 'var(--primary)' : 'white'}; font-size: 14px; font-weight: 900;">${p.name}</span><span style="font-size: 9px; color: var(--text-muted); font-style: italic; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;" title="${pQt.replace(/"/g, '&quot;')}">${pQt}</span><span class="team-score-num" style="font-size: 24px; text-shadow: 0 0 10px rgba(255,255,255,0.2);">${p.score}</span><span style="font-size: 14px; margin-top: 5px;">${p.lives > 0 ? "❤️".repeat(Math.max(0, p.lives)) : "💀"}</span></div>`;
+                    });
+                }
+            } catch(e) {}
+        }
+
+        function renderMpLeaderboard() {
+            const res = document.getElementById('mp-result'); if(!res || !isMultiplayer || isWinnerScreenShown) return;
+            let sorted = [...lobbyPlayers].map(p => { return matchEndData[p.id] ? matchEndData[p.id] : p; }).sort((a,b) => b.score - a.score);
+            let html = '<h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary); text-transform: uppercase;">Live Standings</h3><div style="display: flex; flex-direction: column; gap: 8px; text-align: left;">';
+            sorted.forEach((p, index) => {
+                let rankColor = index === 0 ? 'var(--warning)' : (index === 1 ? '#d4d4d8' : '#b45309'); if(index > 2) rankColor = 'var(--text-muted)';
+                let isMe = p.id === socket.id; let parts = p.avatar.split('|Q|'); let pAv = parts[0];
+                html += `<div style="display: flex; align-items: center; justify-content: space-between; background: ${isMe ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)'}; padding: 10px 15px; border-radius: 8px; border-left: 4px solid ${rankColor};"><div style="display: flex; align-items: center; gap: 10px;"><span style="font-weight: 900; font-size: 16px; color: ${rankColor};">#${index + 1}</span><img src="${pAv}" style="width: 25px; height: 25px; border-radius: 50%; object-fit: cover;"><span style="font-weight: 700; color: white;">${p.name}</span></div><div style="text-align: right;"><div style="font-weight: 900; color: white;">${p.score} Pts</div></div></div>`;
+            });
+            html += '</div>'; res.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
+
