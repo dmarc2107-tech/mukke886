@@ -218,6 +218,9 @@
         .modal.wrong { border-color: var(--danger); box-shadow: 0 0 40px rgba(239, 68, 68, 0.2); } .modal.wrong h2 { color: var(--danger); }
         .modal.gameover { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); } .modal.gameover h2 { color: var(--warning); }
         
+        .modal.warning { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.4); } 
+        .modal.warning h2 { color: var(--warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
+
         .loader { border: 4px solid rgba(255,255,255,0.05); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
 
         input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
@@ -299,6 +302,7 @@
             </div>
             <div class="sidebar-footer">
                 <button id="music-toggle-btn-sidebar" onclick="toggleMenuMusic()" style="background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 10px 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 700; width: 80%; margin: 0 auto; display: block;">🔇 Music Off</button>
+                
                 <div style="display:flex; align-items:center; gap:10px; margin-top:15px; padding: 0 15px;">
                     <span style="font-size:16px;">🔉</span>
                     <input type="range" class="vol-slider" min="0" max="1" step="0.05" oninput="changeVolume(this.value)">
@@ -590,6 +594,7 @@
     <!-- MYSTERY RAPPER SCREEN -->
     <div id="mystery-screen">
         <div class="game-inner">
+            
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; width: 100%; max-width: 600px;">
                 <button onclick="backToMenu()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--surface-border); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer;">🏠 Quit</button>
                 <div style="display: flex; gap: 20px;">
@@ -626,7 +631,7 @@
             
             <div style="display: flex; gap: 10px;">
                 <button class="btn-action" onclick="guessMysteryArtist()" style="flex: 2;">Raten</button>
-                <button class="btn-action" onclick="revealNextHint()" style="flex: 1; background: var(--warning); color: black;">Tipp (-100)</button>
+                <button class="btn-action" onclick="revealNextHint()" style="flex: 1; background: var(--warning); color: black;">Neuer Hinweis (-100)</button>
             </div>
             
             <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:20px; padding: 10px 15px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid var(--surface-border);">
@@ -653,7 +658,7 @@
 
     <script>
         // GLOBALE VARIABLEN MIT EXTREM ERWEITERTEN LISTEN
-        const fallenLegends = ['2Pac', 'The Notorious B.I.G.', 'XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Mac Miller', 'Pop Smoke', 'King Von', 'Takeoff', 'Nipsey Hussle', 'Eazy-E', 'MF DOOM', 'Young Dolph', 'PnB Rock', 'DMX', 'Speaker Knockerz', 'Fredo Santana', 'Lil Keed', 'Big L', 'Coolio', 'Ol\' Dirty Bastard'];
+        const fallenLegends = ['2Pac', 'The Notorious B.I.G.', 'XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Mac Miller', 'Pop Smoke', 'King Von', 'Takeoff', 'Nipsey Hussle', 'Eazy-E', 'MF DOOM', 'Young Dolph', 'PnB Rock', 'DMX', 'Speaker Knockerz', 'Fredo Santana', 'Lil Keed', 'Big L', 'Coolio', `Ol' Dirty Bastard`];
         const soundcloudArtists = ['XXXTentacion', 'Juice WRLD', 'Lil Peep', 'Ski Mask the Slump God', 'Trippie Redd', 'Denzel Curry', 'Playboi Carti', 'Lil Uzi Vert', 'Lil Pump', 'Smokepurpp', '$uicideboy$', 'Chief Keef', 'Tay-K', 'YNW Melly', 'Yung Lean', 'Bones', 'Lil Skies', 'Comethazine', 'YBN Nahmir', 'Yung Bans', 'Yeat', 'Ken Carson', 'Destroy Lonely', 'SoFaygo'];
         const artists2010s = ['Travis Scott', 'Migos', 'Future', 'Young Thug', '21 Savage', 'Kodak Black', 'Lil Baby', 'Gunna', 'Polo G', 'A$AP Rocky', 'Tyler, The Creator', 'Mac Miller', 'Don Toliver', 'Lil Durk', 'Nav', 'Roddy Ricch', 'A Boogie Wit da Hoodie', 'DaBaby', 'NLE Choppa', 'Offset', 'Quavo', 'Yeat', 'Central Cee', 'JID', 'Schoolboy Q', 'Joey Bada$$', 'A$AP Ferg', 'Meek Mill', 'Big Sean', 'Logic', 'Lil Yachty', 'Jack Harlow', 'Rae Sremmurd', 'Rick Ross', 'Wale', 'Vince Staples'];
         const legends = ['2Pac', 'The Notorious B.I.G.', 'Eminem', '50 Cent', 'Snoop Dogg', 'Dr. Dre', 'Ice Cube', 'Nas', 'Jay-Z', 'Wu-Tang Clan', 'Outkast', 'DMX', 'Rakim', 'LL Cool J', 'Busta Rhymes', 'Missy Elliott', 'Lauryn Hill', 'Big L'];
@@ -662,42 +667,42 @@
         const allArtists = [...new Set([...soundcloudArtists, ...artists2010s, ...legends, ...megaStars, ...fallenLegends])].sort();
 
         const mysteryDatabase = {
-            "Drake": ["Kommt aus Toronto, Kanada", "Hat das Label OVO Sound gegründet", "Befand sich im Beef mit Kendrick Lamar", "Bekannt für Alben wie 'Scorpion' und 'Take Care'", "Hit: 'God's Plan'"],
-            "Travis Scott": ["Kommt aus Houston, Texas", "Label und Marke: Cactus Jack", "Hat ein sehr bekanntes Fortnite-Event veranstaltet", "Sein bekanntestes Album heißt 'Astroworld'", "Hit: 'Sicko Mode'"],
-            "XXXTentacion": ["SoundCloud-Legende aus Florida", "Mitbegründer der Crew 'Members Only'", "Sein Haar war berühmt schwarz-blond gefärbt", "Wurde 2018 in seinem Auto ermordet", "Hits: 'SAD!' und 'Look At Me!'"],
-            "Eminem": ["Kommt aus Detroit", "Sein Alter Ego heißt 'Slim Shady'", "Hat im Film '8 Mile' mitgespielt", "Wurde oft als 'Rap God' bezeichnet", "Hit: 'Lose Yourself'"],
-            "Juice WRLD": ["Kommt aus Chicago", "Oft mit der Zahl '999' assoziiert", "War ein legendärer Freestyler", "Starb 2019 an einer Überdosis", "Hit: 'Lucid Dreams'"],
-            "50 Cent": ["Kommt aus Queens, New York", "Gründer der Gruppe G-Unit", "Wurde im Jahr 2000 neunmal angeschossen", "Sein Debütalbum war 'Get Rich or Die Tryin'", "Hit: 'In Da Club'"],
-            "2Pac": ["West Coast Legende, geboren in NY", "Trug oft ein Bandana und hatte 'Thug Life' tätowiert", "Nutze auch den Alias 'Makaveli'", "Wurde 1996 in Las Vegas erschossen", "Hit: 'Hit Em Up' / 'California Love'"],
-            "Kanye West": ["Produzent und Rapper aus Chicago", "Gründer der Marke Yeezy", "Ließ seinen Namen in 'Ye' ändern", "Berühmtes Album: 'My Beautiful Dark Twisted Fantasy'", "Hit: 'Stronger' / 'Runaway'"],
-            "Kendrick Lamar": ["Kommt aus Compton, Kalifornien", "Teil von TDE und Gründer von pgLang", "Hat einen Pulitzer-Preis für Musik gewonnen", "Bekannt für das Album 'To Pimp A Butterfly'", "Hit: 'Not Like Us' / 'HUMBLE.'"],
-            "Lil Peep": ["Pionier des Emo-Rap", "War Mitglied der GothBoiClique (GBC)", "Viele Tattoos im Gesicht (u.a. Crybaby)", "Album: 'Come Over When You're Sober'", "Hit: 'Star Shopping'"],
-            "The Notorious B.I.G.": ["East Coast Legende aus Brooklyn", "Stand bei Bad Boy Records unter Vertrag", "Wurde auch 'Biggie Smalls' genannt", "Wurde 1997 in Los Angeles erschossen", "Hit: 'Juicy' / 'Hypnotize'"],
-            "Snoop Dogg": ["Rap-Legende aus Long Beach, Kalifornien", "Oft in Verbindung mit extremem Marihuana-Konsum", "Debütalbum: 'Doggystyle' (Death Row Records)", "Wurde von Dr. Dre entdeckt", "Hit: 'Drop It Like It's Hot'"],
-            "Playboi Carti": ["Rapper aus Atlanta", "Gründer des Labels 'Opium'", "Bekannt für seine Vampir-Ästhetik und Baby-Voice", "Album: 'Whole Lotta Red'", "Hit: 'Magnolia'"],
-            "Lil Uzi Vert": ["Kommt aus Philadelphia", "Hat sich einen riesigen pinken Diamanten in die Stirn implantieren lassen", "Album: 'Eternal Atake'", "Wurde oft mit Marilyn Manson assoziiert", "Hit: 'XO Tour Llif3'"],
-            "J. Cole": ["Rapper aus North Carolina", "Gründer von Dreamville Records", "Spielt professionell Basketball", "Berühmt für 'Platinum with no features'", "Hit: 'No Role Modelz'"],
-            "Mac Miller": ["Rapper und Produzent aus Pittsburgh", "Debütierte mit 'Blue Slide Park'", "War mit Ariana Grande zusammen", "Verstarb 2018 an einer Überdosis", "Hit: 'Self Care' / 'Donald Trump'"],
-            "Pop Smoke": ["Pionier des Brooklyn Drill", "Stand für das 'Woo' Movement", "Wurde 2020 in Hollywood bei einem Raubüberfall ermordet", "Sein posthumes Album wurde von 50 Cent produziert", "Hit: 'Dior'"],
-            "A$AP Rocky": ["Rapper aus Harlem, New York", "Mitglied des A$AP Mob", "Partner von Rihanna", "Hat einen starken Fokus auf Mode und Fashion", "Hit: 'Praise The Lord'"],
-            "Lil Wayne": ["Kommt aus New Orleans", "Nennt sich selbst oft 'Weezy'", "War schon als Teenager bei Cash Money Records", "Berühmt für die 'Tha Carter' Album-Reihe", "Hit: 'A Milli' / 'Lollipop'"],
-            "Jay-Z": ["Kommt aus Brooklyn, New York", "Gründer von Roc-A-Fella Records", "Mit Beyoncé verheiratet", "Einer der reichsten Rapper der Welt", "Hit: 'Numb/Encore' / 'Empire State of Mind'"],
-            "DMX": ["Legendärer Rapper aus Yonkers", "Bekannt für seine raue, bellende Stimme", "War Mitglied der Ruff Ryders", "Starb 2021", "Hit: 'Ruff Ryders Anthem' / 'X Gon' Give It To Ya'"],
-            "Lil Yachty": ["Rapper aus Atlanta", "Bekannt für seine ehemals roten Perlen-Haare", "Wurde mit 'Minnesota' und '1 Night' berühmt", "Hat ein sehr experimentelles Rock-Album gemacht ('Let's Start Here')", "Hit: 'Poland' / 'Broccoli'"],
-            "Chief Keef": ["Godfather des Chicago Drill", "Hat seine bekanntesten Musikvideos in der Wohnung seiner Oma gedreht", "Label: Glo Gang", "Wurde mit 16 Jahren zum absoluten Superstar", "Hit: 'Love Sosa' / 'I Don't Like'"],
-            "JID": ["Rapper aus Atlanta", "Mitglied bei Dreamville (J. Cole's Label)", "Bekannt für extrem schnellen und technischen Flow", "Bekanntes Album: 'The Forever Story'", "Hit: 'Surround Sound' / 'NEVER'"],
-            "Tyler, The Creator": ["Rapper aus Kalifornien", "Gründer von Odd Future (OFWGKTA)", "Bekannt für sein Album 'IGOR' (Blonder Bob und Anzug)", "Veranstaltet das Camp Flog Gnaw Festival", "Hit: 'EARFQUAKE' / 'See You Again'"],
-            "Rick Ross": ["Rapper aus Miami", "War früher Gefängniswärter", "Bekannt für seinen Bart und den 'Bawse' Lifestyle", "Label: Maybach Music Group (MMG)", "Hit: 'Hustlin'' / 'Aston Martin Music'"],
-            "Ice Cube": ["West Coast Legende", "War Mitglied bei der berüchtigten Gruppe N.W.A", "Schrieb viele der N.W.A-Texte", "Ist heute auch ein sehr bekannter Schauspieler ('Friday')", "Hit: 'It Was A Good Day'"]
+            "Drake": ["Kommt aus Toronto, Kanada", "Hat das Label OVO Sound gegründet", "Befand sich im Beef mit Kendrick Lamar", "Bekannt für Alben wie `Scorpion` und `Take Care`", "Hit: `God's Plan`"],
+            "Travis Scott": ["Kommt aus Houston, Texas", "Label und Marke: Cactus Jack", "Hat ein sehr bekanntes Fortnite-Event veranstaltet", "Sein bekanntestes Album heißt `Astroworld`", "Hit: `Sicko Mode`"],
+            "XXXTentacion": ["SoundCloud-Legende aus Florida", "Mitbegründer der Crew `Members Only`", "Sein Haar war berühmt schwarz-blond gefärbt", "Wurde 2018 in seinem Auto ermordet", "Hits: `SAD!` und `Look At Me!`"],
+            "Eminem": ["Kommt aus Detroit", "Sein Alter Ego heißt `Slim Shady`", "Hat im Film `8 Mile` mitgespielt", "Wurde oft als `Rap God` bezeichnet", "Hit: `Lose Yourself`"],
+            "Juice WRLD": ["Kommt aus Chicago", "Oft mit der Zahl `999` assoziiert", "War ein legendärer Freestyler", "Starb 2019 an einer Überdosis", "Hit: `Lucid Dreams`"],
+            "50 Cent": ["Kommt aus Queens, New York", "Gründer der Gruppe G-Unit", "Wurde im Jahr 2000 neunmal angeschossen", "Sein Debütalbum war `Get Rich or Die Tryin`", "Hit: `In Da Club`"],
+            "2Pac": ["West Coast Legende, geboren in NY", "Trug oft ein Bandana und hatte `Thug Life` tätowiert", "Nutze auch den Alias `Makaveli`", "Wurde 1996 in Las Vegas erschossen", "Hit: `Hit Em Up` / `California Love`"],
+            "Kanye West": ["Produzent und Rapper aus Chicago", "Gründer der Marke Yeezy", "Ließ seinen Namen in `Ye` ändern", "Berühmtes Album: `My Beautiful Dark Twisted Fantasy`", "Hit: `Stronger` / `Runaway`"],
+            "Kendrick Lamar": ["Kommt aus Compton, Kalifornien", "Teil von TDE und Gründer von pgLang", "Hat einen Pulitzer-Preis für Musik gewonnen", "Bekannt für das Album `To Pimp A Butterfly`", "Hit: `Not Like Us` / `HUMBLE.`"],
+            "Lil Peep": ["Pionier des Emo-Rap", "War Mitglied der GothBoiClique (GBC)", "Viele Tattoos im Gesicht (u.a. Crybaby)", "Album: `Come Over When You're Sober`", "Hit: `Star Shopping`"],
+            "The Notorious B.I.G.": ["East Coast Legende aus Brooklyn", "Stand bei Bad Boy Records unter Vertrag", "Wurde auch `Biggie Smalls` genannt", "Wurde 1997 in Los Angeles erschossen", "Hit: `Juicy` / `Hypnotize`"],
+            "Snoop Dogg": ["Rap-Legende aus Long Beach, Kalifornien", "Oft in Verbindung mit extremem Marihuana-Konsum", "Debütalbum: `Doggystyle` (Death Row Records)", "Wurde von Dr. Dre entdeckt", "Hit: `Drop It Like It's Hot`"],
+            "Playboi Carti": ["Rapper aus Atlanta", "Gründer des Labels `Opium`", "Bekannt für seine Vampir-Ästhetik und Baby-Voice", "Album: `Whole Lotta Red`", "Hit: `Magnolia`"],
+            "Lil Uzi Vert": ["Kommt aus Philadelphia", "Hat sich einen riesigen pinken Diamanten in die Stirn implantieren lassen", "Album: `Eternal Atake`", "Wurde oft mit Marilyn Manson assoziiert", "Hit: `XO Tour Llif3`"],
+            "J. Cole": ["Rapper aus North Carolina", "Gründer von Dreamville Records", "Spielt professionell Basketball", "Berühmt für `Platinum with no features`", "Hit: `No Role Modelz`"],
+            "Mac Miller": ["Rapper und Produzent aus Pittsburgh", "Debütierte mit `Blue Slide Park`", "War mit Ariana Grande zusammen", "Verstarb 2018 an einer Überdosis", "Hit: `Self Care` / `Donald Trump`"],
+            "Pop Smoke": ["Pionier des Brooklyn Drill", "Stand für das `Woo` Movement", "Wurde 2020 in Hollywood bei einem Raubüberfall ermordet", "Sein posthumes Album wurde von 50 Cent produziert", "Hit: `Dior`"],
+            "A$AP Rocky": ["Rapper aus Harlem, New York", "Mitglied des A$AP Mob", "Partner von Rihanna", "Hat einen starken Fokus auf Mode und Fashion", "Hit: `Praise The Lord`"],
+            "Lil Wayne": ["Kommt aus New Orleans", "Nennt sich selbst oft `Weezy`", "War schon als Teenager bei Cash Money Records", "Berühmt für die `Tha Carter` Album-Reihe", "Hit: `A Milli` / `Lollipop`"],
+            "Jay-Z": ["Kommt aus Brooklyn, New York", "Gründer von Roc-A-Fella Records", "Mit Beyoncé verheiratet", "Einer der reichsten Rapper der Welt", "Hit: `Numb/Encore` / `Empire State of Mind`"],
+            "DMX": ["Legendärer Rapper aus Yonkers", "Bekannt für seine raue, bellende Stimme", "War Mitglied der Ruff Ryders", "Starb 2021", "Hit: `Ruff Ryders Anthem` / `X Gon' Give It To Ya`"],
+            "Lil Yachty": ["Rapper aus Atlanta", "Bekannt für seine ehemals roten Perlen-Haare", "Wurde mit `Minnesota` und `1 Night` berühmt", "Hat ein sehr experimentelles Rock-Album gemacht (`Let's Start Here`)", "Hit: `Poland` / `Broccoli`"],
+            "Chief Keef": ["Godfather des Chicago Drill", "Hat seine bekanntesten Musikvideos in der Wohnung seiner Oma gedreht", "Label: Glo Gang", "Wurde mit 16 Jahren zum absoluten Superstar", "Hit: `Love Sosa` / `I Don't Like`"],
+            "JID": ["Rapper aus Atlanta", "Mitglied bei Dreamville (J. Cole's Label)", "Bekannt für extrem schnellen und technischen Flow", "Bekanntes Album: `The Forever Story`", "Hit: `Surround Sound` / `NEVER`"],
+            "Tyler, The Creator": ["Rapper aus Kalifornien", "Gründer von Odd Future (OFWGKTA)", "Bekannt für sein Album `IGOR` (Blonder Bob und Anzug)", "Veranstaltet das Camp Flog Gnaw Festival", "Hit: `EARFQUAKE` / `See You Again`"],
+            "Rick Ross": ["Rapper aus Miami", "War früher Gefängniswärter", "Bekannt für seinen Bart und den `Bawse` Lifestyle", "Label: Maybach Music Group (MMG)", "Hit: `Hustlin'` / `Aston Martin Music`"],
+            "Ice Cube": ["West Coast Legende", "War Mitglied bei der berüchtigten Gruppe N.W.A", "Schrieb viele der N.W.A-Texte", "Ist heute auch ein sehr bekannter Schauspieler (`Friday`)", "Hit: `It Was A Good Day`"]
         };
 
         const artistQuotes = {
-            'XXXTentacion': '"What is real will prosper." - X', 'Juice WRLD': '"999. Turn the negative to a positive." - Juice WRLD', 'Lil Peep': '"Everything changes with time." - Lil Peep', 'Ski Mask the Slump God': '"Water!" - Ski Mask', 'Trippie Redd': '"I just wanna be a legend." - Trippie', 'Denzel Curry': '"I am the ultimate." - Denzel', 'Playboi Carti': '"Wake up, it\'s the first of the month." - Carti', 'Lil Uzi Vert': '"I just wanna go to outer space." - Uzi', 'Lil Pump': '"Esskeetit!" - Lil Pump', 'Chief Keef': '"A lot of people say they want to be famous..." - Sosa', '$uicideboy$': '"G59 until the grave." - $uicideboy$', 'Travis Scott': '"I\'m the highest in the room." - Travis Scott', 'Migos': '"Rain drop, drop top." - Migos', 'Future': '"If you don\'t get it, you just don\'t get it." - Future', 'Young Thug': '"Slime Season." - Thugger', '21 Savage': '"I do it for the gang." - 21', 'Lil Baby': '"I\'m just tryna be a better me." - Lil Baby', 'A$AP Rocky': '"I treat the game like a canvas." - Rocky', 'Tyler, The Creator': '"Find your wings." - Tyler', 'Mac Miller': '"No matter where life takes me, find me with a smile." - Mac', 'Drake': '"Started from the bottom, now we\'re here." - Drake', 'Kendrick Lamar': '"If God got us, then we gon\' be alright." - Kendrick', 'J. Cole': '"There\'s beauty in the struggle." - J. Cole', 'Kanye West': '"I still think I am the greatest." - Ye', 'Eminem': '"You only get one shot, do not miss your chance to blow." - Eminem', '2Pac': '"Reality is wrong. Dreams are for real." - 2Pac', 'The Notorious B.I.G.': '"Mo money, mo problems." - Biggie', '50 Cent': '"Get rich or die tryin\'." - 50 Cent', 'Snoop Dogg': '"Drop it like it\'s hot." - Snoop', 'Pop Smoke': '"Woo!" - Pop Smoke',
-            'Lil Wayne': '"Real G\'s move in silence like lasagna." - Lil Wayne', 'Jay-Z': '"I\'m not a businessman, I\'m a business, man." - Jay-Z', 'DMX': '"To live is to suffer, to survive is to find some meaning in the suffering." - DMX', 'Ice Cube': '"Today I didn\'t even have to use my A.K. I got to say it was a good day." - Ice Cube', 'Rick Ross': '"Every day I\'m hustlin'." - Rick Ross'
+            'XXXTentacion': `"What is real will prosper." - X`, 'Juice WRLD': `"999. Turn the negative to a positive." - Juice WRLD`, 'Lil Peep': `"Everything changes with time." - Lil Peep`, 'Ski Mask the Slump God': `"Water!" - Ski Mask`, 'Trippie Redd': `"I just wanna be a legend." - Trippie`, 'Denzel Curry': `"I am the ultimate." - Denzel`, 'Playboi Carti': `"Wake up, it's the first of the month." - Carti`, 'Lil Uzi Vert': `"I just wanna go to outer space." - Uzi`, 'Lil Pump': `"Esskeetit!" - Lil Pump`, 'Chief Keef': `"A lot of people say they want to be famous..." - Sosa`, '$uicideboy$': `"G59 until the grave." - $uicideboy$`, 'Travis Scott': `"I'm the highest in the room." - Travis Scott`, 'Migos': `"Rain drop, drop top." - Migos`, 'Future': `"If you don't get it, you just don't get it." - Future`, 'Young Thug': `"Slime Season." - Thugger`, '21 Savage': `"I do it for the gang." - 21`, 'Lil Baby': `"I'm just tryna be a better me." - Lil Baby`, 'A$AP Rocky': `"I treat the game like a canvas." - Rocky`, 'Tyler, The Creator': `"Find your wings." - Tyler`, 'Mac Miller': `"No matter where life takes me, find me with a smile." - Mac`, 'Drake': `"Started from the bottom, now we're here." - Drake`, 'Kendrick Lamar': `"If God got us, then we gon' be alright." - Kendrick`, 'J. Cole': `"There's beauty in the struggle." - J. Cole`, 'Kanye West': `"I still think I am the greatest." - Ye`, 'Eminem': `"You only get one shot, do not miss your chance to blow." - Eminem`, '2Pac': `"Reality is wrong. Dreams are for real." - 2Pac`, 'The Notorious B.I.G.': `"Mo money, mo problems." - Biggie`, '50 Cent': `"Get rich or die tryin'." - 50 Cent`, 'Snoop Dogg': `"Drop it like it's hot." - Snoop`, 'Pop Smoke': `"Woo!" - Pop Smoke`,
+            'Lil Wayne': `"Real G's move in silence like lasagna." - Lil Wayne`, 'Jay-Z': `"I'm not a businessman, I'm a business, man." - Jay-Z`, 'DMX': `"To live is to suffer, to survive is to find some meaning in the suffering." - DMX`, 'Ice Cube': `"Today I didn't even have to use my A.K. I got to say it was a good day." - Ice Cube`, 'Rick Ross': `"Every day I'm hustlin'." - Rick Ross`
         };
 
         function getArtistQuote(name) { 
-            return artistQuotes[name] || '"Ready to dominate the game." - ' + name; 
+            return artistQuotes[name] || `"Ready to dominate the game." - ` + name; 
         }
 
         const knownStreamBenchmarks = {
@@ -738,6 +743,7 @@
         const supabaseUrl = 'https://txxklmrxzcaqbdpjuksw.supabase.co'; 
         const supabaseKey = 'sb_publishable_B9G2pzd-BFpKli71S5fu0g_a6xBSMdj';
 
+        // LOKALE ZUSTÄNDE & INITIALISIERUNG
         let globalVolume = 0.5;
         let dbClient = null;
         let socket = { on: function(){}, emit: function(){} }; 
@@ -762,15 +768,28 @@
         let matchEndData = {}; let isWinnerScreenShown = false; let playersAnsweredThisRound = new Set(); let playersReadyForNextRound = new Set(); let expectedAnswers = 1;
         let searchTimeout = null;
         
+        // Game Engine Variables
         let songsPool = []; let playedSongIds = new Set(); let currentSong = null; let score = 0; let lives = 3; let isHardcoreMode = false; let showArtistName = true; let currentMode = ''; let maxPlayTime = 1; let precisionTimer = null; let currentPlayId = 0; 
         
-        let currentMysteryArtist = ""; let currentHints = []; let hintIndex = 0; let mysteryScore = 500; let mysteryCandidates = Object.keys(mysteryDatabase); let playedMysteryArtists = new Set();
-        let myDraft = []; let oppDraft = []; let hlPool = []; let hlCurrentA = null; let hlCurrentB = null; let hlStreak = 0; let hlRecentArtists = [];
+        // Mystery Mode Session Variables
+        let currentMysteryArtist = "";
+        let currentHints = [];
+        let hintIndex = 0;
+        let mysteryScore = 500;
+        let mysteryCandidates = Object.keys(mysteryDatabase);
+        let playedMysteryArtists = new Set();
 
+        let myDraft = []; let oppDraft = [];
+        let hlPool = []; let hlCurrentA = null; let hlCurrentB = null; let hlStreak = 0; let hlRecentArtists = [];
+
+        // HILFSFUNKTIONEN
         function playAudioSnippet(isReplay = false) { 
-            clearTimeout(precisionTimer); let playId = ++currentPlayId;
+            clearTimeout(precisionTimer); 
+            let playId = ++currentPlayId;
             if (isReplay) { try { audio.currentTime = 0; } catch(e) {} }
-            audio.volume = globalVolume; audio.loop = false; let p = audio.play();
+            audio.volume = globalVolume; 
+            audio.loop = false; 
+            let p = audio.play();
             if (p !== undefined) { 
                 p.then(() => { 
                     if (playId !== currentPlayId) return; 
@@ -783,7 +802,6 @@
             }
         }
 
-        // +3 Sekunden Button - Sicher repariert, stürzt nicht mehr ab!
         function addTime() { 
             if (maxPlayTime < 10) { 
                 maxPlayTime = Number(maxPlayTime) + 3; 
@@ -920,6 +938,14 @@
             }
         }
 
+        function smartShuffle(pool) {
+            let byArtist = {}; for(let s of pool) { if(!byArtist[s.artist.name]) byArtist[s.artist.name] = []; byArtist[s.artist.name].push(s); }
+            for(let a in byArtist) byArtist[a].sort(() => 0.5 - Math.random());
+            let result = []; let artists = Object.keys(byArtist); let keepGoing = true;
+            while(keepGoing) { keepGoing = false; artists.sort(() => 0.5 - Math.random()); for(let a of artists) { if(byArtist[a].length > 0) { result.push(byArtist[a].pop()); keepGoing = true; } } }
+            return result;
+        }
+
         function switchTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(tabId).classList.add('active'); if(el) el.classList.add('active');
@@ -1024,167 +1050,6 @@
                 document.getElementById('profile-overlay').style.display = 'flex'; 
             }
         };
-
-        async function handleProfileLogin(isAutoLogin = false, autoName = "") {
-            let err = document.getElementById('profile-error');
-            let btn = document.getElementById('login-btn');
-            
-            try {
-                let accounts = safeReadJSON('rapquiz_accounts', {});
-                let name = isAutoLogin ? autoName : document.getElementById('username-input').value.trim(); 
-                
-                let pw = "";
-                if (isAutoLogin && accounts[name] && accounts[name].password) {
-                    pw = accounts[name].password;
-                } else {
-                    let pwInput = document.getElementById('password-input');
-                    if (pwInput) pw = pwInput.value.trim();
-                }
-
-                if (!name || !pw) { 
-                    if(err) { err.innerText = "Bitte fülle Username und Passwort aus!"; err.style.display = 'block'; } 
-                    document.getElementById('profile-overlay').style.display = 'flex';
-                    return; 
-                }
-
-                if (!isAutoLogin && btn) { btn.innerText = "Lade... ⏳"; btn.disabled = true; }
-
-                let localAccountExists = !!accounts[name];
-                if (localAccountExists && !isAutoLogin) {
-                    if (accounts[name].password !== pw) { 
-                        if(err) { err.innerText = "Falsches Passwort!"; err.style.display = 'block'; } 
-                        if(btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
-                        return; 
-                    }
-                }
-
-                if (!localAccountExists) {
-                    accounts[name] = {
-                        password: pw, isPremium: true, 
-                        stats: { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, progressive: 0, megahits: 0, higherlower: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0, draft: 0, mystery: 0 } },
-                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-                        bgUrl: '', favArtist: '', quote: '"Ready to dominate the game."', songUrl: '', songTitle: ''
-                    };
-                }
-
-                playerName = name; savedPw = pw;
-                
-                myStats = accounts[playerName].stats || { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, progressive: 0, megahits: 0, higherlower: 0, fallen: 0, '2010s': 0, soundcloud: 0, artist: 0, draft: 0, mystery: 0 } };
-                myAvatar = accounts[playerName].avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
-                myBgUrl = accounts[playerName].bgUrl || '';
-                myFavArtist = accounts[playerName].favArtist || '';
-                myQuote = accounts[playerName].quote || '';
-                mySongUrl = accounts[playerName].songUrl || '';
-                mySongTitle = accounts[playerName].songTitle || '';
-
-                try {
-                    if (dbClient) {
-                        let fakeEmail = name.toLowerCase().replace(/[^a-z0-9]/g, '') + '@rapquiz.app';
-                        let authData = null;
-                        
-                        try {
-                            let signRes = await dbClient.auth.signInWithPassword({ email: fakeEmail, password: pw });
-                            if (signRes && signRes.error) {
-                                let regRes = await dbClient.auth.signUp({ email: fakeEmail, password: pw });
-                                if (regRes && regRes.data && regRes.data.user) authData = regRes.data;
-                            } else if (signRes && signRes.data) {
-                                authData = signRes.data;
-                            }
-                        } catch (ex) {}
-
-                        if (authData && authData.user) {
-                            let profileRes = await dbClient.from('profiles').select('*').eq('id', authData.user.id).single();
-                            if (profileRes && profileRes.data) {
-                                let profile = profileRes.data;
-                                if (profile.avatar_url) myAvatar = profile.avatar_url;
-                                if (profile.quote) myQuote = profile.quote;
-                                if (profile.fav_artist) myFavArtist = profile.fav_artist;
-                                if (profile.song_url) mySongUrl = profile.song_url;
-                                if (profile.song_title) mySongTitle = profile.song_title;
-                                
-                                if (profile.stats && Object.keys(profile.stats).length > 0) {
-                                    if ((profile.stats.totalScore || 0) >= (myStats.totalScore || 0)) {
-                                        myStats = profile.stats;
-                                    }
-                                }
-                            }
-                            syncToCloud(); 
-                        }
-                    }
-                } catch(e) { }
-
-                if (!accounts[playerName]) accounts[playerName] = {};
-                if (!accounts[playerName].stats) accounts[playerName].stats = myStats;
-
-                accounts[playerName].isPremium = true;
-                accounts[playerName].stats.totalScore = myStats.totalScore;
-                
-                localStorage.setItem('rapquiz_active_user', playerName);
-                localStorage.setItem('rapquiz_accounts', JSON.stringify(accounts));
-
-                updateLevelDisplay(); updateDetailedStats();
-                
-                document.getElementById('app-layout').style.display = 'flex';
-                document.getElementById('profile-overlay').style.display = 'none'; 
-
-                document.getElementById('sidebar-name').innerText = playerName; 
-                document.getElementById('profile-view-name').innerText = playerName; 
-                document.getElementById('profile-view-quote').innerText = myQuote || ""; 
-                
-                let hymnDisplay = document.getElementById('profile-view-hymn'); if (hymnDisplay) hymnDisplay.innerText = mySongTitle || "None";
-                if (myBgUrl) document.getElementById('app-background').src = myBgUrl;
-                
-                let editSel = document.getElementById('edit-fav-artist-select'); if (editSel && myFavArtist) editSel.value = myFavArtist;
-
-                buildArtistGrid(); updateAllAvatars(); playMenuMusic(mySongUrl);
-                if (btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
-            } catch (error) {
-                document.getElementById('profile-overlay').style.display = 'flex';
-                if(err) { err.innerText = "Ein Fehler ist aufgetreten. Bitte auf Reset klicken."; err.style.display = 'block'; }
-                if (btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
-            }
-        }
-
-        function resetProfile() { localStorage.removeItem('rapquiz_active_user'); location.reload(); }
-        function updateFavArtist() { myFavArtist = document.getElementById('edit-fav-artist-select').value; myQuote = getArtistQuote(myFavArtist); document.getElementById('profile-view-quote').innerText = myQuote; saveAccountData(); loadArtistVisuals(myFavArtist); }
-        function encodeAvatarAndQuote() { return myAvatar + '|Q|' + myQuote; }
-
-        function createRoom() { isMultiplayer = true; isMpHost = true; socket.emit('createRoom', { name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Connecting...'; }
-        function joinRoom() { let c = document.getElementById('join-code-input').value; if(c) { isMultiplayer = true; isMpHost = false; socket.emit('joinRoom', { code: c, name: playerName, avatar: encodeAvatarAndQuote() }); document.getElementById('mp-status').innerText = 'Joining...'; } }
-        function cancelMultiplayer() { isMultiplayer = false; isMpHost = false; currentRoom = ''; switchTab('play-tab', document.getElementById('nav-play')); }
-
-        socket.on('roomCreated', (code) => { currentRoom = code; document.getElementById('room-code-display').innerText = code; });
-        socket.on('joinedSuccess', (data) => { currentRoom = data.roomCode; document.getElementById('room-code-display').innerText = data.roomCode; });
-        socket.on('errorMsg', (msg) => { alert(msg); cancelMultiplayer(); });
-        
-        socket.on('lobbyUpdate', (players) => { 
-            lobbyPlayers = players; renderLobbyPlayers();
-            if(currentRoom) {
-                let statusEl = document.getElementById('mp-status');
-                if(isMpHost) {
-                    if(players.length >= 2) { statusEl.innerHTML = `🟢 Ready! You can now choose a mode<br>in the left menu to start.`; statusEl.style.color = 'var(--success)'; } 
-                    else { statusEl.innerText = `Waiting for players... (${players.length}/4)`; statusEl.style.color = 'var(--warning)'; }
-                } else { statusEl.innerText = `🟢 In lobby (${players.length}/4). Waiting for host to start...`; statusEl.style.color = 'var(--success)'; }
-            }
-            if (gameIsOver) checkMatchEnd(); 
-        });
-
-        function renderLobbyPlayers() {
-            const container = document.getElementById('lobby-players-container'); if(!container) return;
-            if(lobbyPlayers.length === 0) { container.innerHTML = '<span style="color: var(--text-muted); font-size: 14px;">No one here yet...</span>'; return; }
-            container.innerHTML = '';
-            lobbyPlayers.forEach(p => {
-                let isMe = p.id === socket.id; let parts = p.avatar.split('|Q|'); let pAv = parts[0]; let pQt = parts.length > 1 ? parts[1] : '"Ready to play!"';
-                container.innerHTML += `
-                    <div style="background: rgba(20,20,25,0.8); padding: 10px 15px; border-radius: 12px; border: 1px solid ${isMe ? 'var(--primary)' : 'var(--surface-border)'}; display: flex; align-items: center; gap: 15px; width: 100%; max-width: 320px; text-align: left;">
-                        <img src="${pAv}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid ${isMe ? 'var(--primary)' : 'white'}; flex-shrink: 0;">
-                        <div style="display: flex; flex-direction: column; overflow: hidden;">
-                            <span style="font-weight: 800; font-size: 15px; color: white;">${p.name} ${isMe ? '(You)' : ''}</span>
-                            <span style="font-size: 11px; color: var(--text-muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title='${pQt.replace(/'/g, "&apos;")}'>${pQt}</span>
-                        </div>
-                    </div>`;
-            });
-        }
 
         // ==========================================
         // DRAFT MODE LOGIC
@@ -1375,7 +1240,7 @@
         }
 
         // ==========================================
-        // MYSTERY ARTIST MODE (AKINATOR) - SESSION UPDATE
+        // MYSTERY ARTIST MODE (AKINATOR)
         // ==========================================
 
         function startMysteryMode() {
