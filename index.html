@@ -790,7 +790,7 @@
         let myQuote = "";
         let mySongUrl = ""; 
         let mySongTitle = "";
-        let myAvatarFx = "none";
+        let myAvatarFx = "pulse";
         let myStats = {};
 
         let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = "";
@@ -882,24 +882,50 @@
             inp.value = "";
         }
 
-        function loadArtistVisuals(artistName) {
+        async function loadArtistVisuals(artistName) {
             if (!artistName) return;
-            const cb = "deezer_vis_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
-            window[cb] = function(res) {
-                if (res && res.data && res.data.length > 0) {
-                    myBgUrl = res.data[0].picture_xl || res.data[0].picture_big || res.data[0].picture_medium;
-                    myAvatar = res.data[0].picture_medium || res.data[0].picture_big || myBgUrl;
-                    saveAccountData();
-                    syncToCloud();
-                    let bgEl = document.getElementById("app-background");
-                    if (bgEl && myBgUrl) bgEl.src = myBgUrl;
-                    updateAllAvatars();
-                }
-                delete window[cb];
-            };
-            const s = document.createElement("script");
-            s.src = "https://api.deezer.com/search/artist?q=" + encodeURIComponent(artistName) + "&limit=1&output=jsonp&callback=" + cb;
-            document.head.appendChild(s);
+            let loaded = await new Promise(function(resolve) {
+                const cb = "deezer_vis_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
+                let to = setTimeout(function() { if (window[cb]) window[cb] = function(){}; resolve(false); }, 1800);
+                window[cb] = function(res) {
+                    clearTimeout(to);
+                    if (res && res.data && res.data.length > 0 && res.data[0].picture_medium) {
+                        myBgUrl = res.data[0].picture_xl || res.data[0].picture_big || res.data[0].picture_medium;
+                        myAvatar = res.data[0].picture_medium || myBgUrl;
+                        saveAccountData();
+                        syncToCloud();
+                        let bgEl = document.getElementById("app-background");
+                        if (bgEl && myBgUrl) bgEl.src = myBgUrl;
+                        updateAllAvatars();
+                        resolve(true);
+                        return;
+                    }
+                    resolve(false);
+                };
+                const s = document.createElement("script");
+                s.src = "https://api.deezer.com/search/artist?q=" + encodeURIComponent(artistName) + "&limit=1&output=jsonp&callback=" + cb;
+                s.onerror = function() { clearTimeout(to); resolve(false); };
+                document.head.appendChild(s);
+            });
+
+            if (!loaded) {
+                try {
+                    let res = await fetch("https://itunes.apple.com/search?term=" + encodeURIComponent(artistName) + "&media=music&entity=song&limit=5");
+                    let data = await res.json();
+                    if (data && data.results && data.results.length > 0) {
+                        let art100 = data.results[0].artworkUrl100;
+                        if (art100) {
+                            myBgUrl = art100.replace("100x100bb", "600x600bb");
+                            myAvatar = art100.replace("100x100bb", "400x400bb");
+                            saveAccountData();
+                            syncToCloud();
+                            let bgEl = document.getElementById("app-background");
+                            if (bgEl && myBgUrl) bgEl.src = myBgUrl;
+                            updateAllAvatars();
+                        }
+                    }
+                } catch(e) {}
+            }
         }
 
         function updateAllAvatars() { 
@@ -1912,29 +1938,34 @@
 
         function handleAnthemInput() { clearTimeout(searchTimeout); searchTimeout = setTimeout(function() { searchMenuSong(); }, 500); }
 
-        function searchMenuSong() {
+        async function searchMenuSong() {
             let q = document.getElementById("edit-song-search-input").value.trim(); let sel = document.getElementById("edit-menu-song-select");
             if(!q) { sel.style.display = "none"; return; }
             let ytMatch = q.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
             if (ytMatch) { let vid = ytMatch[1]; sel.innerHTML = "<option value='yt:" + vid + "' data-title='YouTube Track'>▶️ YouTube Video (" + vid + ")</option>"; sel.style.display = "block"; return; }
             
-            const cb = "dz_menu_" + Date.now() + Math.floor(Math.random()*1000);
-            window[cb] = function(res) {
+            try {
+                let res = await fetch("https://itunes.apple.com/search?term=" + encodeURIComponent(q) + "&media=music&entity=song&limit=10");
+                let data = await res.json();
                 sel.innerHTML = "";
-                if (res && res.data && res.data.length > 0) {
-                    let valid = res.data.filter(function(t) { return t.preview; });
+                if (data && data.results && data.results.length > 0) {
+                    let valid = data.results.filter(function(t) { return t.previewUrl; });
                     if (valid.length > 0) {
                         sel.innerHTML = "<option value=''>🎵 Choose your Anthem...</option>";
                         valid.forEach(function(t) {
-                            let opt = document.createElement("option"); opt.value = t.preview; opt.innerText = t.artist.name + " - " + t.title; opt.setAttribute("data-title", t.artist.name + " - " + t.title); sel.appendChild(opt);
+                            let opt = document.createElement("option");
+                            opt.value = t.previewUrl;
+                            opt.innerText = t.artistName + " - " + t.trackName;
+                            opt.setAttribute("data-title", t.artistName + " - " + t.trackName);
+                            sel.appendChild(opt);
                         });
-                        sel.style.display = "block"; delete window[cb]; return;
+                        sel.style.display = "block";
+                        return;
                     }
                 }
-                sel.innerHTML = "<option value=''>❌ No songs found</option>"; sel.style.display = "block";
-                delete window[cb];
-            };
-            const s = document.createElement("script"); s.src = "https://api.deezer.com/search/track?q=" + encodeURIComponent(q) + "&limit=10&output=jsonp&callback=" + cb; document.head.appendChild(s);
+            } catch(e) {}
+            sel.innerHTML = "<option value=''>❌ No songs found</option>";
+            sel.style.display = "block";
         }
 
         function updateFavSong() {
@@ -2016,21 +2047,38 @@
             nextMysteryRound();
         }
 
-        function loadMysteryArtistPhoto(artistName) {
+        async function loadMysteryArtistPhoto(artistName) {
             let imgEl = document.getElementById("mystery-avatar-preview");
             imgEl.src = "https://api.dicebear.com/7.x/shapes/svg?seed=" + encodeURIComponent(artistName);
             imgEl.style.filter = "blur(20px)";
             
-            let cb = "dz_mys_pic_" + Date.now() + Math.floor(Math.random()*1000);
-            window[cb] = function(res) {
-                if (res && res.data && res.data.length > 0 && res.data[0].picture_medium) {
-                    imgEl.src = res.data[0].picture_xl || res.data[0].picture_medium;
-                }
-                delete window[cb];
-            };
-            let s = document.createElement("script");
-            s.src = "https://api.deezer.com/search/artist?q=" + encodeURIComponent(artistName) + "&limit=1&output=jsonp&callback=" + cb;
-            document.head.appendChild(s);
+            let gotDz = await new Promise(function(resolve) {
+                let cb = "dz_mys_pic_" + Date.now() + Math.floor(Math.random()*1000);
+                let to = setTimeout(function() { if (window[cb]) window[cb] = function(){}; resolve(false); }, 1800);
+                window[cb] = function(res) {
+                    clearTimeout(to);
+                    if (res && res.data && res.data.length > 0 && res.data[0].picture_medium) {
+                        imgEl.src = res.data[0].picture_xl || res.data[0].picture_medium;
+                        resolve(true);
+                        return;
+                    }
+                    resolve(false);
+                };
+                let s = document.createElement("script");
+                s.src = "https://api.deezer.com/search/artist?q=" + encodeURIComponent(artistName) + "&limit=1&output=jsonp&callback=" + cb;
+                s.onerror = function() { clearTimeout(to); resolve(false); };
+                document.head.appendChild(s);
+            });
+
+            if (!gotDz) {
+                try {
+                    let res = await fetch("https://itunes.apple.com/search?term=" + encodeURIComponent(artistName) + "&media=music&entity=song&limit=1");
+                    let data = await res.json();
+                    if (data && data.results && data.results.length > 0 && data.results[0].artworkUrl100) {
+                        imgEl.src = data.results[0].artworkUrl100.replace("100x100bb", "400x400bb");
+                    }
+                } catch(e) {}
+            }
         }
 
         function nextMysteryRound() {
@@ -2136,66 +2184,43 @@
             }
         }
 
-        function playVictorySnippet(artistName, isCorrect, hasNextRound) {
+        async function playVictorySnippet(artistName, isCorrect, hasNextRound) {
             let m = document.getElementById("feedback-modal"); let t = document.getElementById("feedback-title"); let d = document.getElementById("feedback-desc"); let cov = document.getElementById("feedback-cover"); let b = document.getElementById("feedback-btn");
             let remBtn = document.getElementById("feedback-rematch-btn");
             if (remBtn) remBtn.style.display = "none";
 
             document.getElementById("feedback-overlay").style.display = "flex";
-            m.className = "modal"; 
-            t.innerText = "Lade Ergebnis..."; 
-            d.innerText = "Suche Deezer nach Song...";
-            cov.style.display = "none"; b.style.display = "none"; document.getElementById("mp-result").style.display = "none";
+            m.className = isCorrect ? "modal correct" : "modal wrong";
+            t.innerText = isCorrect ? "🏆 RICHTIG!" : "❌ FALSCH";
+            d.innerText = isCorrect ? ("Es war " + currentMysteryArtist + "!\n+" + mysteryScore + " Punkte.") : ("Gesucht war: " + currentMysteryArtist + ".");
+            cov.style.display = "none"; 
+            document.getElementById("mp-result").style.display = "none";
 
-            let cb = "dz_vic_" + Date.now() + Math.floor(Math.random()*1000);
-            window[cb] = function(res) {
-                if (res && res.data && res.data.length > 0) {
-                    let track = res.data.find(function(tr) { return tr.preview; }) || res.data[0];
-                    cov.src = track.album.cover_xl || track.album.cover_medium;
-                    cov.style.display = "block";
-                    
-                    if (isCorrect) {
-                        m.className = "modal correct";
-                        t.innerText = "🏆 RICHTIG!";
-                        d.innerText = "Es war " + currentMysteryArtist + "!\n+" + mysteryScore + " Punkte.";
-                    } else {
-                        m.className = "modal wrong";
-                        t.innerText = "❌ FALSCH";
-                        d.innerText = "Gesucht war: " + currentMysteryArtist + ".";
-                    }
-                    
-                    if (hasNextRound) {
-                        b.innerText = "Nächster Rapper ➔";
-                        b.onclick = nextMysteryRound;
-                    } else {
-                        b.innerText = "Auswertung ➔";
-                        b.onclick = function() { triggerMysteryGameOver(false); };
-                    }
-                    b.style.display = "block";
+            if (hasNextRound) {
+                b.innerText = "Nächster Rapper ➔";
+                b.onclick = nextMysteryRound;
+            } else {
+                b.innerText = "Auswertung ➔";
+                b.onclick = function() { triggerMysteryGameOver(false); };
+            }
+            b.style.display = "block";
 
-                    if (track.preview) {
-                        sfxAudio.src = track.preview;
+            try {
+                let res = await fetch("https://itunes.apple.com/search?term=" + encodeURIComponent(artistName) + "&media=music&entity=song&limit=5");
+                let data = await res.json();
+                if (data && data.results && data.results.length > 0) {
+                    let tr = data.results.find(function(x) { return x.previewUrl; }) || data.results[0];
+                    if (tr.artworkUrl100) {
+                        cov.src = tr.artworkUrl100.replace("100x100bb", "500x500bb");
+                        cov.style.display = "block";
+                    }
+                    if (tr.previewUrl) {
+                        sfxAudio.src = tr.previewUrl;
                         sfxAudio.volume = globalVolume;
                         sfxAudio.play().catch(function(e){});
                     }
-                } else {
-                    if (isCorrect) {
-                        m.className = "modal correct"; t.innerText = "🏆 RICHTIG!"; d.innerText = "Es war " + currentMysteryArtist + "!\n+" + mysteryScore + " Punkte.";
-                    } else {
-                        m.className = "modal wrong"; t.innerText = "❌ FALSCH"; d.innerText = "Gesucht war: " + currentMysteryArtist + ".";
-                    }
-                    if (hasNextRound) {
-                        b.innerText = "Nächster Rapper ➔"; b.onclick = nextMysteryRound;
-                    } else {
-                        b.innerText = "Auswertung ➔"; b.onclick = function() { triggerMysteryGameOver(false); };
-                    }
-                    b.style.display = "block";
                 }
-                delete window[cb];
-            };
-            let s = document.createElement("script");
-            s.src = "https://api.deezer.com/search/track?q=" + encodeURIComponent('artist:"' + artistName + '"') + "&order=RANKING&limit=5&output=jsonp&callback=" + cb;
-            document.head.appendChild(s);
+            } catch(e) {}
         }
 
         function triggerMysteryGameOver(victory) {
@@ -2278,83 +2303,96 @@
 
         function readSettings() { let hcToggle = document.getElementById("hardcore-toggle"); let artToggle = document.getElementById("artist-toggle"); if (hcToggle) isHardcoreMode = hcToggle.checked; if (artToggle) showArtistName = artToggle.checked; }
 
+        function filterAndMapTracks(rawList, sourceType, artist) {
+            const forbidden = ["karaoke", "tribute", "in the style", "type beat", "lullaby", "8-bit", "parody", "workout", "cover", "skit", "interlude", "commentary", "interview", "instrumental", "acapella", "slowed", "sped up", "reverb", "chopped", "screwed", "live at", "live from", "bad bunny", "camila cabello", "ed sheeran", "justin bieber", "j balvin", "ozuna", "shakira", "rosalia", "dua lipa", "ariana grande", "taylor swift", "katy perry", "maroon 5", "coldplay", "selena gomez", "maluma", "daddy yankee", "luis fonsi", "becky g", "anitta", "jennifer lopez", "pitbull", "central cee", "stormzy", "skepta", "aitch"];
+            let searchArtistLower = artist.toLowerCase().trim();
+
+            let valid = rawList.filter(function(t) {
+                let preview = sourceType === "deezer" ? t.preview : t.previewUrl;
+                let rawTitle = sourceType === "deezer" ? t.title : t.trackName;
+                let rawArtist = sourceType === "deezer" ? (t.artist ? t.artist.name : "") : t.artistName;
+                if (!preview || !rawTitle || !rawArtist) return false;
+
+                if (sourceType === "itunes" && t.primaryGenreName) {
+                    let g = t.primaryGenreName.toLowerCase();
+                    if (!g.includes("hip-hop") && !g.includes("rap") && !g.includes("r&b")) return false;
+                }
+
+                let trackNameLower = rawTitle.toLowerCase(); 
+                let artistNameLower = rawArtist.toLowerCase().trim(); 
+
+                let isDirectArtist = artistNameLower.includes(searchArtistLower);
+                let isApprovedCollab = isWhitelistedRapArtist(rawArtist) && (
+                    trackNameLower.includes("feat. " + searchArtistLower) || 
+                    trackNameLower.includes("ft. " + searchArtistLower) || 
+                    trackNameLower.includes("(with " + searchArtistLower) ||
+                    trackNameLower.includes("& " + searchArtistLower)
+                );
+
+                if (!isDirectArtist && !isApprovedCollab) return false;
+
+                for (let i = 0; i < forbidden.length; i++) { 
+                    let term = forbidden[i];
+                    if (trackNameLower.includes(term) || artistNameLower.includes(term)) return false; 
+                }
+                return true;
+            });
+
+            if (sourceType === "deezer") {
+                valid.sort(function(a, b) { return (b.rank || 0) - (a.rank || 0); });
+            }
+
+            let uniqueTracks = new Map();
+            for (let i = 0; i < valid.length; i++) {
+                let t = valid[i];
+                let rawTitle = sourceType === "deezer" ? t.title : t.trackName;
+                let cleanName = rawTitle.toLowerCase().split("(")[0].split("[")[0].split("-")[0].trim();
+                if (cleanName.length < 2) continue;
+                if (!uniqueTracks.has(cleanName)) {
+                    uniqueTracks.set(cleanName, t);
+                } else {
+                    let existing = uniqueTracks.get(cleanName);
+                    let isExp = sourceType === "deezer" ? t.explicit_lyrics : (t.trackExplicitness === "explicit");
+                    let oldExp = sourceType === "deezer" ? existing.explicit_lyrics : (existing.trackExplicitness === "explicit");
+                    if (isExp && !oldExp) {
+                        uniqueTracks.set(cleanName, t);
+                    }
+                }
+            }
+
+            let topTracks = Array.from(uniqueTracks.values());
+            let mapped = topTracks.slice(0, 18).map(function(t, i) { 
+                let rawTitle = sourceType === "deezer" ? t.title : t.trackName;
+                let rawArtist = sourceType === "deezer" ? t.artist.name : t.artistName;
+                let displayTitle = rawTitle.split(" (feat.")[0].split(" [feat.")[0].split(" (ft.")[0].trim();
+                let albTitle = sourceType === "deezer" ? ((t.album && t.album.title) ? t.album.title : displayTitle) : (t.collectionName || displayTitle);
+                let covUrl = sourceType === "deezer" ? (t.album.cover_xl || t.album.cover_medium || "") : (t.artworkUrl100 ? t.artworkUrl100.replace("100x100bb", "500x500bb") : "");
+                return {
+                    id: (sourceType === "deezer" ? "dz" : "it") + (t.id || t.trackId), 
+                    title: displayTitle, 
+                    preview: sourceType === "deezer" ? t.preview : t.previewUrl, 
+                    artist: { name: rawArtist },
+                    album: { title: albTitle, cover_medium: covUrl }, 
+                    popRank: i
+                };
+            });
+
+            return mapped;
+        }
+
         function fetchArtistSongs(artist) {
             return new Promise(async function(resolve) {
+                let gotFromDeezer = false;
                 try {
-                    await new Promise(function(resDeez) {
+                    gotFromDeezer = await new Promise(function(resDeez) {
                         const cb = "dz_" + Date.now() + "_" + Math.floor(Math.random() * 1000000);
-                        let to = setTimeout(function() { if(window[cb]) window[cb] = function(){}; resDeez(false); }, 4000);
+                        let to = setTimeout(function() { if(window[cb]) window[cb] = function(){}; resDeez(false); }, 1800);
 
                         window[cb] = function(res) {
                             clearTimeout(to);
                             if (res && res.data && res.data.length > 0) {
-                                const forbidden = ["karaoke", "tribute", "in the style", "type beat", "lullaby", "8-bit", "parody", "workout", "cover", "skit", "interlude", "commentary", "interview", "instrumental", "acapella", "slowed", "sped up", "reverb", "chopped", "screwed", "live at", "live from", "bad bunny", "camila cabello", "ed sheeran", "justin bieber", "j balvin", "ozuna", "shakira", "rosalia", "dua lipa", "ariana grande", "taylor swift", "katy perry", "maroon 5", "coldplay", "selena gomez", "maluma", "daddy yankee", "luis fonsi", "becky g", "anitta", "jennifer lopez", "pitbull", "central cee", "stormzy", "skepta", "aitch"];
-                                
-                                let searchArtistLower = artist.toLowerCase().trim();
-
-                                let valid = res.data.filter(function(t) {
-                                    if (!t.preview || !t.artist || !t.artist.name) return false;
-                                    let trackNameLower = t.title.toLowerCase(); 
-                                    let artistNameLower = t.artist.name.toLowerCase().trim(); 
-
-                                    let isDirectArtist = (artistNameLower === searchArtistLower) || 
-                                                         artistNameLower.startsWith(searchArtistLower + " ") || 
-                                                         artistNameLower.startsWith(searchArtistLower + ",") || 
-                                                         artistNameLower.startsWith(searchArtistLower + " &");
-
-                                    let isApprovedCollab = isWhitelistedRapArtist(t.artist.name) && (
-                                        artistNameLower.includes(searchArtistLower) || 
-                                        trackNameLower.includes("feat. " + searchArtistLower) || 
-                                        trackNameLower.includes("ft. " + searchArtistLower) || 
-                                        trackNameLower.includes("(with " + searchArtistLower) ||
-                                        trackNameLower.includes("& " + searchArtistLower)
-                                    );
-
-                                    if (!isDirectArtist && !isApprovedCollab) return false;
-
-                                    for (let i = 0; i < forbidden.length; i++) { 
-                                        let term = forbidden[i];
-                                        if (trackNameLower.includes(term) || artistNameLower.includes(term)) return false; 
-                                    }
-                                    return true;
-                                });
-
-                                valid.sort(function(a, b) {
-                                    return (b.rank || 0) - (a.rank || 0);
-                                });
-
-                                let uniqueTracks = new Map();
-                                for (let i = 0; i < valid.length; i++) {
-                                    let t = valid[i];
-                                    let cleanName = t.title.toLowerCase().split("(")[0].split("[")[0].split("-")[0].trim();
-                                    if (cleanName.length < 2) continue;
-                                    if (!uniqueTracks.has(cleanName)) {
-                                        uniqueTracks.set(cleanName, t);
-                                    } else {
-                                        let existing = uniqueTracks.get(cleanName);
-                                        if (t.explicit_lyrics && !existing.explicit_lyrics && (t.rank || 0) >= (existing.rank || 0) * 0.75) {
-                                            uniqueTracks.set(cleanName, t);
-                                        }
-                                    }
-                                }
-
-                                let topTracks = Array.from(uniqueTracks.values());
-                                topTracks.sort(function(a, b) { return (b.rank || 0) - (a.rank || 0); });
-
-                                let mapped = topTracks.slice(0, 15).map(function(t, i) { 
-                                    let displayTitle = t.title.split(" (feat.")[0].split(" [feat.")[0].trim();
-                                    return {
-                                        id: "dz" + t.id, 
-                                        title: displayTitle, 
-                                        preview: t.preview, 
-                                        artist: { name: t.artist.name },
-                                        album: { title: (t.album && t.album.title) ? t.album.title : displayTitle, cover_medium: (t.album.cover_xl || t.album.cover_medium || "") }, 
-                                        popRank: i,
-                                        dzRank: t.rank || 0
-                                    };
-                                });
-
-                                if(mapped.length > 0) {
+                                let mapped = filterAndMapTracks(res.data, "deezer", artist);
+                                if (mapped.length >= 2) {
                                     songsPool.push(...mapped);
                                     resDeez(true);
                                     return;
@@ -2363,12 +2401,24 @@
                             resDeez(false);
                         };
                         const s = document.createElement("script");
-                        let strictQuery = 'artist:"' + artist + '"';
-                        s.src = "https://api.deezer.com/search/track?q=" + encodeURIComponent(strictQuery) + "&order=RANKING&limit=65&output=jsonp&callback=" + cb;
+                        s.src = "https://api.deezer.com/search?q=" + encodeURIComponent(artist) + "&limit=70&output=jsonp&callback=" + cb;
                         s.onerror = function() { clearTimeout(to); resDeez(false); };
                         document.head.appendChild(s);
                     });
                 } catch (e) {}
+
+                if (!gotFromDeezer) {
+                    try {
+                        let res = await fetch("https://itunes.apple.com/search?term=" + encodeURIComponent(artist) + "&media=music&entity=song&limit=75");
+                        let data = await res.json();
+                        if (data && data.results && data.results.length > 0) {
+                            let mapped = filterAndMapTracks(data.results, "itunes", artist);
+                            if (mapped.length > 0) {
+                                songsPool.push(...mapped);
+                            }
+                        }
+                    } catch (e) {}
+                }
                 resolve();
             });
         }
@@ -2418,11 +2468,11 @@
             readSettings();
             document.getElementById("loading-overlay").style.display = "flex"; document.getElementById("loading-text").innerText = "Lade 60s US Rap Time Attack...";
             resetGameStats(); currentMode = "timeattack";
-            let sel = [].concat(megaStars, artists2010s, soundcloudArtists).sort(function(){return 0.5-Math.random();}).slice(0, 10);
+            let sel = [].concat(megaStars, artists2010s, soundcloudArtists).sort(function(){return 0.5-Math.random();}).slice(0, 8);
             try {
                 let promises = sel.map(function(a) { return fetchArtistSongs(a); });
                 await Promise.all(promises);
-                songsPool = songsPool.filter(function(s) { return s.popRank < 8; });
+                songsPool = songsPool.filter(function(s) { return s.popRank < 10; });
                 if (songsPool.length < 4) { document.getElementById("loading-overlay").style.display = "none"; alert("Fehler beim Laden. Bitte neu versuchen!"); return; }
                 songsPool = smartShuffle(songsPool); launchGame();
             } catch (err) { document.getElementById("loading-overlay").style.display = "none"; }
@@ -2440,7 +2490,7 @@
             if (isMultiplayer && isMpHost) socket.emit("startGame", currentRoom);
             document.getElementById("loading-overlay").style.display = "flex"; document.getElementById("loading-text").innerText = "Lade bekannte US Rap-Alben...";
             resetGameStats(); currentMode = "coverquiz";
-            let sel = [].concat(megaStars, artists2010s, legends, fallenLegends).sort(function(){return 0.5-Math.random();}).slice(0, 12);
+            let sel = [].concat(megaStars, artists2010s, legends, fallenLegends).sort(function(){return 0.5-Math.random();}).slice(0, 10);
             try {
                 let promises = sel.map(function(a) { return fetchArtistSongs(a); });
                 await Promise.all(promises);
@@ -2454,7 +2504,6 @@
                     
                     let cleanAlb = cleanAlbumTitleText(rawAlb);
                     if (cleanAlb.length < 2) return;
-                    if (cleanAlb.toLowerCase() === s.title.toLowerCase() && s.popRank > 5) return;
 
                     let key = cleanAlb.toLowerCase();
                     if (!albumMap.has(key)) {
@@ -2483,11 +2532,11 @@
             document.getElementById("loading-overlay").style.display = "flex"; document.getElementById("loading-text").innerText = "Lade US Top-Hits...";
             resetGameStats(); currentMode = mode; let sel = [];
             
-            if (mode === "all") sel = [].concat(artists2010s, soundcloudArtists, megaStars, fallenLegends).sort(function(){return 0.5-Math.random();}).slice(0,10);
-            if (mode === "soundcloud") sel = [].concat(soundcloudArtists).sort(function(){return 0.5-Math.random();}).slice(0,9);
-            if (mode === "2010s") sel = [].concat(artists2010s).sort(function(){return 0.5-Math.random();}).slice(0,10);
-            if (mode === "megahits") sel = [].concat(megaStars, artists2010s, legends, fallenLegends).sort(function(){return 0.5-Math.random();}).slice(0,12);
-            if (mode === "fallen") sel = [].concat(fallenLegends).sort(function(){return 0.5-Math.random();}).slice(0,9);
+            if (mode === "all") sel = [].concat(artists2010s, soundcloudArtists, megaStars, fallenLegends).sort(function(){return 0.5-Math.random();}).slice(0,8);
+            if (mode === "soundcloud") sel = [].concat(soundcloudArtists).sort(function(){return 0.5-Math.random();}).slice(0,8);
+            if (mode === "2010s") sel = [].concat(artists2010s).sort(function(){return 0.5-Math.random();}).slice(0,8);
+            if (mode === "megahits") sel = [].concat(megaStars, artists2010s, legends, fallenLegends).sort(function(){return 0.5-Math.random();}).slice(0,9);
+            if (mode === "fallen") sel = [].concat(fallenLegends).sort(function(){return 0.5-Math.random();}).slice(0,8);
             
             try {
                 let promises = sel.map(function(a) { return fetchArtistSongs(a); });
@@ -2496,9 +2545,9 @@
                 if (songsPool.length < 4) { document.getElementById("loading-overlay").style.display = "none"; alert("Es konnten leider keine Songs geladen werden. Bitte lade die Seite neu!"); return; }
                 
                 if (mode === "megahits") {
-                    songsPool = songsPool.filter(function(s) { return s.popRank < 5; });
+                    songsPool = songsPool.filter(function(s) { return s.popRank < 6; });
                 } else {
-                    songsPool = songsPool.filter(function(s) { return s.popRank < 10; });
+                    songsPool = songsPool.filter(function(s) { return s.popRank < 12; });
                 }
                 
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
@@ -2511,12 +2560,12 @@
             document.getElementById("loading-overlay").style.display = "flex"; document.getElementById("loading-text").innerText = "Loading Progressive Mode...";
             resetGameStats(); currentMode = "progressive";
             
-            let sel = [].concat(megaStars, artists2010s, legends, soundcloudArtists).sort(function(){return 0.5-Math.random();}).slice(0,10);
+            let sel = [].concat(megaStars, artists2010s, legends, soundcloudArtists).sort(function(){return 0.5-Math.random();}).slice(0,8);
             
             try {
                 let promises = sel.map(function(a) { return fetchArtistSongs(a); });
                 await Promise.all(promises);
-                songsPool = songsPool.filter(function(s) { return s.popRank < 7; });
+                songsPool = songsPool.filter(function(s) { return s.popRank < 8; });
                 if (songsPool.length < 4) { document.getElementById("loading-overlay").style.display = "none"; alert("Es konnten leider keine Songs geladen werden. Bitte lade die Seite neu!"); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
             } catch (err) { document.getElementById("loading-overlay").style.display = "none"; alert("Fehler beim Laden der Songs."); }
