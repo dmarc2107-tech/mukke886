@@ -86,7 +86,7 @@
         .sidebar-avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); box-shadow: 0 0 15px rgba(139, 92, 246, 0.6); }
         .sidebar-name { font-size: 14px; font-weight: 800; text-transform: uppercase; }
 
-        .nav-item { padding: 18px 25px; font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.3s; border-left: 4px solid transparent; display: flex; gap: 15px; }
+        .nav-item { padding: 18px 25px; font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.3s; border-left: 4px solid transparent; display: flex; gap: 15px; align-items: center; }
         .nav-item:hover { color: white; background: rgba(255,255,255,0.05); }
         .nav-item.active { color: white; border-left-color: var(--primary); background: rgba(139, 92, 246, 0.2); }
 
@@ -103,6 +103,8 @@
         .banner-subtitle { margin: 0 0 5px 0; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 2px; }
         .banner-title { margin: 0; color: white; text-transform: uppercase; font-size: 32px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 15px rgba(139,92,246,0.8); }
 
+        #active-mp-banner { display: none; background: rgba(16, 185, 129, 0.15); border: 2px solid var(--success); padding: 15px 25px; border-radius: 14px; margin-bottom: 25px; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
         .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-bottom: 40px; }
         
         .ea-card { background: var(--surface); backdrop-filter: blur(12px); border: 1px solid var(--surface-border); border-top: 1px solid rgba(255,255,255,0.25); border-radius: 16px; padding: 25px; cursor: pointer; transition: 0.3s; text-align: left; display: flex; flex-direction: column; justify-content: flex-end; min-height: 140px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); position: relative; overflow: hidden; }
@@ -118,6 +120,7 @@
         .card-mystery { border-color: rgba(236, 72, 153, 0.6); }
         .card-time { border-color: rgba(239, 68, 68, 0.6); }
         .card-cover { border-color: rgba(59, 130, 246, 0.6); }
+        .card-beat { border-color: rgba(16, 185, 129, 0.7); background: linear-gradient(135deg, rgba(20,20,25,0.7), rgba(16,185,129,0.18)); }
 
         .artist-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
         .artist-tile { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; color: white; backdrop-filter: blur(5px); }
@@ -186,6 +189,25 @@
         .hint-row { font-size: 14px; font-weight: 700; color: white; margin-bottom: 10px; padding: 10px 14px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--warning); display: none; animation: fadeIn 0.3s ease forwards; }
         #mystery-avatar-preview { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); margin: 0 auto 15px auto; display: block; filter: blur(20px); transition: filter 0.5s ease; box-shadow: 0 0 25px rgba(139,92,246,0.4); }
 
+        #beat-screen { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 5, 10, 0.95); backdrop-filter: blur(25px); z-index: 120; flex-direction: column; align-items: center; overflow-y: auto; padding: 25px 15px; box-sizing: border-box; }
+        .beat-inner { width: 100%; max-width: 850px; background: rgba(20, 20, 28, 0.9); border: 1px solid var(--surface-border); border-radius: 20px; padding: 25px; box-sizing: border-box; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .seq-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+        .seq-label { width: 110px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: white; flex-shrink: 0; text-align: left; }
+        .seq-steps { display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; flex: 1; }
+        .seq-cell { height: 34px; border-radius: 6px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); cursor: pointer; transition: 0.1s; }
+        .seq-cell:nth-child(4n+1) { border-left: 2px solid rgba(255,255,255,0.35); }
+        .seq-cell.active-r0 { background: #ec4899; box-shadow: 0 0 10px #ec4899; border-color: white; }
+        .seq-cell.active-r1 { background: #8b5cf6; box-shadow: 0 0 10px #8b5cf6; border-color: white; }
+        .seq-cell.active-r2 { background: #ef4444; box-shadow: 0 0 10px #ef4444; border-color: white; }
+        .seq-cell.active-r3 { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; border-color: white; }
+        .seq-cell.active-r4 { background: #10b981; box-shadow: 0 0 10px #10b981; border-color: white; }
+        .seq-cell.active-r5 { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; border-color: white; }
+        .seq-cell.playing-step { transform: scale(1.12); filter: brightness(1.5); border-color: white !important; }
+
+        .beat-vote-card { background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border); border-radius: 14px; padding: 18px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
+        .flame-btn { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 800; transition: 0.2s; }
+        .flame-btn:hover, .flame-btn.voted { background: var(--warning); color: black; border-color: white; transform: scale(1.08); }
+
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: rgba(15, 15, 18, 0.95); padding: 40px; border-radius: 24px; border: 1px solid var(--surface-border); width: 90%; max-width: 480px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -215,6 +237,8 @@
             .cards-grid { grid-template-columns: 1fr; }
             h1 { font-size: 32px; }
             .section-title { font-size: 22px; }
+            .seq-label { width: 70px; font-size: 10px; }
+            .seq-cell { height: 26px; }
         }
     </style>
 </head>
@@ -272,7 +296,7 @@
             </div>
             <div class="nav-menu">
                 <div id="nav-play" class="nav-item active" onclick="switchTab('play-tab', this)">🎮 Play</div>
-                <div id="nav-mp" class="nav-item" onclick="switchTab('multiplayer-tab', this)">⚔️ Online (2-4)</div>
+                <div id="nav-mp" class="nav-item" onclick="switchTab('multiplayer-tab', this)">⚔️ Online Lobby <span id="mp-nav-badge" style="display:none; background:var(--success); color:black; font-size:10px; padding:2px 6px; border-radius:6px; font-weight:900;">AKTIV</span></div>
                 <div id="nav-profile" class="nav-item" onclick="switchTab('profile-tab', this)">👤 My Club</div>
             </div>
             <div class="sidebar-footer">
@@ -287,6 +311,14 @@
 
         <main id="main-content">
             <div id="play-tab" class="tab-content active">
+                <div id="active-mp-banner">
+                    <div>
+                        <span style="font-size: 11px; text-transform: uppercase; color: var(--success); font-weight: 900; letter-spacing: 1px;">🟢 Aktive Multiplayer-Lobby</span>
+                        <div id="active-mp-info" style="font-size: 16px; font-weight: 800; color: white;">Raum-Code: ----</div>
+                    </div>
+                    <button onclick="cancelMultiplayer()" style="background: rgba(239,68,68,0.2); border: 1px solid var(--danger); color: white; padding: 8px 14px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px;">🚪 Lobby verlassen</button>
+                </div>
+
                 <div class="settings-bar">
                     <div class="settings-group">
                         <span class="settings-label">Hardcore (Typing)</span>
@@ -307,12 +339,17 @@
                     </div>
                 </div>
 
-                <div class="section-title">Quick Play & Action</div>
+                <div class="section-title">Quick Play & Action (US Hip-Hop Only)</div>
                 <div class="cards-grid">
                     <div class="ea-card card-highlight" onclick="startMixedMode('all')">
                         <div class="ea-card-icon">🔀</div>
-                        <div class="ea-card-title">All Mixed</div>
-                        <div class="ea-card-desc">Nur echte Hits querbeet durch alle Epochen.</div>
+                        <div class="ea-card-title">US Rap Mixed</div>
+                        <div class="ea-card-desc">Nur große US-Hits querbeet durch alle Epochen.</div>
+                    </div>
+                    <div class="ea-card card-beat" onclick="startBeatBattleMode()">
+                        <div class="ea-card-icon">🎹</div>
+                        <div class="ea-card-title">Beat Producer Battle</div>
+                        <div class="ea-card-desc">Baue deinen eigenen Trap-Beat & battle mit Freunden, wer den härtesten Beat baut!</div>
                     </div>
                     <div class="ea-card card-time" onclick="startTimeAttackMode()">
                         <div class="ea-card-icon">⏱️</div>
@@ -322,12 +359,12 @@
                     <div class="ea-card" onclick="startProgressiveMode()">
                         <div class="ea-card-icon">⚡</div>
                         <div class="ea-card-title">Progressive Mode</div>
-                        <div class="ea-card-desc">Startet bei 0.1s. Nur für echte Profis.</div>
+                        <div class="ea-card-desc">Startet bei 0.1s. Nur für echte US-Rap-Profis.</div>
                     </div>
                     <div class="ea-card card-gold" onclick="startMixedMode('megahits')">
                         <div class="ea-card-icon">🌟</div>
                         <div class="ea-card-title">Mega Hits</div>
-                        <div class="ea-card-desc">Nur die absolut größten Mainstream-Klassiker.</div>
+                        <div class="ea-card-desc">Nur die absolut größten US-Mainstream-Klassiker.</div>
                     </div>
                 </div>
 
@@ -336,31 +373,31 @@
                     <div class="ea-card card-mystery" onclick="startMysteryMode()">
                         <div class="ea-card-icon">🕵️</div>
                         <div class="ea-card-title">Mystery Rapper</div>
-                        <div class="ea-card-desc">Wer bin ich? Errate den Rapper anhand von Hinweisen & verpixeltem Foto.</div>
+                        <div class="ea-card-desc">Wer bin ich? Errate den US-Rapper anhand von Hinweisen & verpixeltem Foto.</div>
                     </div>
                     <div class="ea-card card-cover" onclick="startCoverQuizMode()">
                         <div class="ea-card-icon">💿</div>
                         <div class="ea-card-title">Album Cover Guessr</div>
-                        <div class="ea-card-desc">Erkennst du das Album-Cover und den Albumnamen komplett ohne Ton?</div>
+                        <div class="ea-card-desc">Erkennst du das US-Rap-Album komplett ohne Ton am Cover?</div>
                     </div>
                     <div class="ea-card card-fallen" onclick="startMixedMode('fallen')">
                         <div class="ea-card-icon">🕊️</div>
                         <div class="ea-card-title">Fallen Legends</div>
-                        <div class="ea-card-desc">2Pac, Biggie, Juice WRLD, X, Pop Smoke & mehr.</div>
+                        <div class="ea-card-desc">2Pac, Biggie, Juice WRLD, X, Pop Smoke, Mac Miller & mehr.</div>
                     </div>
                     <div class="ea-card" onclick="startMixedMode('2010s')">
                         <div class="ea-card-icon">📅</div>
-                        <div class="ea-card-title">2010-2020 Rap</div>
-                        <div class="ea-card-desc">Die goldene Trap-Ära (US & UK).</div>
+                        <div class="ea-card-title">2010s US Trap Era</div>
+                        <div class="ea-card-desc">Travis, Future, Migos, Thugger, 21 Savage, Uzi & mehr.</div>
                     </div>
                     <div class="ea-card" onclick="startMixedMode('soundcloud')">
                         <div class="ea-card-icon">☁️</div>
-                        <div class="ea-card-title">SoundCloud Era</div>
-                        <div class="ea-card-desc">Peep, X, Juice, Uzi, Carti & Co.</div>
+                        <div class="ea-card-title">SoundCloud Legends</div>
+                        <div class="ea-card-desc">X, Juice, Peep, Carti, Uzi, Trippie & Ski Mask.</div>
                     </div>
                 </div>
 
-                <div class="section-title">Catalog Quiz (100+ Rapper)</div>
+                <div class="section-title">Catalog Quiz (Mainstream US Rapper)</div>
                 <div class="artist-list" id="artist-grid"></div>
             </div>
 
@@ -480,7 +517,7 @@
             </div>
 
             <div class="game-controls">
-                <button onclick="backToMenu()">🏠 Quit</button>
+                <button onclick="returnToLobby(false)">🏠 Quit</button>
                 <button id="replay-btn" onclick="replaySnippet()" style="border-color: #3b82f6;">🔄 Replay</button>
                 <button id="add-time-btn" onclick="addTime()">+3s</button>
                 <button id="unblur-btn" onclick="unblurCoverStep()" style="display:none; border-color: var(--info); color: #93c5fd;">🔍 Schärfer (-20)</button>
@@ -503,10 +540,56 @@
         </div>
     </div>
 
+    <div id="beat-screen">
+        <div class="beat-inner">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <button onclick="returnToLobby(false)" style="background: rgba(255,255,255,0.08); border: 1px solid var(--surface-border); color: white; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">🏠 Zurück</button>
+                <h2 style="margin: 0; font-size: 22px; font-weight: 900; color: var(--success); text-transform: uppercase;">🎹 Beat Producer Studio</h2>
+                <div id="beat-status-badge" style="font-size: 12px; font-weight: 800; color: var(--warning); text-transform: uppercase;">Baut eure Beats!</div>
+            </div>
+
+            <div id="beat-maker-section">
+                <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.5); padding: 12px 18px; border-radius: 12px; margin-bottom: 18px; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button id="beat-play-btn" onclick="toggleBeatPlayback()" style="background: var(--success); color: black; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 900; cursor: pointer;">▶️ Play Loop</button>
+                        <button onclick="loadPresetBeat()" style="background: var(--primary); color: white; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px;">🔥 Auto-Cook Preset</button>
+                        <button onclick="clearBeatGrid()" style="background: rgba(239,68,68,0.25); color: #fca5a5; border: 1px solid var(--danger); padding: 10px 14px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px;">🗑️ Clear</button>
+                    </div>
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 12px; font-weight: 800; color: var(--text-muted);">VIBE:</span>
+                            <select id="beat-vibe-select" onchange="changeBeatVibe(this.value)" style="background: #141419; color: white; border: 1px solid var(--surface-border); padding: 8px 12px; border-radius: 8px; font-weight: 700;">
+                                <option value="metro">🌑 Dark Metro Trap</option>
+                                <option value="westcoast">🌴 West Coast Bounce</option>
+                                <option value="boombap">🗽 90s NY Boom Bap</option>
+                                <option value="rage">⚡ Playboi Rage Synth</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; min-width: 160px;">
+                            <span id="beat-bpm-label" style="font-size: 12px; font-weight: 800; color: white; width: 75px;">140 BPM</span>
+                            <input type="range" id="beat-bpm-slider" min="85" max="165" value="140" oninput="changeBeatBpm(this.value)">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sequencer-grid" style="margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px;"></div>
+
+                <button id="submit-beat-btn" class="btn-action" style="background: linear-gradient(135deg, #10b981, #059669);" onclick="submitMyBeat()">🔥 Beat einreichen & Battle starten ➔</button>
+            </div>
+
+            <div id="beat-voting-section" style="display: none;">
+                <h3 style="margin-top: 0; color: var(--warning); text-transform: uppercase; text-align: center;">🎧 Beat Battle Showcase – Wer hat den härtesten Beat?</h3>
+                <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 20px;">Hört euch jeden Beat an und vergebt 1 bis 5 Flammen (🔥)!</p>
+                <div id="beat-submissions-list"></div>
+                <button id="finish-beat-battle-btn" class="btn-action" style="margin-top: 15px;" onclick="finishBeatBattle()">🏆 Sieger krönen</button>
+            </div>
+        </div>
+    </div>
+
     <div id="mystery-screen">
         <div class="game-inner">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%; max-width: 600px;">
-                <button onclick="backToMenu()" style="background: rgba(255,255,255,0.08); border: 1px solid var(--surface-border); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer;">🏠 Quit</button>
+                <button onclick="returnToLobby(false)" style="background: rgba(255,255,255,0.08); border: 1px solid var(--surface-border); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer;">🏠 Quit</button>
                 <div style="display: flex; gap: 20px;">
                     <div style="text-align: center;">
                         <span style="font-size: 10px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Leben</span>
@@ -562,17 +645,20 @@
             <img id="feedback-cover" src="">
             <p id="feedback-desc">Description</p>
             <div id="mp-result" style="display: none; margin-bottom: 25px;"></div>
-            <button id="feedback-btn" class="btn-action">Next ➔</button>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="feedback-rematch-btn" class="btn-action" style="display: none; background: var(--success);" onclick="returnToLobby(true)">🔄 Neue Runde (Selbe Lobby)</button>
+                <button id="feedback-btn" class="btn-action">Next ➔</button>
+            </div>
         </div>
     </div>
 
     <script>
-        const fallenLegends = ["2Pac", "The Notorious B.I.G.", "XXXTentacion", "Juice WRLD", "Lil Peep", "Mac Miller", "Pop Smoke", "King Von", "Takeoff", "Nipsey Hussle", "Eazy-E", "MF DOOM", "Young Dolph", "PnB Rock", "DMX", "Speaker Knockerz", "Fredo Santana", "Lil Keed", "Big L", "Coolio"];
-        const soundcloudArtists = ["XXXTentacion", "Juice WRLD", "Lil Peep", "Ski Mask the Slump God", "Trippie Redd", "Denzel Curry", "Playboi Carti", "Lil Uzi Vert", "Lil Pump", "Smokepurpp", "$uicideboy$", "Chief Keef", "Tay-K", "YNW Melly", "Yung Lean", "Bones", "Lil Skies", "Comethazine", "YBN Nahmir", "Yung Bans", "Yeat", "Ken Carson", "Destroy Lonely", "SoFaygo"];
-        const artists2010s = ["Travis Scott", "Migos", "Future", "Young Thug", "21 Savage", "Kodak Black", "Lil Baby", "Gunna", "Polo G", "A$AP Rocky", "Tyler, The Creator", "Mac Miller", "Don Toliver", "Lil Durk", "Nav", "Roddy Ricch", "A Boogie Wit da Hoodie", "DaBaby", "NLE Choppa", "Offset", "Quavo", "Yeat", "Central Cee", "JID", "Schoolboy Q", "Joey Bada$$", "A$AP Ferg", "Meek Mill", "Big Sean", "Logic", "Lil Yachty", "Jack Harlow", "Rae Sremmurd", "Rick Ross", "Wale", "Vince Staples"];
-        const legends = ["2Pac", "The Notorious B.I.G.", "Eminem", "50 Cent", "Snoop Dogg", "Dr. Dre", "Ice Cube", "Nas", "Jay-Z", "Wu-Tang Clan", "Outkast", "DMX", "Rakim", "LL Cool J", "Busta Rhymes", "Missy Elliott", "Lauryn Hill", "Big L"];
-        const megaStars = ["Drake", "Kendrick Lamar", "J. Cole", "Kanye West", "Post Malone", "Lil Wayne", "Nicki Minaj", "Cardi B", "Megan Thee Stallion", "Jay-Z", "Eminem", "50 Cent"];
-        const approvedProducersAndCrews = ["Metro Boomin", "DJ Khaled", "Internet Money", "Mustard", "DJ Mustard", "JackBoys", "Cactus Jack", "Dreamville", "Quality Control", "YSL", "Young Stoner Life", "G-Unit", "D12", "Bad Meets Evil", "Kids See Ghosts", "Jay-Z & Kanye West", "Drake & Future", "Drake & 21 Savage", "Future & Metro Boomin", "Juice WRLD & Future", "Lil Baby & Lil Durk", "Lil Baby & Gunna", "Huncho Jack", "A$AP Mob", "N.W.A", "Mobb Deep", "Fugees", "Clipse", "Run The Jewels", "Brockhampton", "Odd Future", "Good Music", "Murda Beatz", "Mike WiLL Made-It", "Tay Keith", "Wheezy", "Pi'erre Bourne", "Timbaland", "Pharrell Williams", "Swizz Beatz", "Kaytranada", "Lyrical Lemonade", "Central Cee & Dave", "Dave", "Stormzy", "Skepta", "Aitch", "Nemzzz", "21 Savage & Metro Boomin", "Offset & Metro Boomin", "21 Savage, Offset & Metro Boomin", "Ye", "Makaveli", "Notorious B.I.G."];
+        const fallenLegends = ["2Pac", "The Notorious B.I.G.", "XXXTentacion", "Juice WRLD", "Lil Peep", "Mac Miller", "Pop Smoke", "King Von", "Takeoff", "Nipsey Hussle", "Eazy-E", "DMX", "Coolio"];
+        const soundcloudArtists = ["XXXTentacion", "Juice WRLD", "Lil Peep", "Playboi Carti", "Lil Uzi Vert", "Trippie Redd", "Ski Mask the Slump God", "Kodak Black", "Chief Keef", "YNW Melly", "Lil Yachty", "Denzel Curry", "$uicideboy$"];
+        const artists2010s = ["Travis Scott", "Future", "Migos", "Young Thug", "21 Savage", "Lil Baby", "Gunna", "Polo G", "A$AP Rocky", "Tyler, The Creator", "Mac Miller", "Don Toliver", "Lil Durk", "Roddy Ricch", "A Boogie Wit da Hoodie", "DaBaby", "NLE Choppa", "Offset", "Quavo", "Meek Mill", "Big Sean", "Jack Harlow", "Rae Sremmurd", "Rick Ross", "Wiz Khalifa", "Metro Boomin"];
+        const legends = ["2Pac", "The Notorious B.I.G.", "Eminem", "50 Cent", "Snoop Dogg", "Dr. Dre", "Ice Cube", "Nas", "Jay-Z", "Lil Wayne", "Kanye West", "Outkast", "DMX", "Wu-Tang Clan", "Busta Rhymes", "N.W.A", "T.I.", "Ludacris"];
+        const megaStars = ["Drake", "Kendrick Lamar", "J. Cole", "Kanye West", "Travis Scott", "Eminem", "Future", "Lil Wayne", "Post Malone", "50 Cent", "Jay-Z", "Nicki Minaj", "Cardi B"];
+        const approvedProducersAndCrews = ["Metro Boomin", "DJ Khaled", "Internet Money", "Mustard", "DJ Mustard", "JackBoys", "Cactus Jack", "Dreamville", "Quality Control", "YSL", "Young Stoner Life", "G-Unit", "D12", "Bad Meets Evil", "Kids See Ghosts", "Jay-Z & Kanye West", "Drake & Future", "Drake & 21 Savage", "Future & Metro Boomin", "Juice WRLD & Future", "Lil Baby & Lil Durk", "Lil Baby & Gunna", "Huncho Jack", "A$AP Mob", "N.W.A", "Mobb Deep", "Fugees", "Clipse", "Odd Future", "Good Music", "Murda Beatz", "Mike WiLL Made-It", "Tay Keith", "Wheezy", "Timbaland", "Pharrell Williams", "Swizz Beatz", "Lyrical Lemonade", "21 Savage & Metro Boomin", "Offset & Metro Boomin", "21 Savage, Offset & Metro Boomin", "Ye", "Makaveli", "Notorious B.I.G."];
 
         const allArtists = Array.from(new Set([].concat(soundcloudArtists, artists2010s, legends, megaStars, fallenLegends))).sort();
         const whitelistArtistsLower = Array.from(new Set([].concat(allArtists, approvedProducersAndCrews))).map(function(a) { return a.toLowerCase(); });
@@ -590,7 +676,7 @@
         }
 
         const mysteryDatabase = {
-            "Drake": ["Kommt aus Toronto, Kanada", "Hat das Label OVO Sound gegruendet", "Befand sich im historischen Beef mit Kendrick Lamar", "Bekannt fuer Alben wie Scorpion und Take Care", "Mega-Hit: Gods Plan"],
+            "Drake": ["Champagne Papi auf Instagram", "Hat das Label OVO Sound gegruendet", "Befand sich im historischen Beef mit Kendrick Lamar", "Bekannt fuer Alben wie Scorpion, Views und Take Care", "Mega-Hit: Gods Plan"],
             "Travis Scott": ["Kommt aus Houston, Texas", "Label und Marke: Cactus Jack", "Hat ein gigantisches Fortnite-Konzert veranstaltet", "Sein bekanntestes Album heisst Astroworld", "Mega-Hit: Sicko Mode"],
             "XXXTentacion": ["SoundCloud-Pionier aus Florida", "Mitbegruender der Crew Members Only", "Seine Haare waren beruehmt halb schwarz, halb blond", "Wurde 2018 in Florida erschossen", "Mega-Hits: SAD! und Look At Me!"],
             "Eminem": ["Kommt aus Detroit, Michigan", "Sein bekanntes Alter Ego heisst Slim Shady", "Spielte die Hauptrolle im Film 8 Mile", "Wurde durch Dr. Dre entdeckt", "Mega-Hit: Lose Yourself"],
@@ -614,9 +700,8 @@
             "Chief Keef": ["Der unbestrittene Godfather des Chicago Drill", "Drehte das legendäre Video zu I Dont Like im Hausarrest", "Kopf der Glo Gang", "Wurde bereits mit 16 Jahren von Kanye West geremixt", "Mega-Hit: Love Sosa"],
             "Tyler, The Creator": ["Kreativkopf aus Kalifornien", "Gruender des wilden Kollektivs Odd Future (OFWGKTA)", "Gewann einen Grammy fuer das Album IGOR", "Trägt bei Auftritten oft ausgefallene Kostüme und Perücken", "Mega-Hits: See You Again und EARFQUAKE"],
             "Future": ["Trap-Pionier aus Atlanta", "Kopf des Labels Freebandz", "Bekannt fuer exzessiven Autotune-Einsatz und Toxic-Memes", "Klassiker-Album: DS2 (Dirty Sprite 2)", "Mega-Hit: Mask Off"],
-            "21 Savage": ["Trap-Star aus Atlanta (wurde eigentlich in London geboren)", "Machte ein Kollabo-Album namens Her Loss mit Drake", "Markenzeichen: Ein Dolch-Tattoo mitten auf der Stirn", "Sehr ruhiger, eiskalter Flow", "Mega-Hits: Bank Account und a lot"],
-            "Ice Cube": ["West-Coast-Pionier aus South Central LA", "Mitbegruender der radikalen Gruppe N.W.A", "Heute extrem erfolgreich als Schauspieler und Filmproduzent (Friday)", "Gilt als einer der besten Storyteller im Gangsta-Rap", "Mega-Hit: It Was A Good Day"],
-            "Central Cee": ["Aktuell der erfolgreichste Rapper aus West-London (UK)", "Brachte den UK-Drill und Melodic-Rap weltweit in die Charts", "Wurde durch den viralen Track Day in the Life bekannt", "Kollaborierte mit Dave auf dem Hit Sprinter", "Mega-Hit: Doja"]
+            "21 Savage": ["Trap-Star aus Atlanta", "Machte ein Kollabo-Album namens Her Loss mit Drake", "Markenzeichen: Ein Dolch-Tattoo mitten auf der Stirn", "Sehr ruhiger, eiskalter Flow", "Mega-Hits: Bank Account und a lot"],
+            "Ice Cube": ["West-Coast-Pionier aus South Central LA", "Mitbegruender der radikalen Gruppe N.W.A", "Heute extrem erfolgreich als Schauspieler und Filmproduzent (Friday)", "Gilt als einer der besten Storyteller im Gangsta-Rap", "Mega-Hit: It Was A Good Day"]
         };
 
         const artistQuotes = {
@@ -628,7 +713,6 @@
             "Denzel Curry": "I am the ultimate. - Denzel", 
             "Playboi Carti": "Wake up, its the first of the month. - Carti", 
             "Lil Uzi Vert": "I just wanna go to outer space. - Uzi", 
-            "Lil Pump": "Esskeetit! - Lil Pump", 
             "Chief Keef": "A lot of people say they want to be famous... - Sosa", 
             "$uicideboy$": "G59 until the grave. - $uicideboy$", 
             "Travis Scott": "Im the highest in the room. - Travis Scott", 
@@ -702,6 +786,24 @@
         let mysteryCandidates = Object.keys(mysteryDatabase);
         let playedMysteryArtists = new Set();
 
+        let beatCtx = null;
+        let beatIsPlaying = false;
+        let beatTimer = null;
+        let beatStep = 0;
+        let beatBpm = 140;
+        let beatVibe = "metro";
+        let beatGrid = [
+            [1,0,0,0, 0,0,1,0, 0,0,0,0, 1,0,0,0],
+            [0,0,1,0, 0,1,0,0, 1,0,0,1, 0,0,1,0],
+            [1,0,0,0, 0,0,1,0, 0,0,1,0, 0,0,0,0],
+            [1,0,0,0, 0,0,0,0, 1,0,1,0, 0,0,0,0],
+            [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+            [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1]
+        ];
+        let submittedBeats = {};
+        let beatVotes = {};
+        let activeShowcaseGrid = null;
+
         function safeReadJSON(key, fallback) {
             try { 
                 let val = localStorage.getItem(key); 
@@ -767,7 +869,7 @@
 
         function searchCustomArtistGifs() {
             let q = document.getElementById("gif-search-input").value.trim();
-            if (!q) q = myFavArtist || "Hip Hop";
+            if (!q) q = myFavArtist || "Travis Scott";
             loadArtistGifs(q, false);
         }
 
@@ -778,6 +880,20 @@
             saveAccountData(); 
             loadArtistVisuals(myFavArtist); 
             loadArtistGifs(myFavArtist, true);
+        }
+
+        function updateMpLobbyBanner() {
+            let banner = document.getElementById("active-mp-banner");
+            let info = document.getElementById("active-mp-info");
+            let badge = document.getElementById("mp-nav-badge");
+            if (isMultiplayer && currentRoom) {
+                if (banner) banner.style.display = "flex";
+                if (badge) badge.style.display = "inline-block";
+                if (info) info.innerText = "Raum-Code: " + currentRoom + " (" + lobbyPlayers.length + "/4 Spieler bereit)";
+            } else {
+                if (banner) banner.style.display = "none";
+                if (badge) badge.style.display = "none";
+            }
         }
 
         async function handleProfileLogin(isAutoLogin, autoName) {
@@ -816,7 +932,7 @@
                 if (!localAccountExists) {
                     accounts[name] = {
                         password: pw, isPremium: true, 
-                        stats: { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, timeattack: 0, progressive: 0, megahits: 0, coverquiz: 0, mystery: 0, fallen: 0, "2010s": 0, soundcloud: 0, artist: 0 } },
+                        stats: { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, beatbattle: 0, timeattack: 0, progressive: 0, megahits: 0, coverquiz: 0, mystery: 0, fallen: 0, "2010s": 0, soundcloud: 0, artist: 0 } },
                         avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=" + encodeURIComponent(name),
                         bgUrl: "", favArtist: "Travis Scott", quote: getArtistQuote("Travis Scott"), songUrl: "", songTitle: ""
                     };
@@ -949,11 +1065,13 @@
                             statusEl.innerText = "Waiting for players... (1/4)";
                             statusEl.style.color = "var(--warning)";
                         }
+                        updateMpLobbyBanner();
                     });
 
                     socket.on("joinedSuccess", function(data) { 
                         currentRoom = data.roomCode; 
                         document.getElementById("room-code-display").innerText = data.roomCode; 
+                        updateMpLobbyBanner();
                     });
 
                     socket.on("errorMsg", function(msg) { 
@@ -964,11 +1082,12 @@
                     socket.on("lobbyUpdate", function(players) { 
                         lobbyPlayers = players; 
                         renderLobbyPlayers();
+                        updateMpLobbyBanner();
                         if(currentRoom) {
                             let statusEl = document.getElementById("mp-status");
                             if(isMpHost) {
                                 if(players.length >= 2) { 
-                                    statusEl.innerHTML = "🟢 Ready! You can now choose a mode<br>in the left menu to start."; 
+                                    statusEl.innerHTML = "🟢 Ready! Wähle links im Play-Menü einen Modus für die Lobby aus!"; 
                                     statusEl.style.color = "var(--success)"; 
                                 } else { 
                                     statusEl.innerText = "Waiting for players... (" + players.length + "/4)"; 
@@ -991,7 +1110,7 @@
                     
                     socket.on("receiveRoundData", function(data) { 
                         resetGameStats(); 
-                        songsPool = data.songs; 
+                        songsPool = data.songs || []; 
                         currentMode = data.mode; 
                         isHardcoreMode = data.hardcore; 
                         showArtistName = data.showArtist; 
@@ -999,7 +1118,11 @@
                         document.getElementById("artist-toggle").checked = showArtistName; 
                         isMultiplayer = true; 
                         document.getElementById("loading-overlay").style.display = "none"; 
-                        launchGame(); 
+                        if (currentMode === "beatbattle") {
+                            openBeatStudio();
+                        } else {
+                            launchGame(); 
+                        }
                     });
                     
                     socket.on("updateAllStats", function(players) { 
@@ -1017,6 +1140,15 @@
                             checkAllReady(); 
                         } else if (data.type === "SUDDEN_DEATH") { 
                             triggerSuddenDeathLocal(data.ids); 
+                        } else if (data.type === "LOBBY_REMATCH") {
+                            returnToLobby(false);
+                        } else if (data.type === "BEAT_SUBMITTED") {
+                            submittedBeats[data.id] = data.beatData;
+                            checkAllBeatsSubmitted();
+                        } else if (data.type === "BEAT_VOTE") {
+                            if (!beatVotes[data.targetId]) beatVotes[data.targetId] = [];
+                            beatVotes[data.targetId].push(data.stars);
+                            renderBeatVotingCards();
                         }
                     });
                     
@@ -1071,8 +1203,451 @@
             isMultiplayer = false; 
             isMpHost = false; 
             currentRoom = ""; 
+            lobbyPlayers = [];
             pendingMpAction = null;
+            document.getElementById("room-code-display").innerText = "----";
+            updateMpLobbyBanner();
             switchTab("play-tab", document.getElementById("nav-play")); 
+        }
+
+        function returnToLobby(broadcastRematch) {
+            try {
+                audio.pause(); sfxAudio.pause(); stopBeatPlayback();
+                clearTimeout(precisionTimer); clearInterval(timeAttackInterval);
+                gameIsOver = false; isWinnerScreenShown = false; matchEndData = {};
+                playersAnsweredThisRound.clear(); playersReadyForNextRound.clear();
+
+                if (broadcastRematch && isMultiplayer && currentRoom) {
+                    socket.emit("teammateAnswered", { type: "LOBBY_REMATCH", id: socket.id, roomCode: currentRoom });
+                    socket.emit("syncStats", { roomCode: currentRoom, score: 0, lives: 3 });
+                }
+
+                document.getElementById("game-screen").style.display = "none"; 
+                document.getElementById("mystery-screen").style.display = "none"; 
+                document.getElementById("beat-screen").style.display = "none";
+                document.getElementById("feedback-overlay").style.display = "none"; 
+                document.getElementById("app-layout").style.display = "flex"; 
+                
+                updateMpLobbyBanner();
+                if (isMultiplayer && currentRoom) {
+                    switchTab("play-tab", document.getElementById("nav-play"));
+                }
+                resumeMenuMusic();
+            } catch(e) { location.reload(); }
+        }
+
+        function backToMenu() { 
+            cancelMultiplayer();
+            returnToLobby(false);
+        }
+
+        function initAudioContext() {
+            if (!beatCtx) {
+                let AudioCtx = window.AudioContext || window.webkitAudioContext;
+                beatCtx = new AudioCtx();
+            }
+            if (beatCtx.state === "suspended") beatCtx.resume();
+        }
+
+        function triggerSynthSound(row, stepIndex, vibeType) {
+            if (!beatCtx) return;
+            let now = beatCtx.currentTime;
+            let scaleMetro = [261.63, 311.13, 349.23, 392.00, 415.30, 523.25];
+            let scaleWest = [293.66, 349.23, 392.00, 440.00, 523.25, 587.33];
+            let scaleBoom = [220.00, 261.63, 293.66, 329.63, 392.00, 440.00];
+            let scaleRage = [277.18, 329.63, 369.99, 415.30, 493.88, 554.37];
+            let activeScale = vibeType === "westcoast" ? scaleWest : (vibeType === "boombap" ? scaleBoom : (vibeType === "rage" ? scaleRage : scaleMetro));
+
+            if (row === 0) {
+                let osc = beatCtx.createOscillator();
+                let gain = beatCtx.createGain();
+                osc.type = vibeType === "rage" ? "sawtooth" : "sine";
+                let freq = activeScale[(stepIndex * 2) % activeScale.length] * 2;
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.18 * globalVolume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+                osc.connect(gain); gain.connect(beatCtx.destination);
+                osc.start(now); osc.stop(now + 0.29);
+            } else if (row === 1) {
+                let osc = beatCtx.createOscillator();
+                let gain = beatCtx.createGain();
+                osc.type = "triangle";
+                let freq = activeScale[stepIndex % activeScale.length];
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0.22 * globalVolume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc.connect(gain); gain.connect(beatCtx.destination);
+                osc.start(now); osc.stop(now + 0.36);
+            } else if (row === 2) {
+                let osc = beatCtx.createOscillator();
+                let gain = beatCtx.createGain();
+                osc.type = vibeType === "rage" ? "sawtooth" : "sine";
+                let baseFreq = (stepIndex >= 12) ? 65.41 : 55.0;
+                osc.frequency.setValueAtTime(baseFreq * 2.2, now);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq, now + 0.08);
+                gain.gain.setValueAtTime(0.55 * globalVolume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                osc.connect(gain); gain.connect(beatCtx.destination);
+                osc.start(now); osc.stop(now + 0.46);
+            } else if (row === 3) {
+                let osc = beatCtx.createOscillator();
+                let gain = beatCtx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(35, now + 0.12);
+                gain.gain.setValueAtTime(0.7 * globalVolume, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                osc.connect(gain); gain.connect(beatCtx.destination);
+                osc.start(now); osc.stop(now + 0.19);
+            } else if (row === 4) {
+                let bufferSize = beatCtx.sampleRate * 0.14;
+                let buffer = beatCtx.createBuffer(1, bufferSize, beatCtx.sampleRate);
+                let data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                let noise = beatCtx.createBufferSource();
+                noise.buffer = buffer;
+                let filter = beatCtx.createBiquadFilter();
+                filter.type = "bandpass";
+                filter.frequency.setValueAtTime(1200, now);
+                let gain = beatCtx.createGain();
+                gain.gain.setValueAtTime(0.45 * globalVolume, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+                noise.connect(filter); filter.connect(gain); gain.connect(beatCtx.destination);
+                noise.start(now);
+            } else if (row === 5) {
+                let bufferSize = beatCtx.sampleRate * 0.05;
+                let buffer = beatCtx.createBuffer(1, bufferSize, beatCtx.sampleRate);
+                let data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                let noise = beatCtx.createBufferSource();
+                noise.buffer = buffer;
+                let filter = beatCtx.createBiquadFilter();
+                filter.type = "highpass";
+                filter.frequency.setValueAtTime(7000, now);
+                let gain = beatCtx.createGain();
+                gain.gain.setValueAtTime(0.25 * globalVolume, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                noise.connect(filter); filter.connect(gain); gain.connect(beatCtx.destination);
+                noise.start(now);
+            }
+        }
+
+        function buildSequencerUI() {
+            let container = document.getElementById("sequencer-grid");
+            if (!container) return;
+            container.innerHTML = "";
+            const labels = ["🔔 Trap Bell", "🎹 Dark Pluck", "💣 808 Bass", "🥁 Kick", "👏 Clap", "🎩 Hi-Hat"];
+            for (let r = 0; r < 6; r++) {
+                let rowDiv = document.createElement("div");
+                rowDiv.className = "seq-row";
+                let lbl = document.createElement("div");
+                lbl.className = "seq-label";
+                lbl.innerText = labels[r];
+                rowDiv.appendChild(lbl);
+
+                let stepsDiv = document.createElement("div");
+                stepsDiv.className = "seq-steps";
+                for (let c = 0; c < 16; c++) {
+                    let cell = document.createElement("div");
+                    cell.id = "seq-cell-" + r + "-" + c;
+                    cell.className = "seq-cell" + (beatGrid[r][c] ? (" active-r" + r) : "");
+                    cell.onclick = (function(rowIdx, colIdx) {
+                        return function() {
+                            initAudioContext();
+                            beatGrid[rowIdx][colIdx] = beatGrid[rowIdx][colIdx] ? 0 : 1;
+                            let el = document.getElementById("seq-cell-" + rowIdx + "-" + colIdx);
+                            if (beatGrid[rowIdx][colIdx]) {
+                                el.classList.add("active-r" + rowIdx);
+                                triggerSynthSound(rowIdx, colIdx, beatVibe);
+                            } else {
+                                el.classList.remove("active-r" + rowIdx);
+                            }
+                        };
+                    })(r, c);
+                    stepsDiv.appendChild(cell);
+                }
+                rowDiv.appendChild(stepsDiv);
+                container.appendChild(rowDiv);
+            }
+        }
+
+        function startBeatBattleMode() {
+            currentMode = "beatbattle";
+            if (isMultiplayer && isMpHost) {
+                socket.emit("startGame", currentRoom);
+                socket.emit("syncRoundData", { roomCode: currentRoom, songs: [], mode: "beatbattle", hardcore: false, showArtist: true });
+            }
+            openBeatStudio();
+        }
+
+        function openBeatStudio() {
+            pauseMenuMusic();
+            stopBeatPlayback();
+            submittedBeats = {};
+            beatVotes = {};
+            activeShowcaseGrid = null;
+            document.getElementById("app-layout").style.display = "none";
+            document.getElementById("game-screen").style.display = "none";
+            document.getElementById("beat-screen").style.display = "flex";
+            document.getElementById("beat-maker-section").style.display = "block";
+            document.getElementById("beat-voting-section").style.display = "none";
+            document.getElementById("submit-beat-btn").disabled = false;
+            document.getElementById("submit-beat-btn").innerText = "🔥 Beat einreichen & Battle starten ➔";
+            document.getElementById("beat-status-badge").innerText = isMultiplayer ? ("Lobby (" + lobbyPlayers.length + " Producer)") : "Solo vs. Metro Bot";
+            buildSequencerUI();
+        }
+
+        function toggleBeatPlayback() {
+            initAudioContext();
+            if (beatIsPlaying) {
+                stopBeatPlayback();
+            } else {
+                activeShowcaseGrid = null;
+                beatIsPlaying = true;
+                beatStep = 0;
+                document.getElementById("beat-play-btn").innerText = "⏹️ Stop";
+                runBeatLoop();
+            }
+        }
+
+        function runBeatLoop() {
+            if (!beatIsPlaying) return;
+            let gridToUse = activeShowcaseGrid ? activeShowcaseGrid.grid : beatGrid;
+            let vibeToUse = activeShowcaseGrid ? activeShowcaseGrid.vibe : beatVibe;
+            let bpmToUse = activeShowcaseGrid ? activeShowcaseGrid.bpm : beatBpm;
+
+            document.querySelectorAll(".seq-cell").forEach(function(el) { el.classList.remove("playing-step"); });
+            for (let r = 0; r < 6; r++) {
+                let cellEl = document.getElementById("seq-cell-" + r + "-" + beatStep);
+                if (cellEl) cellEl.classList.add("playing-step");
+                if (gridToUse[r] && gridToUse[r][beatStep]) {
+                    triggerSynthSound(r, beatStep, vibeToUse);
+                }
+            }
+            beatStep = (beatStep + 1) % 16;
+            let stepMs = (60 / bpmToUse / 4) * 1000;
+            beatTimer = setTimeout(runBeatLoop, stepMs);
+        }
+
+        function stopBeatPlayback() {
+            beatIsPlaying = false;
+            clearTimeout(beatTimer);
+            let btn = document.getElementById("beat-play-btn");
+            if (btn) btn.innerText = "▶️ Play Loop";
+            document.querySelectorAll(".seq-cell").forEach(function(el) { el.classList.remove("playing-step"); });
+        }
+
+        function changeBeatBpm(val) {
+            beatBpm = parseInt(val, 10);
+            document.getElementById("beat-bpm-label").innerText = beatBpm + " BPM";
+        }
+
+        function changeBeatVibe(val) {
+            beatVibe = val;
+        }
+
+        function clearBeatGrid() {
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 16; c++) beatGrid[r][c] = 0;
+            }
+            buildSequencerUI();
+        }
+
+        function loadPresetBeat() {
+            initAudioContext();
+            const presets = [
+                [
+                    [1,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,0,0],
+                    [0,0,1,0, 0,1,0,0, 1,0,0,1, 0,0,1,0],
+                    [1,0,0,0, 0,0,1,0, 0,0,1,0, 0,1,0,0],
+                    [1,0,0,0, 0,0,0,0, 1,0,1,0, 0,0,0,0],
+                    [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+                    [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1]
+                ],
+                [
+                    [0,0,1,0, 0,0,0,1, 0,0,1,0, 0,1,0,0],
+                    [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
+                    [1,0,0,1, 0,0,1,0, 1,0,0,0, 0,0,1,0],
+                    [1,0,0,1, 0,0,0,0, 1,0,0,1, 0,0,0,0],
+                    [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,1],
+                    [1,0,1,1, 1,0,1,1, 1,0,1,1, 1,1,1,1]
+                ]
+            ];
+            let pick = presets[Math.floor(Math.random() * presets.length)];
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 16; c++) beatGrid[r][c] = pick[r][c];
+            }
+            buildSequencerUI();
+            if (!beatIsPlaying) toggleBeatPlayback();
+        }
+
+        function submitMyBeat() {
+            stopBeatPlayback();
+            let myBeatObj = {
+                id: socket.id || "local_player",
+                name: playerName || "Producer",
+                avatar: myAvatar,
+                bpm: beatBpm,
+                vibe: beatVibe,
+                grid: JSON.parse(JSON.stringify(beatGrid))
+            };
+            let myId = socket.id || "local_player";
+            submittedBeats[myId] = myBeatObj;
+
+            let btn = document.getElementById("submit-beat-btn");
+            btn.disabled = true;
+            btn.innerText = "⏳ Warte auf die anderen Producer...";
+
+            if (isMultiplayer && currentRoom) {
+                socket.emit("teammateAnswered", { type: "BEAT_SUBMITTED", id: myId, roomCode: currentRoom, beatData: myBeatObj });
+                checkAllBeatsSubmitted();
+            } else {
+                let botGrid = [
+                    [1,0,0,0, 1,0,0,1, 0,0,1,0, 0,1,0,0],
+                    [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0],
+                    [1,0,0,1, 0,0,1,0, 0,0,1,0, 1,0,0,0],
+                    [1,0,0,0, 0,0,0,0, 1,0,1,0, 0,0,0,0],
+                    [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+                    [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1]
+                ];
+                submittedBeats["bot_metro"] = {
+                    id: "bot_metro",
+                    name: "Metro Bot 🤖",
+                    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=metro",
+                    bpm: 144,
+                    vibe: "metro",
+                    grid: botGrid
+                };
+                beatVotes[myId] = [Math.floor(Math.random() * 2) + 4];
+                showBeatVotingScreen();
+            }
+        }
+
+        function checkAllBeatsSubmitted() {
+            let needed = isMultiplayer ? Math.max(1, lobbyPlayers.length) : 2;
+            let count = Object.keys(submittedBeats).length;
+            document.getElementById("beat-status-badge").innerText = "Beats eingereicht: " + count + "/" + needed;
+            if (count >= needed) {
+                showBeatVotingScreen();
+            }
+        }
+
+        function showBeatVotingScreen() {
+            stopBeatPlayback();
+            document.getElementById("beat-maker-section").style.display = "none";
+            document.getElementById("beat-voting-section").style.display = "block";
+            renderBeatVotingCards();
+        }
+
+        function playSubmittedBeat(producerId) {
+            initAudioContext();
+            let b = submittedBeats[producerId];
+            if (!b) return;
+            if (beatIsPlaying && activeShowcaseGrid && activeShowcaseGrid.id === producerId) {
+                stopBeatPlayback();
+                activeShowcaseGrid = null;
+                return;
+            }
+            stopBeatPlayback();
+            activeShowcaseGrid = b;
+            beatIsPlaying = true;
+            beatStep = 0;
+            runBeatLoop();
+        }
+
+        function voteForBeat(targetId, stars, btnEl) {
+            if (isMultiplayer && currentRoom) {
+                socket.emit("teammateAnswered", { type: "BEAT_VOTE", targetId: targetId, stars: stars, roomCode: currentRoom });
+            }
+            if (!beatVotes[targetId]) beatVotes[targetId] = [];
+            beatVotes[targetId].push(stars);
+            let parent = btnEl.parentElement;
+            if (parent) {
+                Array.from(parent.querySelectorAll(".flame-btn")).forEach(function(b) { b.disabled = true; });
+            }
+            btnEl.classList.add("voted");
+            renderBeatVotingCards();
+        }
+
+        function renderBeatVotingCards() {
+            let list = document.getElementById("beat-submissions-list");
+            if (!list) return;
+            list.innerHTML = "";
+            let keys = Object.keys(submittedBeats);
+            keys.forEach(function(k) {
+                let item = submittedBeats[k];
+                let votesArr = beatVotes[k] || [];
+                let totalFlames = votesArr.reduce(function(a, b) { return a + b; }, 0);
+                let card = document.createElement("div");
+                card.className = "beat-vote-card";
+
+                let left = "<div style='display:flex; align-items:center; gap:12px;'>";
+                left += "<img src='" + item.avatar + "' style='width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);'>";
+                left += "<div style='text-align:left;'><div style='font-weight:900; font-size:15px; color:white;'>" + item.name + "</div>";
+                left += "<div style='font-size:11px; color:var(--text-muted);'>" + item.bpm + " BPM • Vibe: " + item.vibe.toUpperCase() + " • 🔥 " + totalFlames + " Punkte</div></div></div>";
+
+                let right = "<div style='display:flex; align-items:center; gap:6px; flex-wrap:wrap;'>";
+                right += "<button onclick=\"playSubmittedBeat('" + k + "')\" style='background:var(--info); color:white; border:none; padding:8px 14px; border-radius:8px; font-weight:800; cursor:pointer;'>▶️ Anhören</button>";
+                for (let s = 1; s <= 5; s++) {
+                    right += "<button class='flame-btn' onclick=\"voteForBeat('" + k + "', " + s + ", this)\">" + s + "🔥</button>";
+                }
+                right += "</div>";
+
+                card.innerHTML = left + right;
+                list.appendChild(card);
+            });
+        }
+
+        function finishBeatBattle() {
+            stopBeatPlayback();
+            let bestProducer = null;
+            let bestScore = -1;
+            Object.keys(submittedBeats).forEach(function(k) {
+                let v = beatVotes[k] || [];
+                let sum = v.reduce(function(a, b) { return a + b; }, 0);
+                if (sum > bestScore) {
+                    bestScore = sum;
+                    bestProducer = submittedBeats[k];
+                }
+            });
+
+            let earnedPts = Math.max(150, bestScore * 50);
+            myStats.played = (myStats.played || 0) + 1;
+            myStats.wins = (myStats.wins || 0) + 1;
+            myStats.totalScore = (myStats.totalScore || 0) + earnedPts;
+            if (!myStats.modeScores["beatbattle"]) myStats.modeScores["beatbattle"] = 0;
+            myStats.modeScores["beatbattle"] += earnedPts;
+            saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats();
+
+            document.getElementById("beat-screen").style.display = "none";
+            let m = document.getElementById("feedback-modal");
+            let t = document.getElementById("feedback-title");
+            let d = document.getElementById("feedback-desc");
+            let cov = document.getElementById("feedback-cover");
+            let b = document.getElementById("feedback-btn");
+            let remBtn = document.getElementById("feedback-rematch-btn");
+
+            m.className = "modal correct";
+            t.innerText = "🏆 BEAT KING GEKRÖNT!";
+            if (bestProducer) {
+                cov.src = bestProducer.avatar;
+                cov.style.display = "block";
+                d.innerText = "Sieger: " + bestProducer.name + " mit " + bestScore + " 🔥 Flammen!\n(+" + earnedPts + " XP für dein Studio)";
+            } else {
+                cov.style.display = "none";
+                d.innerText = "Starkes Producer-Battle!";
+            }
+
+            if (isMultiplayer && currentRoom) {
+                remBtn.style.display = "block";
+                b.innerText = "🚪 Lobby verlassen";
+                b.onclick = backToMenu;
+            } else {
+                remBtn.style.display = "none";
+                b.innerText = "Zurück zum Menü 🏠";
+                b.onclick = function() { returnToLobby(false); };
+            }
+            document.getElementById("feedback-overlay").style.display = "flex";
         }
 
         function playAudioSnippet(isReplay) { 
@@ -1247,7 +1822,7 @@
         function updateDetailedStats() {
             document.getElementById("stat-songs-correct").innerText = myStats.correctGuesses || 0;
             document.getElementById("stat-songs-wrong").innerText = myStats.wrongGuesses || 0;
-            const modeNames = { "all": "All Mixed", "timeattack": "Time Attack ⏱️", "progressive": "Progressive", "megahits": "Mega Hits", "coverquiz": "Album Cover Guessr 💿", "mystery": "Mystery Rapper 🕵️", "fallen": "Fallen Legends", "2010s": "2010-2020 Rap", "soundcloud": "SoundCloud Era", "artist": "Artist Catalog" };
+            const modeNames = { "all": "US Rap Mixed", "beatbattle": "Beat Producer Battle 🎹", "timeattack": "Time Attack ⏱️", "progressive": "Progressive", "megahits": "Mega Hits", "coverquiz": "Album Cover Guessr 💿", "mystery": "Mystery Rapper 🕵️", "fallen": "Fallen Legends", "2010s": "2010s US Trap", "soundcloud": "SoundCloud Era", "artist": "Artist Catalog" };
             const container = document.getElementById("mode-stats-container");
             if (container) {
                 container.innerHTML = "";
@@ -1532,7 +2107,9 @@
 
         function playVictorySnippet(artistName, isCorrect, hasNextRound) {
             let m = document.getElementById("feedback-modal"); let t = document.getElementById("feedback-title"); let d = document.getElementById("feedback-desc"); let cov = document.getElementById("feedback-cover"); let b = document.getElementById("feedback-btn");
-            
+            let remBtn = document.getElementById("feedback-rematch-btn");
+            if (remBtn) remBtn.style.display = "none";
+
             document.getElementById("feedback-overlay").style.display = "flex";
             m.className = "modal"; 
             t.innerText = "Lade Ergebnis..."; 
@@ -1586,7 +2163,7 @@
                 delete window[cb];
             };
             let s = document.createElement("script");
-            s.src = "https://api.deezer.com/search/track?q=" + encodeURIComponent(artistName) + "&order=RANKING&limit=5&output=jsonp&callback=" + cb;
+            s.src = "https://api.deezer.com/search/track?q=" + encodeURIComponent('artist:"' + artistName + '"') + "&order=RANKING&limit=5&output=jsonp&callback=" + cb;
             document.head.appendChild(s);
         }
 
@@ -1605,7 +2182,7 @@
             d.innerText = "Du hast in dieser Session " + score + " Punkte erreicht!";
             b.innerText = "Zurück zum Menü 🏠"; 
             b.style.display = "block"; 
-            b.onclick = backToMenu;
+            b.onclick = function() { returnToLobby(false); };
             document.getElementById("feedback-overlay").style.display = "flex";
         }
 
@@ -1623,18 +2200,6 @@
                     saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats(); showWinnerScreen(winner);
                 }
             } else { renderMpLeaderboard(); }
-        }
-
-        function backToMenu() { 
-            try { 
-                audio.pause(); sfxAudio.pause(); clearTimeout(precisionTimer); clearInterval(timeAttackInterval);
-                gameIsOver = true; cancelMultiplayer(); 
-                document.getElementById("game-screen").style.display = "none"; 
-                document.getElementById("mystery-screen").style.display = "none"; 
-                document.getElementById("feedback-overlay").style.display = "none"; 
-                document.getElementById("app-layout").style.display = "flex"; 
-                resumeMenuMusic(); 
-            } catch(e) { location.reload(); }
         }
 
         function triggerSuddenDeathLocal(tiedIds) {
@@ -1664,13 +2229,20 @@
                 
                 playWinnerAnthem(winner.anthem);
                 document.getElementById("feedback-btn").style.display = "none"; 
+                document.getElementById("feedback-rematch-btn").style.display = "none";
                 setTimeout(function() {
                     sfxAudio.pause(); if(ytContext === "winner" && ytReady && ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
                     cov.style.display = "none"; cov.style.borderRadius = "16px"; cov.style.border = "2px solid var(--surface-border)"; cov.style.boxShadow = "0 10px 30px rgba(0,0,0,0.5)";
                     document.getElementById("feedback-title").innerText = "📊 FINAL STANDINGS"; document.getElementById("feedback-desc").innerText = "";
-                    renderMpLeaderboard(); let btn = document.getElementById("feedback-btn"); btn.style.display = "block"; btn.innerText = "Exit 🏠"; btn.onclick = function() { backToMenu(); };
-                }, 7000);
-            } catch(e) { backToMenu(); }
+                    renderMpLeaderboard(); 
+                    let remBtn = document.getElementById("feedback-rematch-btn");
+                    remBtn.style.display = "block";
+                    let btn = document.getElementById("feedback-btn"); 
+                    btn.style.display = "block"; 
+                    btn.innerText = "🚪 Lobby verlassen"; 
+                    btn.onclick = function() { backToMenu(); };
+                }, 6500);
+            } catch(e) { returnToLobby(false); }
         }
 
         function readSettings() { let hcToggle = document.getElementById("hardcore-toggle"); let artToggle = document.getElementById("artist-toggle"); if (hcToggle) isHardcoreMode = hcToggle.checked; if (artToggle) showArtistName = artToggle.checked; }
@@ -1685,7 +2257,7 @@
                         window[cb] = function(res) {
                             clearTimeout(to);
                             if (res && res.data && res.data.length > 0) {
-                                const forbidden = ["karaoke", "tribute", "in the style", "type beat", "lullaby", "8-bit", "parody", "workout", "cover", "skit", "interlude", "commentary", "interview", "instrumental", "acapella", "slowed", "sped up", "reverb", "chopped", "screwed", "live at", "live from", "bad bunny", "camila cabello", "ed sheeran", "justin bieber", "j balvin", "ozuna", "shakira", "rosalia", "dua lipa", "ariana grande", "taylor swift", "katy perry", "maroon 5", "coldplay", "selena gomez", "maluma", "daddy yankee", "luis fonsi", "becky g", "anitta", "jennifer lopez", "pitbull"];
+                                const forbidden = ["karaoke", "tribute", "in the style", "type beat", "lullaby", "8-bit", "parody", "workout", "cover", "skit", "interlude", "commentary", "interview", "instrumental", "acapella", "slowed", "sped up", "reverb", "chopped", "screwed", "live at", "live from", "bad bunny", "camila cabello", "ed sheeran", "justin bieber", "j balvin", "ozuna", "shakira", "rosalia", "dua lipa", "ariana grande", "taylor swift", "katy perry", "maroon 5", "coldplay", "selena gomez", "maluma", "daddy yankee", "luis fonsi", "becky g", "anitta", "jennifer lopez", "pitbull", "central cee", "stormzy", "skepta", "aitch"];
                                 
                                 let searchArtistLower = artist.toLowerCase().trim();
 
@@ -1729,7 +2301,7 @@
                                         uniqueTracks.set(cleanName, t);
                                     } else {
                                         let existing = uniqueTracks.get(cleanName);
-                                        if (t.explicit_lyrics && !existing.explicit_lyrics && (t.rank || 0) >= (existing.rank || 0) * 0.7) {
+                                        if (t.explicit_lyrics && !existing.explicit_lyrics && (t.rank || 0) >= (existing.rank || 0) * 0.75) {
                                             uniqueTracks.set(cleanName, t);
                                         }
                                     }
@@ -1738,7 +2310,7 @@
                                 let topTracks = Array.from(uniqueTracks.values());
                                 topTracks.sort(function(a, b) { return (b.rank || 0) - (a.rank || 0); });
 
-                                let mapped = topTracks.slice(0, 22).map(function(t, i) { 
+                                let mapped = topTracks.slice(0, 15).map(function(t, i) { 
                                     let displayTitle = t.title.split(" (feat.")[0].split(" [feat.")[0].trim();
                                     return {
                                         id: "dz" + t.id, 
@@ -1760,7 +2332,8 @@
                             resDeez(false);
                         };
                         const s = document.createElement("script");
-                        s.src = "https://api.deezer.com/search/track?q=" + encodeURIComponent(artist) + "&order=RANKING&limit=85&output=jsonp&callback=" + cb;
+                        let strictQuery = 'artist:"' + artist + '"';
+                        s.src = "https://api.deezer.com/search/track?q=" + encodeURIComponent(strictQuery) + "&order=RANKING&limit=65&output=jsonp&callback=" + cb;
                         s.onerror = function() { clearTimeout(to); resDeez(false); };
                         document.head.appendChild(s);
                     });
@@ -1775,6 +2348,7 @@
             updateAllAvatars(); updateStatsDisplay(); sfxAudio.pause(); audio.loop = false;
             let box = document.getElementById("suggestions-box"); if(box) box.style.display = "none"; 
             let res = document.getElementById("mp-result"); if(res) res.style.display = "none";
+            let remBtn = document.getElementById("feedback-rematch-btn"); if(remBtn) remBtn.style.display = "none";
         }
 
         function syncHostData() {
@@ -1811,13 +2385,13 @@
         async function startTimeAttackMode() {
             if (isMultiplayer) return alert("Time Attack ist ein Solo-Action-Modus!");
             readSettings();
-            document.getElementById("loading-overlay").style.display = "flex"; document.getElementById("loading-text").innerText = "Lade 60s Time Attack...";
+            document.getElementById("loading-overlay").style.display = "flex"; document.getElementById("loading-text").innerText = "Lade 60s US Rap Time Attack...";
             resetGameStats(); currentMode = "timeattack";
             let sel = [].concat(megaStars, artists2010s, soundcloudArtists).sort(function(){return 0.5-Math.random();}).slice(0, 10);
             try {
                 let promises = sel.map(function(a) { return fetchArtistSongs(a); });
                 await Promise.all(promises);
-                songsPool = songsPool.filter(function(s) { return s.popRank < 10; });
+                songsPool = songsPool.filter(function(s) { return s.popRank < 8; });
                 if (songsPool.length < 4) { document.getElementById("loading-overlay").style.display = "none"; alert("Fehler beim Laden. Bitte neu versuchen!"); return; }
                 songsPool = smartShuffle(songsPool); launchGame();
             } catch (err) { document.getElementById("loading-overlay").style.display = "none"; }
@@ -1833,7 +2407,7 @@
         async function startCoverQuizMode() {
             readSettings();
             if (isMultiplayer && isMpHost) socket.emit("startGame", currentRoom);
-            document.getElementById("loading-overlay").style.display = "flex"; document.getElementById("loading-text").innerText = "Lade bekannte Rap-Alben...";
+            document.getElementById("loading-overlay").style.display = "flex"; document.getElementById("loading-text").innerText = "Lade bekannte US Rap-Alben...";
             resetGameStats(); currentMode = "coverquiz";
             let sel = [].concat(megaStars, artists2010s, legends, fallenLegends).sort(function(){return 0.5-Math.random();}).slice(0, 12);
             try {
@@ -1849,7 +2423,7 @@
                     
                     let cleanAlb = cleanAlbumTitleText(rawAlb);
                     if (cleanAlb.length < 2) return;
-                    if (cleanAlb.toLowerCase() === s.title.toLowerCase() && s.popRank > 6) return;
+                    if (cleanAlb.toLowerCase() === s.title.toLowerCase() && s.popRank > 5) return;
 
                     let key = cleanAlb.toLowerCase();
                     if (!albumMap.has(key)) {
@@ -1875,7 +2449,7 @@
         async function startMixedMode(mode) {
             readSettings(); 
             if (isMultiplayer && isMpHost) socket.emit("startGame", currentRoom);
-            document.getElementById("loading-overlay").style.display = "flex"; document.getElementById("loading-text").innerText = "Lade Top-Hits...";
+            document.getElementById("loading-overlay").style.display = "flex"; document.getElementById("loading-text").innerText = "Lade US Top-Hits...";
             resetGameStats(); currentMode = mode; let sel = [];
             
             if (mode === "all") sel = [].concat(artists2010s, soundcloudArtists, megaStars, fallenLegends).sort(function(){return 0.5-Math.random();}).slice(0,10);
@@ -1893,7 +2467,7 @@
                 if (mode === "megahits") {
                     songsPool = songsPool.filter(function(s) { return s.popRank < 5; });
                 } else {
-                    songsPool = songsPool.filter(function(s) { return s.popRank < 12; });
+                    songsPool = songsPool.filter(function(s) { return s.popRank < 10; });
                 }
                 
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
@@ -1911,7 +2485,7 @@
             try {
                 let promises = sel.map(function(a) { return fetchArtistSongs(a); });
                 await Promise.all(promises);
-                songsPool = songsPool.filter(function(s) { return s.popRank < 8; });
+                songsPool = songsPool.filter(function(s) { return s.popRank < 7; });
                 if (songsPool.length < 4) { document.getElementById("loading-overlay").style.display = "none"; alert("Es konnten leider keine Songs geladen werden. Bitte lade die Seite neu!"); return; }
                 songsPool = smartShuffle(songsPool); if (isMultiplayer && isMpHost) syncHostData(); launchGame();
             } catch (err) { document.getElementById("loading-overlay").style.display = "none"; alert("Fehler beim Laden der Songs."); }
@@ -2078,6 +2652,8 @@
             if (document.getElementById("feedback-overlay").style.display === "flex" || gameIsOver) return;
 
             document.getElementById("suggestions-box").style.display = "none"; 
+            let remBtn = document.getElementById("feedback-rematch-btn");
+            if (remBtn) remBtn.style.display = "none";
             
             let basePts = maxPlayTime <= 1 ? 100 : (maxPlayTime <= 4 ? 75 : 50);
             if (currentMode === "coverquiz") basePts = 120;
@@ -2160,6 +2736,7 @@
             try {
                 if (gameIsOver) return; gameIsOver = true; audio.pause(); clearTimeout(precisionTimer); clearInterval(timeAttackInterval);
                 let m = document.getElementById("feedback-modal"); let t = document.getElementById("feedback-title"); let d = document.getElementById("feedback-desc"); let b = document.getElementById("feedback-btn"); let cov = document.getElementById("feedback-cover");
+                let remBtn = document.getElementById("feedback-rematch-btn");
                 cov.style.display = "none"; m.className = "modal gameover";
                 
                 if (isMultiplayer) {
@@ -2170,6 +2747,7 @@
                     t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
                     document.getElementById("mp-result").style.display = "block"; document.getElementById("mp-result").innerHTML = "Loading live data...";
                     b.style.display = "none"; 
+                    if (remBtn) remBtn.style.display = "none";
                     document.getElementById("feedback-overlay").style.display = "flex";
                     
                     renderMpLeaderboard(); checkMatchEnd();
@@ -2182,8 +2760,9 @@
                     myStats.modeScores[currentMode] += score;
                     saveAccountData(); syncToCloud(); updateLevelDisplay(); updateDetailedStats();
 
+                    if (remBtn) remBtn.style.display = "none";
                     b.innerText = "Exit 🏠"; b.style.display = "block"; 
-                    b.onclick = function() { backToMenu(); };
+                    b.onclick = function() { returnToLobby(false); };
                     document.getElementById("feedback-overlay").style.display = "flex";
                 }
             } catch(e) { }
@@ -2213,7 +2792,6 @@
                         const isMe = (p.id === socket.id);
                         let parts = p.avatar.split("|Q|");
                         let pAv = parts[0];
-                        let pQt = parts.length > 1 ? parts[1] : "Ready to play!";
 
                         let opacity = p.lives <= 0 ? "0.4" : "1";
                         let width = (100 / Math.max(1, lobbyPlayers.length)) + "%";
