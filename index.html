@@ -38,6 +38,7 @@
             filter: blur(8px) brightness(0.4); 
             z-index: -2; transition: background-image 1s ease-in-out;
             background-color: var(--bg-color);
+            object-fit: cover;
         }
 
         .scanlines {
@@ -83,8 +84,24 @@
         .sidebar-logo span { color: var(--primary); }
 
         .sidebar-user { display: flex; align-items: center; gap: 15px; padding: 15px 25px; margin-bottom: 30px; background: rgba(0,0,0,0.4); border-top: 1px solid var(--surface-border); border-bottom: 1px solid var(--surface-border); }
-        .sidebar-avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); box-shadow: 0 0 15px rgba(139, 92, 246, 0.6); }
+        .sidebar-avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); box-shadow: 0 0 15px rgba(139, 92, 246, 0.6); transition: 0.3s; }
         .sidebar-name { font-size: 14px; font-weight: 800; text-transform: uppercase; }
+
+        @keyframes pulseBass {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 15px var(--primary); }
+            50% { transform: scale(1.09); box-shadow: 0 0 28px #ec4899, 0 0 12px var(--primary); border-color: #ec4899; }
+        }
+        @keyframes spinVinyl {
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes neonGlow {
+            0%, 100% { box-shadow: 0 0 15px #10b981; border-color: #10b981; filter: hue-rotate(0deg); }
+            50% { box-shadow: 0 0 30px #3b82f6; border-color: #3b82f6; filter: hue-rotate(45deg); }
+        }
+
+        .fx-pulse { animation: pulseBass 1.1s infinite ease-in-out; }
+        .fx-vinyl { animation: spinVinyl 6s linear infinite; }
+        .fx-neon { animation: neonGlow 2s infinite ease-in-out; }
 
         .nav-item { padding: 18px 25px; font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.3s; border-left: 4px solid transparent; display: flex; gap: 15px; align-items: center; }
         .nav-item:hover { color: white; background: rgba(255,255,255,0.05); }
@@ -98,7 +115,7 @@
         .section-title { font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; border-bottom: 2px solid var(--surface-border); padding-bottom: 10px; color: white; text-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between; }
 
         .banner-container { display: flex; align-items: center; gap: 25px; padding: 25px; border-radius: 16px; border: 2px solid var(--primary); background: linear-gradient(135deg, rgba(20,20,25,0.9), rgba(139,92,246,0.15)); box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 40px; }
-        .banner-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); box-shadow: 0 0 25px rgba(139,92,246,0.6); flex-shrink: 0; }
+        .banner-img { width: 130px; height: 130px; border-radius: 16px; object-fit: cover; border: 2px solid rgba(255,255,255,0.25); box-shadow: 0 8px 25px rgba(0,0,0,0.6); flex-shrink: 0; }
         .banner-text-box { text-align: left; }
         .banner-subtitle { margin: 0 0 5px 0; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 2px; }
         .banner-title { margin: 0; color: white; text-transform: uppercase; font-size: 32px; font-weight: 900; letter-spacing: 1px; text-shadow: 0 0 15px rgba(139,92,246,0.8); }
@@ -126,10 +143,9 @@
         .artist-tile { background: rgba(0,0,0,0.6); border: 1px solid var(--surface-border); padding: 12px; border-radius: 8px; font-size: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; color: white; backdrop-filter: blur(5px); }
         .artist-tile:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
 
-        .gif-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); gap: 12px; margin-top: 15px; margin-bottom: 20px; }
-        .gif-option { width: 100%; height: 95px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 3px solid rgba(255,255,255,0.15); transition: 0.25s; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .gif-option:hover { transform: scale(1.08); border-color: var(--primary); box-shadow: 0 0 20px rgba(139, 92, 246, 0.8); }
-        .gif-option.active-gif { border-color: var(--success); box-shadow: 0 0 20px rgba(16, 185, 129, 0.9); }
+        .fx-btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; margin-bottom: 20px; }
+        .fx-btn { background: rgba(255,255,255,0.06); border: 1px solid var(--surface-border); color: white; padding: 10px 16px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .fx-btn:hover, .fx-btn.active-fx { background: var(--primary); border-color: white; box-shadow: 0 0 15px rgba(139,92,246,0.5); }
 
         .settings-bar { display: flex; gap: 20px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 12px; border: 1px solid var(--surface-border); margin-bottom: 30px; align-items: center; backdrop-filter: blur(10px); flex-wrap: wrap;}
         .settings-group { display: flex; align-items: center; gap: 10px; }
@@ -160,9 +176,8 @@
         .team-score-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-align: center; color: var(--text-muted);}
         .team-score-num { font-size: 22px; font-weight: 900; }
 
-        .visualizer { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(from 0deg, var(--primary), transparent); margin: 0 auto 25px auto; animation: spin 3s linear infinite; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(139,92,246,0.3); }
+        .visualizer { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(from 0deg, var(--primary), transparent); margin: 0 auto 25px auto; animation: spinVinyl 3s linear infinite; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(139,92,246,0.3); }
         .visualizer-inner { width: 100px; height: 100px; background-color: var(--bg-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; border: 2px solid rgba(139,92,246,0.5); }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         #cover-quiz-box { display: none; flex-direction: column; align-items: center; margin-bottom: 25px; }
         #cover-quiz-img { width: 190px; height: 190px; border-radius: 16px; object-fit: cover; border: 2px solid var(--surface-border); box-shadow: 0 15px 35px rgba(0,0,0,0.7); transition: filter 0.4s ease; filter: blur(24px); }
@@ -221,7 +236,7 @@
         .modal.gameover { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2); } .modal.gameover h2 { color: var(--warning); }
         .modal.warning { border-color: var(--warning); box-shadow: 0 0 40px rgba(245, 158, 11, 0.4); } .modal.warning h2 { color: var(--warning); }
 
-        .loader { border: 4px solid rgba(255,255,255,0.05); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
+        .loader { border: 4px solid rgba(255,255,255,0.05); border-top: 4px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spinVinyl 1s linear infinite; margin: 0 auto 20px auto; }
 
         input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; margin-top: -5px; box-shadow: 0 0 10px rgba(139,92,246,0.8); }
@@ -336,6 +351,7 @@
                     <div class="banner-text-box">
                         <h3 class="banner-subtitle">Your Favorite Artist</h3>
                         <h2 id="banner-artist-name" class="banner-title">Artist</h2>
+                        <p id="banner-artist-quote" style="margin: 6px 0 0 0; color: var(--text-muted); font-size: 13px; font-style: italic;"></p>
                     </div>
                 </div>
 
@@ -450,17 +466,23 @@
                 </div>
 
                 <div style="background: rgba(0,0,0,0.6); padding: 25px; border-radius: 16px; border: 1px solid var(--surface-border); text-align: left; margin-bottom: 30px;">
-                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">1. Lieblings-Artist & Animiertes GIF-Profilbild</h3>
-                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 12px;" onchange="updateFavArtist()"></select>
+                    <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--primary);">1. Lieblings-Artist (Profilbild, Banner & Hintergrund)</h3>
+                    <select id="edit-fav-artist-select" class="ea-input" style="margin-bottom: 18px;" onchange="updateFavArtist()"></select>
                     
-                    <div style="display:flex; gap:8px; margin-bottom: 10px;">
-                        <input type="text" id="gif-search-input" class="ea-input" style="margin:0;" placeholder="Nach Rapper-GIF suchen (z.B. Travis Scott, 2Pac, Carti)...">
-                        <button class="btn-action" style="width:140px; padding:0; font-size: 13px;" onclick="searchCustomArtistGifs()">🎬 GIFs laden</button>
+                    <h3 style="margin-top: 10px; font-size: 14px; text-transform: uppercase; color: var(--warning);">2. Live Avatar-Animation & Eigenes GIF (Optional)</h3>
+                    <div class="fx-btn-group">
+                        <button class="fx-btn" id="fx-none" onclick="setAvatarAnimation('none')">⏹️ Statisch</button>
+                        <button class="fx-btn" id="fx-pulse" onclick="setAvatarAnimation('pulse')">🔥 808 Bass-Puls</button>
+                        <button class="fx-btn" id="fx-vinyl" onclick="setAvatarAnimation('vinyl')">💿 Drehende Vinyl</button>
+                        <button class="fx-btn" id="fx-neon" onclick="setAvatarAnimation('neon')">⚡ Neon-Glow</button>
                     </div>
-                    <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 8px 0;">Klicke auf ein animiertes GIF, um es als dein Profilbild auszuwählen:</p>
-                    <div id="artist-gif-grid" class="gif-grid"></div>
 
-                    <h3 style="margin-top: 25px; font-size: 14px; text-transform: uppercase;">2. Change Anthem & Menu Music</h3>
+                    <div style="display:flex; gap:8px; margin-bottom: 20px;">
+                        <input type="text" id="custom-gif-input" class="ea-input" style="margin:0;" placeholder="Optional: Eigenen .gif oder Bild-Link hier einfügen...">
+                        <button class="btn-action" style="width:140px; padding:0; font-size: 12px;" onclick="applyCustomGifUrl()">✅ Übernehmen</button>
+                    </div>
+
+                    <h3 style="margin-top: 20px; font-size: 14px; text-transform: uppercase;">3. Change Anthem & Menu Music</h3>
                     <p style="font-size: 12px; color: var(--text-muted); margin-top: -5px; margin-bottom: 10px;">Type a song name (results appear automatically) OR paste a YouTube link.</p>
                     <div style="display:flex; gap:8px; margin-bottom:10px;">
                         <input type="text" id="edit-song-search-input" class="ea-input" style="margin:0;" placeholder="e.g. Sicko Mode..." oninput="handleAnthemInput()">
@@ -768,6 +790,7 @@
         let myQuote = "";
         let mySongUrl = ""; 
         let mySongTitle = "";
+        let myAvatarFx = "none";
         let myStats = {};
 
         let gameIsOver = false; let isMultiplayer = false; let isMpHost = false; let lobbyPlayers = []; let currentRoom = "";
@@ -823,63 +846,92 @@
             location.reload(); 
         }
 
-        function selectGifAvatar(gifUrl, imgElement) {
-            myAvatar = gifUrl;
+        function setAvatarAnimation(fxType) {
+            myAvatarFx = fxType;
+            saveAccountData();
+            applyAvatarEffectUI();
+        }
+
+        function applyAvatarEffectUI() {
+            let ids = ["sidebar-avatar", "profile-view-avatar"];
+            ids.forEach(function(id) {
+                let el = document.getElementById(id);
+                if (el) {
+                    el.classList.remove("fx-pulse", "fx-vinyl", "fx-neon");
+                    if (myAvatarFx === "pulse") el.classList.add("fx-pulse");
+                    if (myAvatarFx === "vinyl") el.classList.add("fx-vinyl");
+                    if (myAvatarFx === "neon") el.classList.add("fx-neon");
+                }
+            });
+            ["none", "pulse", "vinyl", "neon"].forEach(function(k) {
+                let btn = document.getElementById("fx-" + k);
+                if (btn) {
+                    if (myAvatarFx === k) btn.classList.add("active-fx");
+                    else btn.classList.remove("active-fx");
+                }
+            });
+        }
+
+        function applyCustomGifUrl() {
+            let inp = document.getElementById("custom-gif-input");
+            if (!inp || !inp.value.trim()) return;
+            myAvatar = inp.value.trim();
             saveAccountData();
             syncToCloud();
             updateAllAvatars();
-            document.querySelectorAll(".gif-option").forEach(function(el) {
-                el.classList.remove("active-gif");
-            });
-            if (imgElement) imgElement.classList.add("active-gif");
+            inp.value = "";
         }
 
-        async function loadArtistGifs(queryName, autoSelectFirst) {
-            let grid = document.getElementById("artist-gif-grid");
-            if (grid) grid.innerHTML = "<span style='color:var(--text-muted); font-size:12px;'>Lade animierte GIFs...</span>";
-            try {
-                let searchQ = queryName + " rapper";
-                let res = await fetch("https://g.tenor.com/v1/search?q=" + encodeURIComponent(searchQ) + "&key=LIVDSRZULELA&limit=8&media_filter=minimal");
-                let data = await res.json();
-                if (data && data.results && data.results.length > 0) {
-                    if (grid) grid.innerHTML = "";
-                    data.results.forEach(function(item, idx) {
-                        if (item.media && item.media[0]) {
-                            let gifUrl = (item.media[0].tinygif && item.media[0].tinygif.url) ? item.media[0].tinygif.url : item.media[0].gif.url;
-                            if (idx === 0 && autoSelectFirst) {
-                                myAvatar = gifUrl;
-                                saveAccountData();
-                                syncToCloud();
-                                updateAllAvatars();
-                            }
-                            if (grid) {
-                                let img = document.createElement("img");
-                                img.src = gifUrl;
-                                img.className = "gif-option" + ((myAvatar === gifUrl) ? " active-gif" : "");
-                                img.onclick = function() { selectGifAvatar(gifUrl, img); };
-                                grid.appendChild(img);
-                            }
-                        }
-                    });
-                    return;
+        function loadArtistVisuals(artistName) {
+            if (!artistName) return;
+            const cb = "deezer_vis_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
+            window[cb] = function(res) {
+                if (res && res.data && res.data.length > 0) {
+                    myBgUrl = res.data[0].picture_xl || res.data[0].picture_big || res.data[0].picture_medium;
+                    myAvatar = res.data[0].picture_medium || res.data[0].picture_big || myBgUrl;
+                    saveAccountData();
+                    syncToCloud();
+                    let bgEl = document.getElementById("app-background");
+                    if (bgEl && myBgUrl) bgEl.src = myBgUrl;
+                    updateAllAvatars();
                 }
-            } catch(e) {}
-            if (grid) grid.innerHTML = "<span style='color:var(--text-muted); font-size:12px;'>Keine GIFs gefunden.</span>";
+                delete window[cb];
+            };
+            const s = document.createElement("script");
+            s.src = "https://api.deezer.com/search/artist?q=" + encodeURIComponent(artistName) + "&limit=1&output=jsonp&callback=" + cb;
+            document.head.appendChild(s);
         }
 
-        function searchCustomArtistGifs() {
-            let q = document.getElementById("gif-search-input").value.trim();
-            if (!q) q = myFavArtist || "Travis Scott";
-            loadArtistGifs(q, false);
+        function updateAllAvatars() { 
+            ["sidebar-avatar", "profile-view-avatar"].forEach(function(id) { 
+                let el = document.getElementById(id); 
+                if(el && myAvatar) el.src = myAvatar; 
+            }); 
+            let b1 = document.getElementById("fav-artist-img-1"); 
+            let bName = document.getElementById("banner-artist-name");
+            let bQuote = document.getElementById("banner-artist-quote");
+            if (b1 && (myBgUrl || myAvatar)) { 
+                b1.src = myBgUrl || myAvatar; 
+                if(bName) bName.innerText = myFavArtist || "Artist"; 
+                if(bQuote) bQuote.innerText = myQuote || "";
+                document.getElementById("fav-artist-banner").style.display = "flex"; 
+            }
+            applyAvatarEffectUI();
         }
 
         function updateFavArtist() { 
-            myFavArtist = document.getElementById("edit-fav-artist-select").value; 
+            let sel = document.getElementById("edit-fav-artist-select");
+            if (!sel || !sel.value) return;
+            myFavArtist = sel.value; 
             myQuote = getArtistQuote(myFavArtist); 
-            document.getElementById("profile-view-quote").innerText = myQuote; 
+            let qEl = document.getElementById("profile-view-quote");
+            if (qEl) qEl.innerText = myQuote; 
+            let bName = document.getElementById("banner-artist-name");
+            if (bName) bName.innerText = myFavArtist;
+            let bQuote = document.getElementById("banner-artist-quote");
+            if (bQuote) bQuote.innerText = myQuote;
             saveAccountData(); 
             loadArtistVisuals(myFavArtist); 
-            loadArtistGifs(myFavArtist, true);
         }
 
         function updateMpLobbyBanner() {
@@ -933,8 +985,8 @@
                     accounts[name] = {
                         password: pw, isPremium: true, 
                         stats: { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: { all: 0, beatbattle: 0, timeattack: 0, progressive: 0, megahits: 0, coverquiz: 0, mystery: 0, fallen: 0, "2010s": 0, soundcloud: 0, artist: 0 } },
-                        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=" + encodeURIComponent(name),
-                        bgUrl: "", favArtist: "Travis Scott", quote: getArtistQuote("Travis Scott"), songUrl: "", songTitle: ""
+                        avatar: "",
+                        bgUrl: "", favArtist: "Travis Scott", quote: getArtistQuote("Travis Scott"), songUrl: "", songTitle: "", avatarFx: "pulse"
                     };
                 }
 
@@ -942,12 +994,13 @@
                 
                 myStats = accounts[playerName].stats || { played: 0, wins: 0, losses: 0, totalScore: 0, correctGuesses: 0, wrongGuesses: 0, modeScores: {} };
                 if (!myStats.modeScores) myStats.modeScores = {};
-                myAvatar = accounts[playerName].avatar || ("https://api.dicebear.com/7.x/avataaars/svg?seed=" + encodeURIComponent(name));
+                myAvatar = accounts[playerName].avatar || "";
                 myBgUrl = accounts[playerName].bgUrl || "";
                 myFavArtist = accounts[playerName].favArtist || "Travis Scott";
                 myQuote = accounts[playerName].quote || getArtistQuote(myFavArtist);
                 mySongUrl = accounts[playerName].songUrl || "";
                 mySongTitle = accounts[playerName].songTitle || "";
+                myAvatarFx = accounts[playerName].avatarFx || "pulse";
 
                 try {
                     if (dbClient) {
@@ -1001,15 +1054,19 @@
                 document.getElementById("profile-view-quote").innerText = myQuote || ""; 
                 
                 let hymnDisplay = document.getElementById("profile-view-hymn"); if (hymnDisplay) hymnDisplay.innerText = mySongTitle || "None";
-                if (myBgUrl) document.getElementById("app-background").src = myBgUrl;
-                else if (myFavArtist) loadArtistVisuals(myFavArtist);
                 
-                let editSel = document.getElementById("edit-fav-artist-select"); if (editSel && myFavArtist) editSel.value = myFavArtist;
+                let editSel = document.getElementById("edit-fav-artist-select"); 
+                if (editSel && myFavArtist) editSel.value = myFavArtist;
 
-                let isDefaultDicebear = myAvatar.includes("dicebear.com");
-                loadArtistGifs(myFavArtist || "Travis Scott", isDefaultDicebear);
+                if (myBgUrl && myAvatar && !myAvatar.includes("dicebear.com")) {
+                    document.getElementById("app-background").src = myBgUrl;
+                    updateAllAvatars();
+                } else {
+                    loadArtistVisuals(myFavArtist || "Travis Scott");
+                }
 
-                buildArtistGrid(); updateAllAvatars(); playMenuMusic(mySongUrl);
+                buildArtistGrid(); 
+                playMenuMusic(mySongUrl);
                 if (btn) { btn.innerText = "Login / Register ➔"; btn.disabled = false; }
             } catch (error) {
                 document.getElementById("profile-overlay").style.display = "flex";
@@ -1807,7 +1864,7 @@
             if(!accounts[playerName]) accounts[playerName] = {};
             accounts[playerName].stats = myStats; accounts[playerName].isPremium = true; accounts[playerName].avatar = myAvatar;
             accounts[playerName].favArtist = myFavArtist; accounts[playerName].songUrl = mySongUrl; accounts[playerName].songTitle = mySongTitle;
-            accounts[playerName].quote = myQuote; accounts[playerName].bgUrl = myBgUrl;
+            accounts[playerName].quote = myQuote; accounts[playerName].bgUrl = myBgUrl; accounts[playerName].avatarFx = myAvatarFx;
             localStorage.setItem("rapquiz_accounts", JSON.stringify(accounts));
         }
 
@@ -1851,32 +1908,6 @@
                 updateLevelDisplay(); updateDetailedStats();
             }
             if (window.innerWidth <= 768) { document.getElementById("sidebar").classList.remove("open"); document.getElementById("sidebar-overlay").classList.remove("active"); }
-        }
-
-        function loadArtistVisuals(artistName) {
-            if (!artistName) return; const cb = "deezer_vis_" + Date.now();
-            window[cb] = function(res) {
-                if (res && res.data && res.data.length > 0) {
-                    myBgUrl = res.data[0].picture_xl;
-                    if (!myAvatar || myAvatar.includes("dicebear.com")) {
-                        myAvatar = res.data[0].picture_medium;
-                    }
-                    saveAccountData(); document.getElementById("app-background").src = myBgUrl; updateAllAvatars();
-                }
-            };
-            const s = document.createElement("script"); s.src = "https://api.deezer.com/search/artist?q=" + encodeURIComponent(artistName) + "&limit=1&output=jsonp&callback=" + cb; document.head.appendChild(s);
-        }
-
-        function updateAllAvatars() { 
-            ["sidebar-avatar", "profile-view-avatar", "fav-artist-img-1"].forEach(function(id) { 
-                let el = document.getElementById(id); 
-                if(el && myAvatar) el.src = myAvatar; 
-            }); 
-            let bName = document.getElementById("banner-artist-name");
-            if (bName && myFavArtist) { 
-                bName.innerText = myFavArtist; 
-                document.getElementById("fav-artist-banner").style.display = "flex"; 
-            }
         }
 
         function handleAnthemInput() { clearTimeout(searchTimeout); searchTimeout = setTimeout(function() { searchMenuSong(); }, 500); }
@@ -2747,7 +2778,7 @@
                     t.innerText = "⏳ WAITING FOR PLAYERS..."; d.innerText = "Match is still running for others. Live standings:"; 
                     document.getElementById("mp-result").style.display = "block"; document.getElementById("mp-result").innerHTML = "Loading live data...";
                     b.style.display = "none"; 
-                    if (remBtn) remBtn.style.display = "none";
+                    if (remBtn) remBtn.style.display = "block";
                     document.getElementById("feedback-overlay").style.display = "flex";
                     
                     renderMpLeaderboard(); checkMatchEnd();
